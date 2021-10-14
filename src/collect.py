@@ -2,6 +2,7 @@ import datetime
 import os
 import time
 from pprint import pprint
+import traceback
 
 import pandas as pd
 import requests
@@ -104,54 +105,59 @@ def main():
         has_next_page = True
         while has_next_page:
             print(f'Trying to retrieve the next {variables["repositoriesPerPage"]} repositories (pushedAt >= {min_pushed})...')
-            response = requests.post(url="https://api.github.com/graphql", json=request, headers=headers)
-            result = response.json()
+            try:
+                response = requests.post(url="https://api.github.com/graphql", json=request, headers=headers)
+                result = response.json()
 
-            if 'Retry-After' in response.headers:  # reached retry limit
-                print(f'Waiting for {response.headers["Retry-After"]} seconds before continuing...', end=' ')
-                time.sleep(int(response.headers['Retry-After']))
+                if 'Retry-After' in response.headers:  # reached retry limit
+                    print(f'Waiting for {response.headers["Retry-After"]} seconds before continuing...', end=' ')
+                    time.sleep(int(response.headers['Retry-After']))
 
-            if 'errors' in result:
-                if 'timeout' in result['errors'][0]['message']:  # reached timeout
-                    print(f'Timeout!', end=' ')
-                    variables['repositoriesPerPage'] = int(max(1, variables['repositoriesPerPage'] * md))  # using AIMD
-                    ai = 1  # resetting slow start
-                else:  # some unexpected error.
-                    pprint(result['errors'])
-                    exit(1)
+                if 'errors' in result:
+                    if 'timeout' in result['errors'][0]['message']:  # reached timeout
+                        print(f'Timeout!', end=' ')
+                        variables['repositoriesPerPage'] = int(max(1, variables['repositoriesPerPage'] * md))  # using AIMD
+                        ai = 1  # resetting slow start
+                    else:  # some unexpected error.
+                        pprint(result['errors'])
+                        exit(1)
 
-            if 'data' in result and result['data']:
-                if repository_count == -1:
-                    repository_count = result["data"]["search"]["repositoryCount"]
+                if 'data' in result and result['data']:
+                    if repository_count == -1:
+                        repository_count = result["data"]["search"]["repositoryCount"]
 
-                some_repositories = result['data']['search']['nodes']
-                process(some_repositories, all_repositories)
-                print(
-                    f'Processed {len(all_repositories)} of {repository_count} repositories at {datetime.datetime.now():%H:%M:%S}.',
-                    end=' ')
+                    some_repositories = result['data']['search']['nodes']
+                    process(some_repositories, all_repositories)
+                    print(
+                        f'Processed {len(all_repositories)} of {repository_count} repositories at {datetime.datetime.now():%H:%M:%S}.',
+                        end=' ')
 
-                # Keeps the number of stars already processed to restart the process when reaching 1,000 repositories limit
-                if some_repositories:
-                    min_pushed = datetime.datetime.strptime(some_repositories[-1]['pushedAt'], "%Y-%m-%dT%H:%M:%SZ")
+                    # Keeps the number of stars already processed to restart the process when reaching 1,000 repositories limit
+                    if some_repositories:
+                        min_pushed = datetime.datetime.strptime(some_repositories[-1]['pushedAt'], "%Y-%m-%dT%H:%M:%SZ")
 
-                page_info = result['data']['search']['pageInfo']
-                variables['cursor'] = page_info['endCursor']
-                variables['repositoriesPerPage'] = min(100, variables['repositoriesPerPage'] + ai)  # using AIMD
-                ai = min(8, ai * 2)  # slow start
+                    page_info = result['data']['search']['pageInfo']
+                    variables['cursor'] = page_info['endCursor']
+                    variables['repositoriesPerPage'] = min(100, variables['repositoriesPerPage'] + ai)  # using AIMD
+                    ai = min(8, ai * 2)  # slow start
 
-                if not page_info['hasNextPage']:  # We may have finished all repositories or reached the 1,000 limit
-                    if result["data"]["search"]["repositoryCount"] > 1000:  # We reached the 1,000 repositories limit
-                        print(f'We reached the limit of 1,000 repositories.', end=' ')
-                        min_pushed = min_pushed - datetime.timedelta(days=5) # some overlap to accommodate changes in date pushed
-                        variables['filter'] = query_filter(min_pushed)  
-                        variables['cursor'] = None
-                    else:  # We have finished all repositories
-                        print(f'Finished.')
-                        has_next_page = False
+                    if not page_info['hasNextPage']:  # We may have finished all repositories or reached the 1,000 limit
+                        if result["data"]["search"]["repositoryCount"] > 1000:  # We reached the 1,000 repositories limit
+                            print(f'We reached the limit of 1,000 repositories.', end=' ')
+                            min_pushed = min_pushed - datetime.timedelta(days=5) # some overlap to accommodate changes in date pushed
+                            variables['filter'] = query_filter(min_pushed)  
+                            variables['cursor'] = None
+                        else:  # We have finished all repositories
+                            print(f'Finished.')
+                            has_next_page = False
+            except:
+                print('Possibly Incomplete read, trying again.')
+                traceback.print_exc()
 
             time.sleep(1)  # Wait 1 second before next request (https://developer.github.com/v3/#abuse-rate-limits)
     except Exception as e:
         print(e)
+        traceback.print_exc()
     finally:
         save(all_repositories)
 
