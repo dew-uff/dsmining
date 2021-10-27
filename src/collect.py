@@ -103,7 +103,8 @@ def main():
     try:
         repository_count = -1
         has_next_page = True
-        while has_next_page:
+        toprocess_repositories = -1
+        while has_next_page and toprocess_repositories != 0:
             print(f'Trying to retrieve the next {variables["repositoriesPerPage"]} repositories (pushedAt >= {min_pushed})...')
             try:
                 response = requests.post(url="https://api.github.com/graphql", json=request, headers=headers)
@@ -128,6 +129,12 @@ def main():
 
                     some_repositories = result['data']['search']['nodes']
                     process(some_repositories, all_repositories)
+
+                    
+                    #toprocess_repositories: number of repositories whose data were not collected yet
+                    
+                    toprocess_repositories = repository_count - len(all_repositories)
+
                     print(
                         f'Processed {len(all_repositories)} of {repository_count} repositories at {datetime.datetime.now():%H:%M:%S}.',
                         end=' ')
