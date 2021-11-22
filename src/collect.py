@@ -10,7 +10,7 @@ import requests
 from util import PROJECTS_FILE
 
 # Minimum number of stars
-MIN_STARS = 1
+MIN_STARS = 0
 
 # Maximum number of stars (None for no maximum limit)
 MAX_STARS = None
@@ -39,7 +39,8 @@ def save(repositories):
     df.createdAt = pd.to_datetime(df.createdAt, infer_datetime_format=True).dt.tz_localize(None)
     df.pushedAt = pd.to_datetime(df.pushedAt, infer_datetime_format=True).dt.tz_localize(None)
     df.sort_values('stargazers', ascending=False, inplace=True)
-    df.to_excel(PROJECTS_FILE, index=False)
+    #df.to_excel(PROJECTS_FILE, index=False)
+    df.to_excel(PROJECTS_FILE, index=False, engine='xlsxwriter')
     print('Done!')
 
 
@@ -55,9 +56,9 @@ def query_filter(min_pushed=None):
     else:
         stars = f'>={MIN_STARS}'
     if min_pushed:
-        return f'"Data Science" OR "Ciência de Dados" OR "Science des données" OR "Ciencia de los datos" stars:{stars} pushed:>={min_pushed:%Y-%m-%d} sort:updated-asc'
+        return f'"Data Science" OR "Ciência de Dados" OR "Science des données" OR "Ciencia de los datos" pushed:>={min_pushed:%Y-%m-%d} sort:updated-asc'
     else:
-        return f'"Data Science" OR "Ciência de Dados" OR "Science des données" OR "Ciencia de los datos" stars:{stars} sort:updated-asc'
+        return f'"Data Science" OR "Ciência de Dados" OR "Science des données" OR "Ciencia de los datos" sort:updated-asc'
 
 
 def process(some_repositories, all_repositories):
@@ -151,7 +152,7 @@ def main():
                     if not page_info['hasNextPage']:  # We may have finished all repositories or reached the 1,000 limit
                         if result["data"]["search"]["repositoryCount"] > 1000:  # We reached the 1,000 repositories limit
                             print(f'We reached the limit of 1,000 repositories.', end=' ')
-                            min_pushed = min_pushed - datetime.timedelta(days=5) # some overlap to accommodate changes in date pushed
+                            min_pushed = min_pushed - datetime.timedelta(days=1) # some overlap to accommodate changes in date pushed
                             variables['filter'] = query_filter(min_pushed)  
                             variables['cursor'] = None
                         else:  # We have finished all repositories
