@@ -1,0 +1,62 @@
+query characterizeProjects($filter: String!, $repositoriesPerPage: Int, $cursor: String) {
+    search(query: $filter, type: REPOSITORY, first: $repositoriesPerPage, after: $cursor) {
+        pageInfo {
+            endCursor
+            hasNextPage
+        }
+        repositoryCount
+        nodes {
+            ... on Repository {
+                owner {
+                    login
+                }
+                name
+                createdAt
+                pushedAt
+                isMirror
+                diskUsage
+                primaryLanguage {
+                    name
+                }
+                languages {
+                    totalCount
+                }
+                contributors: mentionableUsers {
+                    totalCount
+                }
+                watchers {
+                    totalCount
+                }
+                stargazers {
+                    totalCount
+                }
+                forks: forkCount
+                issues {
+                    totalCount
+                }
+                commits: defaultBranchRef {
+                    target {
+                        ... on Commit {
+                            history {
+                                totalCount
+                            }
+                        }
+                    }
+                }
+                pullRequests {
+                    totalCount
+                }
+                branches: refs(refPrefix: "refs/heads/") {
+                    totalCount
+                }
+                tags: refs(refPrefix: "refs/tags/") {
+                    totalCount
+                }
+                releases {
+                    totalCount
+                }
+                description
+            }
+        }
+    }
+}
