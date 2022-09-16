@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+jupyter = "*"
+matplotlib = "*"
+openpyxl = "*"
+pandas = "1.3.2"
+requests = "*"
+sqlalchemy = "==1.3.23"
+sqlalchemy-utils = "*"
+flask = "==2.0.1"
+flask-sqlalchemy = "*"
+flask-cors = "*"
+numpy = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
