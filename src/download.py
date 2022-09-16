@@ -1,8 +1,6 @@
 import os
 import subprocess
-
 import pandas as pd
-
 from util import ANNOTATED_FILE, REPOS_DIR
 
 

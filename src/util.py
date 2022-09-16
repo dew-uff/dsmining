@@ -27,6 +27,7 @@ AGREEMENT_FILE = RESOURCE_DIR + os.sep + 'agreement.xlsx'
 
 DATABASE_CONFIG_FILE = BASE_DIR + os.sep + 'database.json'
 
+
 def bold(string):
     return '\033[1m' + string + '\033[0m'
 
@@ -41,6 +42,7 @@ def green(string):
 
 def yellow(string):
     return '\033[33m' + string + '\033[0m'
+
 
 def get_database_uri(database_name):
     return BASE_DIR + os.sep + database_name

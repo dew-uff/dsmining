@@ -1,13 +1,12 @@
 import datetime
 import os
 import time
-from pprint import pprint
 import traceback
-
 import pandas as pd
 import requests
-
+from pprint import pprint
 from util import PROJECTS_FILE
+
 
 # Minimum number of stars
 MIN_STARS = 0
@@ -39,7 +38,7 @@ def save(repositories):
     df.createdAt = pd.to_datetime(df.createdAt, infer_datetime_format=True).dt.tz_localize(None)
     df.pushedAt = pd.to_datetime(df.pushedAt, infer_datetime_format=True).dt.tz_localize(None)
     df.sort_values('stargazers', ascending=False, inplace=True)
-    #df.to_excel(PROJECTS_FILE, index=False)
+    # df.to_excel(PROJECTS_FILE, index=False)
     df.to_excel(PROJECTS_FILE, index=False, engine='xlsxwriter')
     print('Done!')
 
@@ -51,14 +50,17 @@ def query_filter(min_pushed=None):
     :return: query filter string compatible to GitHub
     """
 
-    if MAX_STARS:
-        stars = f'{MIN_STARS}..{MAX_STARS}'
-    else:
-        stars = f'>={MIN_STARS}'
+    # if MAX_STARS:
+    #     stars = f'{MIN_STARS}..{MAX_STARS}'
+    # else:
+    #     stars = f'>={MIN_STARS}'
+
     if min_pushed:
-        return f'"Data Science" OR "Ciência de Dados" OR "Science des données" OR "Ciencia de los datos" pushed:>={min_pushed:%Y-%m-%d} sort:updated-asc'
+        return f'"Data Science" OR "Ciência de Dados" OR' \
+               f' "Science des données" OR "Ciencia de los datos" pushed:>={min_pushed:%Y-%m-%d} sort:updated-asc'
     else:
-        return f'"Data Science" OR "Ciência de Dados" OR "Science des données" OR "Ciencia de los datos" sort:updated-asc'
+        return f'"Data Science" OR "Ciência de Dados" OR' \
+               f' "Science des données" OR "Ciencia de los datos" sort:updated-asc'
 
 
 def process(some_repositories, all_repositories):
@@ -131,16 +133,16 @@ def main():
                     some_repositories = result['data']['search']['nodes']
                     process(some_repositories, all_repositories)
 
-                    
-                    #toprocess_repositories: number of repositories whose data were not collected yet
-                    
+                    # toprocess_repositories: number of repositories whose data were not collected yet
+
                     toprocess_repositories = repository_count - len(all_repositories)
 
                     print(
                         f'Processed {len(all_repositories)} of {repository_count} repositories at {datetime.datetime.now():%H:%M:%S}.',
                         end=' ')
 
-                    # Keeps the number of stars already processed to restart the process when reaching 1,000 repositories limit
+                    # Keeps the number of stars already processed to restart the process
+                    # when reaching 1,000 repositories limit
                     if some_repositories:
                         min_pushed = datetime.datetime.strptime(some_repositories[-1]['pushedAt'], "%Y-%m-%dT%H:%M:%SZ")
 
@@ -150,10 +152,12 @@ def main():
                     ai = min(8, ai * 2)  # slow start
 
                     if not page_info['hasNextPage']:  # We may have finished all repositories or reached the 1,000 limit
-                        if result["data"]["search"]["repositoryCount"] > 1000:  # We reached the 1,000 repositories limit
+                        if result["data"]["search"]["repositoryCount"] > 1000:
+                            # We reached the 1,000 repositories limit
                             print(f'We reached the limit of 1,000 repositories.', end=' ')
-                            min_pushed = min_pushed - datetime.timedelta(days=1) # some overlap to accommodate changes in date pushed
-                            variables['filter'] = query_filter(min_pushed)  
+                            # some overlap to accommodate changes in date pushed
+                            min_pushed = min_pushed - datetime.timedelta(days=1)
+                            variables['filter'] = query_filter(min_pushed)
                             variables['cursor'] = None
                         else:  # We have finished all repositories
                             print(f'Finished.')

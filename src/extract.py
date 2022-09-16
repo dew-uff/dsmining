@@ -1,10 +1,8 @@
 import os
 import subprocess
-from time import time
-
 import pandas as pd
-
 import database as db
+from time import time
 from sqlalchemy.orm import load_only, selectinload
 from util import ANNOTATED_FILE, HEURISTICS_DIR, REPOS_DIR, red, green, yellow, CODE_DEBUG
 
