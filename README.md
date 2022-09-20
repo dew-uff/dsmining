@@ -4,19 +4,24 @@
 Mining Data Science projects from public repositories to identify patterns and behaviors
 
 ### Script Workflow
-| Name          | Goal                                       |
-| ------------- |--------------------------------------------|  
-| collect.py    | Queries projects' metadata from GitHub     | 
-| filter.ipynb  | Applies additional filters                 |
-| analyze.ipynb | Produces statistics about the final corpus | 
-| download.py   | Clones all repositories in the corpus      |
-| extract.py    | Runs git grep and populates the databese   |
+| Name                      | Goal                                                    |
+| --------------------------|---------------------------------------------------------|  
+| collect.py                | Queries projects' metadata from GitHub with API filters | 
+| filter.ipynb              | Applies additional filters                              |
+| analyze.ipynb             | Produces statistics about the final corpus              | 
+| download.py               | Clones all repositories in the corpus                   |
+| extract.py                | Runs git grep and populates the database                |
+| jupyter_libraries.py        | Analyzes Jupyter Notebooks libraries                    |
+| jupyter_data_entries.py   | Analyzes Jupyter Notebooks data entries                 |
+| python_libraries.py       | Analyzes Python libraries                               |
+| python_data_entries.py    | Analyzes Python data entries                            |
 
 ## Corpus
 ### Applied Filters
 The projects that had the following requirements were collected from Github:
-- More than 1 commit
+- At least 1 language, 1 commit and 1 contributor
 - More than 1 day between first and last commit
+- Is not a course project
 
 ## Requirements
 The project uses Python 3.7+.  For managing packages and libraries it uses Pipenv and Pipfile.
