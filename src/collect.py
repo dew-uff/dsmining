@@ -5,7 +5,7 @@ import traceback
 import pandas as pd
 import requests
 from pprint import pprint
-from util import PROJECTS_FILE
+from config import PROJECTS_FILE
 
 
 # Minimum number of stars

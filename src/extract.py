@@ -4,7 +4,7 @@ import pandas as pd
 import database as db
 from time import time
 from sqlalchemy.orm import load_only, selectinload
-from util import ANNOTATED_FILE, HEURISTICS_DIR, REPOS_DIR, red, green, yellow, CODE_DEBUG
+from config import ANNOTATED_FILE, REPOS_DIR
 
 # Git rev-parse command
 REVPARSE_COMMAND = [
@@ -210,59 +210,12 @@ def main():
     db.connect()
 
     print(f'Loading projects from {ANNOTATED_FILE}.')
-    projects = get_or_create_projects()
 
-    print(f'\nLoading heuristics from {HEURISTICS_DIR}.')
-    labels = get_or_create_labels()
+    # populates database here
 
-    # Indexing executions by label heuristic and project version.
-    executions = index_executions(labels)
+    commit()
 
-    status = {
-        'Success': 0,
-        'Skipped': 0,
-        'Repository not found': 0,
-        'Git error': 0,
-        'Total': len(labels) * len(projects)
-    }
-
-    print(f'\nProcessing {len(labels)} heuristics over {len(projects)} projects.')
-    for i, label in enumerate(labels):
-        heuristic = label.heuristic
-        for j, project in enumerate(projects):
-            version = project.versions[0]  # TODO: fix this to deal with multiple versions
-
-            # Print progress information
-            progress = '{:.2%}'.format((i * len(projects) + (j + 1)) / status['Total'])
-            print(f'[{progress}] Searching for {label.name} in {project.owner}/{project.name}:', end=' ')
-
-            # Try to get a previous execution
-            execution = executions.get((heuristic, version), None)
-            if not execution:
-                try:
-                    os.chdir(REPOS_DIR + os.sep + project.owner + os.sep + project.name)
-                    cmd = GREP_COMMAND + [HEURISTICS_DIR + os.sep + label.type + os.sep + label.name + '.txt']
-                    p = subprocess.run(cmd, capture_output=True)
-                    if p.stderr:
-                        raise subprocess.CalledProcessError(p.returncode, cmd, p.stdout, p.stderr)
-                    db.create(db.Execution, output=p.stdout.decode(errors='replace').replace('\x00', '\uFFFD'),
-                              version=version, heuristic=heuristic, isValidated=False, isAccepted=False)
-                    print(green('ok.'))
-                    status['Success'] += 1
-                except NotADirectoryError:
-                    print(red('repository not found.'))
-                    status['Repository not found'] += 1
-                except subprocess.CalledProcessError as ex:
-                    print(red('Git error.'))
-                    status['Git error'] += 1
-                    if CODE_DEBUG:
-                        print(ex.stderr)
-            else:  # Execution already exists
-                print(yellow('already done.'))
-                status['Skipped'] += 1
-        commit()
-
-    print_results(status)
+    # print_results(status)
     db.close()
 
 
