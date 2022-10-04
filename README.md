@@ -10,7 +10,7 @@ Mining Data Science projects from public repositories to identify patterns and b
 | filter.ipynb              | Applies additional filters                              |
 | analyze.ipynb             | Produces statistics about the final corpus              | 
 | download.py               | Clones all repositories in the corpus                   |
-| extract.py                | Runs git grep and populates the database                |
+| extract.py                | Populates the database                |
 | jupyter_libraries.py        | Analyzes Jupyter Notebooks libraries                    |
 | jupyter_data_entries.py   | Analyzes Jupyter Notebooks data entries                 |
 | python_libraries.py       | Analyzes Python libraries                               |
