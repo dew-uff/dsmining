@@ -15,6 +15,11 @@ flask = "==2.0.1"
 flask-sqlalchemy = "*"
 flask-cors = "*"
 numpy = "*"
+matplotlib-venn = "*"
+seaborn = "*"
+dask = "*"
+pathlib2 = "*"
+timeout-decorator = "*"
 
 [dev-packages]
 
