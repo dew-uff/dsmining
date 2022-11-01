@@ -2,5 +2,15 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/26/3fb1ddca041867ee1446d47065869dfab2df21" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/2d/eb0879b47c5a6153876f851f5bf0c01181adb3" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/7c/8102789f79e0eaa92c7dff9c7f7fc443a3735f" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/8d/1888c04152616084fbc00a6e51241424c5aa9e" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/8e/3cb7dbc856becaff503a49f636d04d28043c2a" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/9b/82403370ec631e5de34728039ada592ada87d3" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/ba/5742ac0940570e114b391220ab81685452720d" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/ca/ad0d794a6fe5dadb557a5821a36a0f513c0ef1" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/e3/4169ad1c3e0995d6d5fa8b236e0741543b4354" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/mnt/jupyter/github/content/e8/8fca76db47514227c29ec761c60c3936eb7235" vcs="Git" />
   </component>
 </project>

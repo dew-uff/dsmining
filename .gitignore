@@ -201,3 +201,7 @@ dbmining.sqlite
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+
+src/jupyter
+src/mnt

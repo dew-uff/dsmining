@@ -12,24 +12,21 @@ from sqlalchemy import ForeignKeyConstraint
 
 import config
 from utils import version_string_to_list, ext_split
-
-# if not config.IS_SQLITE:
-from sqlalchemy.dialects.postgresql import BIGINT as BigInt
-# else:
-#     BigInt = Integer
+from config import DB_CONNECTION
 
 
+BigInt = Integer
 Base = declarative_base()  # pylint: disable=invalid-name
 
 
 def one_to_many(table, backref):
     """Create one to many relationship"""
-    return relationship(table, back_populates=backref, lazy="dynamic", viewonly=True)
+    return relationship(table, back_populates=backref, lazy="dynamic", viewonly=True, sync_backref=False)
 
 
 def many_to_one(table, backref):
     """Create many to one relationship"""
-    return relationship(table, back_populates=backref, viewonly=True)
+    return relationship(table, back_populates=backref, viewonly=True, sync_backref=False)
 
 
 def force_encoded_string_output(func):
@@ -1677,18 +1674,12 @@ class NotebookName(Base):
 
 
 @contextmanager
-def connect(echo=False, config=config):
+def connect(echo=False):
     """Creates a context with an open SQLAlchemy session."""
-    engine = create_engine(
-        'sqlite:///dbmining.sqlite',
-        convert_unicode=True,
-        echo=echo
-    )
+    engine = create_engine(DB_CONNECTION, convert_unicode=True, echo=echo)
     Base.metadata.create_all(engine)
-    connection = engine.connect()
-    db_session = scoped_session(
-        sessionmaker(autocommit=False, autoflush=True, bind=engine)
-    )
+    connection = engine.raw_connection()
+    db_session = scoped_session(sessionmaker(autocommit=False, autoflush=True, bind=engine))
     yield db_session
     db_session.close()  # pylint: disable=E1101
     connection.close()

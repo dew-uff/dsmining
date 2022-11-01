@@ -20,6 +20,8 @@ seaborn = "*"
 dask = "*"
 pathlib2 = "*"
 timeout-decorator = "*"
+pygithub = "*"
+future = "*"
 
 [dev-packages]
 
