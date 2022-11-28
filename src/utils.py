@@ -189,12 +189,9 @@ def best_match(version, versions):
         position = -1
     return specific_match(versions[keys[index]], position)
 
+
 def get_pyexec(version, versions):
-    return str(
-        config.ANACONDA_PATH / "envs"
-        / best_match(version, versions)
-        / "bin" / "python"
-    )
+    return f"{config.PYTHON_PATH}/bin/python{best_match(version, versions)}"
 
 
 def invoke(program, *args):

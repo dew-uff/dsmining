@@ -1678,7 +1678,7 @@ def connect(echo=False):
     """Creates a context with an open SQLAlchemy session."""
     engine = create_engine(DB_CONNECTION, convert_unicode=True, echo=echo)
     Base.metadata.create_all(engine)
-    connection = engine.raw_connection()
+    connection = engine.connect()
     db_session = scoped_session(sessionmaker(autocommit=False, autoflush=True, bind=engine))
     yield db_session
     db_session.close()  # pylint: disable=E1101

@@ -241,9 +241,9 @@ def savefig(name, width=8, height=6):
     yield
     fig = plt.gcf()
     fig.set_size_inches(width, height)
-    fig.savefig("outputs/{}.svg".format(name), bbox_inches='tight')
-    fig.savefig("outputs/{}.pdf".format(name), bbox_inches='tight')
-    fig.savefig("outputs/{}.png".format(name), bbox_inches='tight')
+    fig.savefig("../outputs/{}.svg".format(name), bbox_inches='tight')
+    fig.savefig("../outputs/{}.pdf".format(name), bbox_inches='tight')
+    fig.savefig("../outputs/{}.png".format(name), bbox_inches='tight')
 
 
 @contextmanager

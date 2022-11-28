@@ -29,6 +29,8 @@ The project uses Python 3.7+.  For managing packages and libraries it uses Pipen
 To install Pipenv run (if it is not already installed): ``~/dsmining$ python -m pip install pipenv``.
 And then run ``~/dsmining$ python -m pip install pipenv`` to prepare the environment.
 
+For compressing files install lbzip2 ``sudo apt-get install -y lbzip2``
+
 ## References
 - [DB Mining](https://github.com/gems-uff/db-mining)
 - [Script Analysis](https://github.com/dew-uff/script-analysis)
