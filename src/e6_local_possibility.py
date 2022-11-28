@@ -1,12 +1,11 @@
 """Load markdown features"""
 import argparse
 import os
-import sys
 
 import config
 import consts
 
-from database import CellModule, RepositoryFile, connect
+from db.database import CellModule, RepositoryFile, connect
 from utils import vprint, StatusLogger, check_exit, savepid
 
 

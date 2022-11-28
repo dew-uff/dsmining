@@ -6,10 +6,9 @@ import os
 import config
 import consts
 
-import shutil
 import subprocess
-from database import Cell, Notebook, Repository, connect
-from utils import timeout, TimeoutError, vprint, StatusLogger, mount_basedir
+from db.database import Repository, connect
+from utils import vprint, StatusLogger, mount_basedir
 from utils import check_exit, savepid
 
 

@@ -11,13 +11,12 @@ import consts
 
 from contextlib import contextmanager
 from collections import Counter, OrderedDict, defaultdict
-from functools import wraps
 from itertools import groupby
 
 from future.utils.surrogateescape import register_surrogateescape
 
-from database import Cell, CellFeature, CellModule, CellName, CodeAnalysis, connect
-from database import RepositoryFile
+from db.database import Cell, CellFeature, CellModule, CellName, CodeAnalysis, connect
+from db.database import RepositoryFile
 from utils import vprint, StatusLogger, check_exit, savepid, to_unicode
 from utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
 from utils import mount_basedir, ignore_surrogates

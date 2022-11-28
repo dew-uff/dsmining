@@ -118,13 +118,13 @@ def base_dir_exists(out=None, err=None):
     exists = True
     if config.MOUNT_BASE:
         try:
-            exists = config.BASE_DIR.exists()
+            exists = config.JUPYTER_FILE.exists()
         except OSError as e:
             if e.errno == 107 and config.UMOUNT_BASE:
                 subprocess.call(
                     config.UMOUNT_BASE, shell=True, stdout=out, stderr=err
                 )
-            exists = config.BASE_DIR.exists()
+            exists = config.JUPYTER_FILE.exists()
     return exists
 
 
@@ -137,7 +137,7 @@ def mount_umount(out=None, err=None):
             )
         yield
     finally:
-        if config.BASE_DIR.exists() and config.UMOUNT_BASE:
+        if config.JUPYTER_FILE.exists() and config.UMOUNT_BASE:
             subprocess.call(
                 config.UMOUNT_BASE, shell=True, stdout=out, stderr=err
             )

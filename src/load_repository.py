@@ -10,7 +10,7 @@ from future.moves.urllib.parse import urlparse
 
 import consts
 import config
-from database import Repository, connect
+from db.database import Repository, connect
 from utils import find_files, vprint, join_paths, find_files_in_path
 from utils import mount_basedir, savepid
 
@@ -58,7 +58,7 @@ def git_output(*args, cwd=None):
 
 def clone(part, end, repo, remote, branch=None, commit=None):
     """Clone git repository into a proper directory"""
-    part_dir = config.BASE_DIR / "content" / part
+    part_dir = config.JUPYTER_REPOS_DIR / "content" / part
     part_dir.mkdir(parents=True, exist_ok=True)
     full_dir = part_dir / end
     if (full_dir.exists() and

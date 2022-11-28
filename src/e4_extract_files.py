@@ -1,15 +1,12 @@
 """Load markdown features"""
 import argparse
 import os
-import sys
-import ast
 import tarfile
-import re
 
 import config
 import consts
-from database import Repository, RepositoryFile, connect
-from utils import vprint, StatusLogger, check_exit, savepid, to_unicode
+from db.database import Repository, RepositoryFile, connect
+from utils import vprint, StatusLogger, check_exit, savepid
 from utils import mount_basedir, ignore_surrogates
 from future.utils.surrogateescape import register_surrogateescape
 

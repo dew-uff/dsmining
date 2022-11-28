@@ -7,9 +7,7 @@ from IPython.core.interactiveshell import InteractiveShell
 
 import config
 import consts
-import shutil
-import subprocess
-from database import Cell, Notebook, Repository, connect
+from db.database import Cell, Notebook, Repository, connect
 from utils import timeout, TimeoutError, vprint, StatusLogger, mount_basedir
 from utils import check_exit, savepid, SafeSession
 from unzip_repositories import unzip_repository

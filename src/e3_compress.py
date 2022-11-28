@@ -5,7 +5,7 @@ import config
 import os
 
 import consts
-from database import Repository, Notebook, connect
+from db.database import Repository, connect
 from utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
 
 

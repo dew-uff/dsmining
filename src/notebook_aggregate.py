@@ -1,16 +1,15 @@
 """Load markdown features"""
 import argparse
 import os
-import sys
 
 import config
 import consts
 
 from collections import Counter, OrderedDict
 
-from database import Notebook, connect, NotebookMarkdown, MarkdownFeature, Cell
-from database import NotebookAST, NotebookModule, NotebookFeature, NotebookName
-from database import CodeAnalysis, CellModule, CellFeature, CellName
+from db.database import Notebook, connect, NotebookMarkdown, MarkdownFeature, Cell
+from db.database import NotebookAST, NotebookModule, NotebookFeature, NotebookName
+from db.database import CodeAnalysis, CellModule, CellFeature, CellName
 from utils import vprint, StatusLogger, check_exit, savepid
 
 IGNORE_COLUMNS = {

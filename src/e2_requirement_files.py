@@ -6,7 +6,7 @@ import chardet
 import config
 import consts
 
-from database import RequirementFile, Repository, connect
+from db.database import RequirementFile, Repository, connect
 from utils import vprint, join_paths, StatusLogger, check_exit, savepid
 from utils import find_files_in_path, find_files_in_zip, mount_basedir
 from config import Path

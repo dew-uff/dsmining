@@ -5,7 +5,7 @@ import traceback
 import pandas as pd
 import requests
 from pprint import pprint
-from config import PROJECTS_FILE
+from config import REPOSITORIES_FILE
 
 
 # Minimum number of stars
@@ -17,9 +17,9 @@ MAX_STARS = None
 
 def load():
     repositories = dict()
-    print(f'Loading repositories from {PROJECTS_FILE}...', end=' ')
+    print(f'Loading repositories from {REPOSITORIES_FILE}...', end=' ')
     try:
-        df = pd.read_excel(PROJECTS_FILE, keep_default_na=False)
+        df = pd.read_excel(REPOSITORIES_FILE, keep_default_na=False)
         for i, row in df.iterrows():
             repo = row.to_dict()
             repositories[repo['owner'] + '/' + repo['name']] = repo
@@ -31,7 +31,7 @@ def load():
 
 def save(repositories):
     repositories.update(load())
-    print(f'Saving repositories to {PROJECTS_FILE}...', end=' ')
+    print(f'Saving repositories to {REPOSITORIES_FILE}...', end=' ')
     df = pd.DataFrame(repositories.values())
     df.loc[df.description.str.contains('(?i)\\bmirror\\b',
                                        na=False), 'isMirror'] = True  # Check 'mirror' in the description
@@ -39,7 +39,7 @@ def save(repositories):
     df.pushedAt = pd.to_datetime(df.pushedAt, infer_datetime_format=True).dt.tz_localize(None)
     df.sort_values('stargazers', ascending=False, inplace=True)
     # df.to_excel(PROJECTS_FILE, index=False)
-    df.to_excel(PROJECTS_FILE, index=False, engine='xlsxwriter')
+    df.to_excel(REPOSITORIES_FILE, index=False, engine='xlsxwriter')
     print('Done!')
 
 
