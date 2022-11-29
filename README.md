@@ -4,17 +4,20 @@
 Mining Data Science projects from public repositories to identify patterns and behaviors
 
 ### Script Workflow
-| Name                      | Goal                                                    |
-| --------------------------|---------------------------------------------------------|  
-| collect.py                | Queries projects' metadata from GitHub with API filters | 
-| filter.ipynb              | Applies additional filters                              |
-| analyze.ipynb             | Produces statistics about the final corpus              | 
-| download.py               | Clones all repositories in the corpus                   |
-| extract.py                | Populates the database                |
-| jupyter_libraries.py        | Analyzes Jupyter Notebooks libraries                    |
-| jupyter_data_entries.py   | Analyzes Jupyter Notebooks data entries                 |
-| python_libraries.py       | Analyzes Python libraries                               |
-| python_data_entries.py    | Analyzes Python data entries                            |
+| Scripts                      | Goal                                                       |
+| -----------------------------|---------------------------------------------------------   |  
+| s1_collect.py                | Queries projects' metadata from GitHub with API filters    | 
+| s2_filter.ipynb              | Applies additional filters                                 |
+| s3_extract.py                | Extracts data from repositories and populates the database |
+
+| Analysis Scripts             | Goal                                                  |
+| -----------------------------|------------------------------------------------------ |  
+| a1_analyze_filtered.ipynb    | Analyzes filtred repositories collected from Github   |
+| a2_jupyter_modules.py        | Analyzes Jupyter Notebooks modules                    |
+| a3_jupyter_data_entries.py   | Analyzes Jupyter Notebooks data entries               |
+| a4_python_modules.py         | Analyzes Python libraries                             |
+| a5_python_data_entries.py    | Analyzes Python data entries                          |
+
 
 ## Corpus
 ### Applied Filters
