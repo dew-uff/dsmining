@@ -84,7 +84,6 @@ class Repository(Base):
     notebooks_objs = one_to_many("Notebook", "repository_obj")
     cell_objs = one_to_many("Cell", "repository_obj")
     requirement_files_objs = one_to_many("RequirementFile", "repository_obj")
-    execution_objs = one_to_many("Execution", "repository_obj")
     markdown_features_objs = one_to_many("MarkdownFeature", "repository_obj")
     code_analyses_objs = one_to_many("CodeAnalysis", "repository_obj")
     cell_modules_objs = one_to_many("CellModule", "repository_obj")
@@ -215,7 +214,6 @@ class Notebook(Base):
 
     repository_obj = many_to_one("Repository", "notebooks_objs")
     cell_objs = one_to_many("Cell", "notebook_obj")
-    execution_objs = one_to_many("Execution", "notebook_obj")
     markdown_features_objs = one_to_many("MarkdownFeature", "notebook_obj")
     code_analyses_objs = one_to_many("CodeAnalysis", "notebook_obj")
     cell_modules_objs = one_to_many("CellModule", "notebook_obj")
@@ -329,49 +327,6 @@ class RequirementFile(Base):
     @force_encoded_string_output
     def __repr__(self):
         return u"<RequirementFile({0.repository_id}/{0.id}:{0.name})>".format(
-            self
-        )
-
-
-class Execution(Base):
-    """Cell Table"""
-    # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'executions'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['notebook_id'],
-            ['notebooks.id']
-        ),
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    notebook_id = Column(Integer)
-    mode = Column(Integer)
-    # 1: cellorder
-    # 2: dependencies
-    # 4: anaconda
-    reason = Column(String)
-    msg = Column(String)
-    diff = Column(String)
-    cell = Column(Integer)  # last executed cell index in notebook
-    count = Column(Integer)  # number of executed cells
-    diff_count = Column(Integer)
-    timeout = Column(Integer)
-    duration = Column(Float)
-    processed = Column(Integer, default=0)
-    skip = Column(Integer, default=0)
-    repository_id = Column(Integer)
-
-    repository_obj = many_to_one("Repository", "execution_objs")
-    notebook_obj = many_to_one("Notebook", "execution_objs")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        return u"<Execution({0.repository_id}/{0.notebook_id}/{0.id}:m{0.mode})>".format(
             self
         )
 

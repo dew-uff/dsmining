@@ -23,6 +23,7 @@ timeout-decorator = "*"
 pygithub = "*"
 future = "*"
 chardet = "*"
+IPython = "*"
 
 [dev-packages]
 
