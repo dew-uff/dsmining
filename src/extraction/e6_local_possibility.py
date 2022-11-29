@@ -1,12 +1,11 @@
 """Load markdown features"""
 import argparse
 import os
-
 import config
 import consts
 
 from db.database import CellModule, RepositoryFile, connect
-from utils import vprint, StatusLogger, check_exit, savepid
+from src.utils import vprint, StatusLogger, check_exit, savepid
 
 
 def process_cell_module(session, cell_module, archive):
@@ -32,7 +31,6 @@ def process_cell_module(session, cell_module, archive):
     split = module_name.split('/')
     if len(split) > 2:
         modes.append([split[-1], 1, "module name 1"])
-
 
     for name in archive:
         for modname, value, result in modes:

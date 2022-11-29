@@ -7,8 +7,7 @@ import os
 
 from future.moves.urllib.parse import urlparse
 
-
-import consts
+from src.extraction import consts
 import config
 from db.database import Repository, connect
 from utils import find_files, vprint, join_paths, find_files_in_path

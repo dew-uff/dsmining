@@ -5,22 +5,18 @@ import sys
 import ast
 import tarfile
 import re
-
 import config
 import consts
 
 from contextlib import contextmanager
 from collections import Counter, OrderedDict, defaultdict
 from itertools import groupby
-
-from future.utils.surrogateescape import register_surrogateescape
-
 from db.database import Cell, CellFeature, CellModule, CellName, CodeAnalysis, connect
 from db.database import RepositoryFile
-from utils import vprint, StatusLogger, check_exit, savepid, to_unicode
-from utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
-from utils import mount_basedir, ignore_surrogates
-
+from src.utils import vprint, StatusLogger, check_exit, savepid, to_unicode
+from src.utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
+from src.utils import mount_basedir, ignore_surrogates
+from future.utils.surrogateescape import register_surrogateescape
 from e4_extract_files import process_repository
 
 
@@ -140,7 +136,7 @@ class CellVisitor(ast.NodeVisitor):
             self.counter["ast_" + nodetype] = 0
         for nodetype in others:
             self.counter["ast_" + nodetype] = 0
-        #self.counter["------"] = 0
+        # self.counter["------"] = 0
         self.counter["ast_others"] = ""
 
         self.statements = set(statements)
@@ -424,6 +420,7 @@ def extract_features(text, checker):
         visitor.names
     )
 
+
 def process_code_cell(
     session, repository_id, notebook_id, cell, checker,
     skip_if_error=consts.C_PROCESS_ERROR,
@@ -589,7 +586,7 @@ def load_archives(session, repository):
             vprint(1, "Failed to load repository. Skipping")
             return True, None
 
-    tarzip =  {
+    tarzip = {
         fil.path for fil in session.query(RepositoryFile).filter(
             RepositoryFile.repository_id == repository.id
         )
@@ -657,7 +654,6 @@ def load_notebook(
     return skip_repo, skip_notebook, notebook_id, archives, checker
 
 
-
 def apply(
     session, status, dispatches, selected_notebooks,
     skip_if_error, skip_if_syntaxerror, skip_if_timeout,
@@ -717,7 +713,6 @@ def apply(
         skip_notebook = False
         notebook_id = None
         checker = None
-
 
         for cell in query:
             if check_exit(check):

@@ -3,10 +3,10 @@ import argparse
 import shutil
 import config
 import os
-
 import consts
+
 from db.database import Repository, connect
-from utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
+from src.utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
 
 
 def apply(session, status, keep, count, interval, reverse, check):
@@ -112,6 +112,7 @@ def main():
             args.reverse,
             set(args.check)
         )
+
 
 if __name__ == "__main__":
     main()

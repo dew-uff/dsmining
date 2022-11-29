@@ -7,9 +7,8 @@ import config
 import consts
 
 from db.database import RequirementFile, Repository, connect
-from utils import vprint, join_paths, StatusLogger, check_exit, savepid
-from utils import find_files_in_path, find_files_in_zip, mount_basedir
-from config import Path
+from src.utils import vprint, join_paths, StatusLogger, check_exit, savepid
+from src.utils import find_files_in_path, find_files_in_zip, mount_basedir
 
 
 def process_requirement_file(session, repository, reqformat, skip_if_error=consts.R_REQUIREMENTS_ERROR):
@@ -28,8 +27,8 @@ def process_requirement_file(session, repository, reqformat, skip_if_error=const
             session.add(repository)
             vprint(1, "Failed to load requirement {} due <repository not found>".format(reqformat))
             return False
-        tarzip =  tarfile.open(str(repository.zip_path))
-        zip_path = Path(repository.hash_dir2)
+        tarzip = tarfile.open(str(repository.zip_path))
+        zip_path = config.Path(repository.hash_dir2)
     finished = True
     req_param = MAP[reqformat] + "_names"
     for name in getattr(repository, req_param):
@@ -90,7 +89,7 @@ def collect_requirements(session, repository):
         vprint(2, "using zip")
         with tarfile.open(str(repository.zip_path)) as tarzip:
             setups, requirements, pipfiles, pipfile_locks = find_files_in_zip(
-                tarzip, Path(repository.hash_dir2), [
+                tarzip, config.Path(repository.hash_dir2), [
                     "setup.py", "requirements.txt", "Pipfile", "Pipfile.lock"
                 ]
             )
@@ -102,7 +101,7 @@ def collect_requirements(session, repository):
 
     if changed:
         repository.setups_count = len(setups)
-        repository.requirements_count=len(requirements)
+        repository.requirements_count = len(requirements)
         repository.pipfiles_count = len(pipfiles)
         repository.pipfile_locks_count = len(pipfile_locks)
 
@@ -131,15 +130,14 @@ def process_repository(session, repository, skip_if_error=consts.R_REQUIREMENTS_
     finished &= process_requirement_file(session, repository, "Pipfile.lock", skip_if_error)
 
     if finished and not repository.processed & skip_if_error:
-
         repository.processed |= consts.R_REQUIREMENTS_OK
         session.add(repository)
     return "done"
 
 
 def apply(
-    session, status, selected_repositories, skip_if_error,
-    count, interval, reverse, check
+        session, status, selected_repositories, skip_if_error,
+        count, interval, reverse, check
 ):
     while selected_repositories:
         filters = [
@@ -208,7 +206,6 @@ def main():
                         default={'all', script_name, script_name + '.py'},
                         help='check name in .exit')
 
-
     args = parser.parse_args()
     config.VERBOSE = args.verbose
     status = None
@@ -221,7 +218,7 @@ def main():
             session,
             status,
             args.repositories or True,
-             0 if args.retry_errors else consts.R_REQUIREMENTS_ERROR,
+            0 if args.retry_errors else consts.R_REQUIREMENTS_ERROR,
             args.count,
             args.interval,
             args.reverse,

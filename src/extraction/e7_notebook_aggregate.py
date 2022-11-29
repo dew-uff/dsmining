@@ -1,16 +1,14 @@
 """Load markdown features"""
 import argparse
 import os
-
 import config
 import consts
 
 from collections import Counter, OrderedDict
-
 from db.database import Notebook, connect, NotebookMarkdown, MarkdownFeature, Cell
 from db.database import NotebookAST, NotebookModule, NotebookFeature, NotebookName
 from db.database import CodeAnalysis, CellModule, CellFeature, CellName
-from utils import vprint, StatusLogger, check_exit, savepid
+from src.utils import vprint, StatusLogger, check_exit, savepid
 
 IGNORE_COLUMNS = {
     "id", "repository_id", "notebook_id", "cell_id", "index",
@@ -63,7 +61,7 @@ def calculate_markdown(session, notebook):
     markdown_languages = Counter()
     query = (
         notebook.markdown_features_objs
-        #.order_by(MarkdownFeature.index.asc())
+        # .order_by(MarkdownFeature.index.asc())
     )
     for feature in query:
         agg_markdown["cell_count"] += 1
@@ -86,7 +84,7 @@ def calculate_ast(session, notebook):
     ast_others = []
     query = (
         notebook.code_analyses_objs
-        #.order_by(CodeAnalysis.index.asc())
+        # .order_by(CodeAnalysis.index.asc())
     )
     for ast in query:
         agg_ast["cell_count"] += 1
@@ -108,6 +106,7 @@ def calculate_modules(session, notebook):
     }
     temp_agg["index"] = OrderedDict()
     others = []
+
     def add_key(key, module):
         if key in temp_agg:
             temp_agg[key][module.module_name] = 1

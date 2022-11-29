@@ -4,12 +4,12 @@ import os
 
 
 import config
-import consts
+from src.extraction import consts
 
 import subprocess
 from db.database import Repository, connect
-from utils import vprint, StatusLogger, mount_basedir
-from utils import check_exit, savepid
+from src.utils import vprint, StatusLogger, mount_basedir
+from src.utils import check_exit, savepid
 
 
 def unzip_repository(session, repository):

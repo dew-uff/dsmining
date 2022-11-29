@@ -2,12 +2,12 @@
 import argparse
 import os
 import tarfile
-
 import config
 import consts
+
 from db.database import Repository, RepositoryFile, connect
-from utils import vprint, StatusLogger, check_exit, savepid
-from utils import mount_basedir, ignore_surrogates
+from src.utils import vprint, StatusLogger, check_exit, savepid
+from src.utils import mount_basedir, ignore_surrogates
 from future.utils.surrogateescape import register_surrogateescape
 
 

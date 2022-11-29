@@ -10,6 +10,7 @@ else:
 # Github Credentials
 GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+MACHINE = os.environ.get("GITHUB_USERNAME")
 
 # Directories
 BASE = os.path.dirname(os.path.realpath(__file__))
@@ -32,19 +33,10 @@ PYTHON_REPOS_FILE = RESOURCE_DIR + os.sep + 'python_repositories.xlsx'
 # Database
 DB_CONNECTION = f'sqlite:////{DB_DIR}{os.sep}dbmining.sqlite'
 
-
-
-# Directories
-MACHINE = 'db'
-
-
-
-# Config
+# Configs
 VERBOSE = 5
-FIRST_DATE = dateutil.parser.parse("2022-10-20")
 MAX_SIZE = 10.0
-
-# Additional Config
+FIRST_DATE = dateutil.parser.parse("2022-10-20")
 COMPRESSION = "lbzip2"
 PYTHON_PATH = 'usr'
 MOUNT_BASE = os.environ.get("JUP_MOUNT_BASE", "")
