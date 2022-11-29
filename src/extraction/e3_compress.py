@@ -6,7 +6,7 @@ import os
 import consts
 
 from db.database import Repository, connect
-from src.utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
+from src.helpers.h1_utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
 
 
 def apply(session, status, keep, count, interval, reverse, check):

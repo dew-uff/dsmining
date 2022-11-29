@@ -7,8 +7,8 @@ import config
 import consts
 
 from db.database import RequirementFile, Repository, connect
-from src.utils import vprint, join_paths, StatusLogger, check_exit, savepid
-from src.utils import find_files_in_path, find_files_in_zip, mount_basedir
+from src.helpers.h1_utils import vprint, join_paths, StatusLogger, check_exit, savepid
+from src.helpers.h1_utils import find_files_in_path, find_files_in_zip, mount_basedir
 
 
 def process_requirement_file(session, repository, reqformat, skip_if_error=consts.R_REQUIREMENTS_ERROR):

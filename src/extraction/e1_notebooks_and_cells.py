@@ -8,9 +8,9 @@ import consts
 
 from IPython.core.interactiveshell import InteractiveShell
 from db.database import Cell, Notebook, Repository, connect
-from src.utils import timeout, TimeoutError, vprint, StatusLogger, mount_basedir
-from src.utils import check_exit, savepid, SafeSession
-from src.unzip_repositories import unzip_repository
+from src.helpers.h1_utils import timeout, TimeoutError, vprint, StatusLogger, mount_basedir
+from src.helpers.h1_utils import check_exit, savepid, SafeSession
+from src.helpers.h3_unzip_repositories import unzip_repository
 
 
 def cell_output_formats(cell):

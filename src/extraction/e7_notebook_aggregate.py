@@ -8,7 +8,7 @@ from collections import Counter, OrderedDict
 from db.database import Notebook, connect, NotebookMarkdown, MarkdownFeature, Cell
 from db.database import NotebookAST, NotebookModule, NotebookFeature, NotebookName
 from db.database import CodeAnalysis, CellModule, CellFeature, CellName
-from src.utils import vprint, StatusLogger, check_exit, savepid
+from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
 
 IGNORE_COLUMNS = {
     "id", "repository_id", "notebook_id", "cell_id", "index",

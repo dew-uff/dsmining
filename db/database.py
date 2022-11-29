@@ -11,7 +11,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from sqlalchemy import ForeignKeyConstraint
 
 import config as config
-from src.utils import version_string_to_list, ext_split
+from src.helpers.h1_utils import version_string_to_list, ext_split
 from config import DB_CONNECTION
 
 

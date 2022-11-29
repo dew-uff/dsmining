@@ -6,8 +6,8 @@ import config
 import consts
 
 from db.database import Repository, RepositoryFile, connect
-from src.utils import vprint, StatusLogger, check_exit, savepid
-from src.utils import mount_basedir, ignore_surrogates
+from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
+from src.helpers.h1_utils import mount_basedir, ignore_surrogates
 from future.utils.surrogateescape import register_surrogateescape
 
 

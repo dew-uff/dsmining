@@ -5,7 +5,7 @@ import config
 import consts
 
 from db.database import CellModule, RepositoryFile, connect
-from src.utils import vprint, StatusLogger, check_exit, savepid
+from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
 
 
 def process_cell_module(session, cell_module, archive):

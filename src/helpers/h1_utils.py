@@ -6,19 +6,18 @@ import re
 import subprocess
 import os
 import fnmatch
-import traceback
 import sys
 import time
 import csv
 from contextlib import contextmanager
-
+from timeout_decorator import timeout, TimeoutError, timeout_decorator
 from pytz import unicode
 import config
 from config import Path
 
 
 def ignore_surrogates(original):
-    new = original.encode('utf8','ignore').decode('utf8','ignore')
+    new = original.encode('utf8', 'ignore').decode('utf8', 'ignore')
     return new, new != original
 
 
@@ -83,7 +82,6 @@ def ext_split(values, ext):
         else:
             result.append(name)
     return result
-
 
 
 def vprint(verbose, *args):
@@ -152,13 +150,13 @@ def mount_basedir(out=None, err=None):
     yield
 
 
-
 def version_string_to_list(version):
     """Split version"""
     return [
         int(x) for x in re.findall(r"(\d+)\.?(\d*)\.?(\d*)", version)[0]
         if x
     ]
+
 
 def specific_match(versions, position=0):
     """Matches a specific position in a trie dict ordered by its keys
@@ -170,6 +168,7 @@ def specific_match(versions, position=0):
         return versions
     keys = sorted(list(versions.keys()))
     return specific_match(versions[keys[position]], position)
+
 
 def best_match(version, versions):
     """Get the closest version in a versions trie that matches the version
@@ -231,6 +230,7 @@ def find_files_in_path(full_dir, patterns):
         ] for pattern in patterns
     ]
 
+
 def find_files_in_zip(tarzip, full_dir, patterns):
     names = tarzip.getnames()
     full_dir = str(full_dir)
@@ -242,6 +242,7 @@ def find_files_in_zip(tarzip, full_dir, patterns):
         ] for pattern in patterns
     ]
 
+
 def _target(queue, function, *args, **kwargs):
     """Run a function with arguments and return output via a queue.
     This is a helper function for the Process created in _Timeout. It runs
@@ -252,8 +253,9 @@ def _target(queue, function, *args, **kwargs):
     try:
         queue.put((True, function(*args, **kwargs)))
     except:
-        #traceback.print_exc()
+        # traceback.print_exc()
         queue.put((False, sys.exc_info()[1]))
+
 
 def check_exit(matches):
     path = Path(".exit")
@@ -265,8 +267,9 @@ def check_exit(matches):
             return matches & content
     return False
 
-from timeout_decorator import timeout, TimeoutError, timeout_decorator
+
 timeout_decorator._target = _target
+
 
 class StatusLogger(object):
 

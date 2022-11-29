@@ -13,7 +13,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import dask.dataframe as dd
-
+import config
 
 from dask.dataframe.core import Series as DaskSeries
 from dask.array.core import Array as DaskArray
@@ -58,15 +58,15 @@ def var(key, value, template="{}"):
     result = template.format(value)
     latex_result = tex_escape(result)
     data = {}
-    if os.path.exists("variables.dat"):
-        with open("variables.dat", "r") as fil:
+    if os.path.exists(f"{config.DATA_DIR}/variables.dat"):
+        with open(f"{config.DATA_DIR}/variables.dat", "r") as fil:
             for line in fil:
                 line = line.strip()
                 if line:
                     k, v = line.split(" = ")
                     data[k] = v
     data[key] = latex_result
-    with open("variables.dat", "w") as fil:
+    with open(f"{config.DATA_DIR}/variables.dat", "w") as fil:
         fil.writelines(
             "{} = {}\n".format(k, v)
             for k, v in data.items()

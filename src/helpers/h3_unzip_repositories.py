@@ -8,8 +8,8 @@ from src.extraction import consts
 
 import subprocess
 from db.database import Repository, connect
-from src.utils import vprint, StatusLogger, mount_basedir
-from src.utils import check_exit, savepid
+from src.helpers.h1_utils import vprint, StatusLogger, mount_basedir
+from src.helpers.h1_utils import check_exit, savepid
 
 
 def unzip_repository(session, repository):

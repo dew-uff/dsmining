@@ -13,9 +13,9 @@ from collections import Counter, OrderedDict, defaultdict
 from itertools import groupby
 from db.database import Cell, CellFeature, CellModule, CellName, CodeAnalysis, connect
 from db.database import RepositoryFile
-from src.utils import vprint, StatusLogger, check_exit, savepid, to_unicode
-from src.utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
-from src.utils import mount_basedir, ignore_surrogates
+from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
+from src.helpers.h1_utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
+from src.helpers.h1_utils import mount_basedir, ignore_surrogates
 from future.utils.surrogateescape import register_surrogateescape
 from e4_extract_files import process_repository
 
