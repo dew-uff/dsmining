@@ -26,10 +26,8 @@ PYTHON_REPOS_DIR = Path(REPOS_DIR + os.sep + 'python').expanduser()
 RESOURCE_DIR = DATA_DIR + os.sep + 'resources'
 REPOSITORIES_FILE = RESOURCE_DIR + os.sep + 'repositories.xlsx'
 FILTERED_FILE = RESOURCE_DIR + os.sep + 'filtered_repositories.xlsx'
-ANNOTATED_FILE = RESOURCE_DIR + os.sep + 'annotated.xlsx'
-JUPYTER_FILE = RESOURCE_DIR + os.sep + 'jupyter.xlsx'
-
-
+JUPYTER_REPOS_FILE = RESOURCE_DIR + os.sep + 'jupyter_repositories.xlsx'
+PYTHON_REPOS_FILE = RESOURCE_DIR + os.sep + 'python_repositories.xlsx'
 
 # Database
 DB_CONNECTION = f'sqlite:////{DB_DIR}{os.sep}dbmining.sqlite'
