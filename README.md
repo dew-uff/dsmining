@@ -3,12 +3,23 @@
 ## About
 Mining Data Science projects from public repositories to identify patterns and behaviors
 
-### Script Workflow
-| Scripts                      | Goal                                                       |
-| -----------------------------|---------------------------------------------------------   |  
-| s1_collect.py                | Queries projects' metadata from GitHub with API filters    | 
-| s2_filter.ipynb              | Applies additional filters                                 |
-| s3_extract.py                | Extracts data from repositories and populates the database |
+### Script Workflow   
+
+| Main Scripts           | Goal                                                                              |
+| -----------------------------|---------------------------------------------------------------------------- |  
+| s1_collect.py                | Queries projects' metadata from GitHub with API filters                     | 
+| s2_filter.ipynb              | Applies additional filters and selects repositories for futher   extraction |
+| s3_extract.py                | Extracts data from repositories and populates the database                  |
+
+| Extraction Scripts           | Goal                                                    |
+| -----------------------------|-------------------------------------------------------- |  
+| e1_notebooks_and_cells.py    | Extracts notebooks and cells from each repository       | 
+| e2_requirement_files.py      | Extracts requirement files from each repository         |
+| e3_compress.py               | Compresses processed repositories                       |
+| e4_extract_files.py          | Extracts files from  each repository                    |
+| e5_cell_features.py          | Extracts cell features from each notebook               |
+| e6_local_possibility.py      | Extracts local possibility values from each cell module |
+| e7_notebook_aggregate.py     | Aggregates extracted data into Notebook tables          |
 
 | Analysis Scripts             | Goal                                                  |
 | -----------------------------|------------------------------------------------------ |  
