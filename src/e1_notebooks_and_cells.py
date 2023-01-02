@@ -8,7 +8,7 @@ import consts
 
 from IPython.core.interactiveshell import InteractiveShell
 from database import Cell, Notebook, Repository, connect
-from h1_utils import timeout, TimeoutError, vprint, StatusLogger, mount_basedir
+from h1_utils import find_files, ext_split, timeout, TimeoutError, vprint, StatusLogger, mount_basedir
 from h1_utils import check_exit, savepid, SafeSession
 from h3_unzip_repositories import unzip_repository
 
@@ -153,6 +153,19 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
     return nbrow, cells_info
 
 
+def find_notebooks(session, repository):
+    """Finds all jupyter notebooks in the repository"""
+    notebooks = [
+        str(file.relative_to(repository.path))
+        for file in find_files(repository.path, "*.ipynb")
+        if ".ipynb_checkpoints" not in str(file)
+    ]
+
+    repository.notebooks_count = len(notebooks)
+    session.commit()
+
+    return notebooks
+
 def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
     """Process repository"""
     if repository.processed & (consts.R_N_EXTRACTION + skip_if_error):
@@ -162,7 +175,8 @@ def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
         repository.processed -= consts.R_N_ERROR
 
     count = 0
-    for name in repository.notebook_names:
+    repository_notebooks_names = find_notebooks(session, repository)
+    for name in repository_notebooks_names:
         if not name:
             continue
         count += 1

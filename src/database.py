@@ -69,15 +69,16 @@ class Repository(Base):
     hash_dir1 = Column(String)
     hash_dir2 = Column(String)
     commit = Column(String)
+    processed = Column(Integer, default=0)
+
     notebooks_count = Column(Integer)
     setups_count = Column(Integer)
     requirements_count = Column(Integer)
-    notebooks = Column(String)
-    setups = Column(String)
-    requirements = Column(String)
-    processed = Column(Integer, default=0)
     pipfiles_count = Column(Integer)
     pipfile_locks_count = Column(Integer)
+
+    setups = Column(String)
+    requirements = Column(String)
     pipfiles = Column(String)
     pipfile_locks = Column(String)
 
@@ -152,11 +153,6 @@ class Repository(Base):
             ], cwd=str(cwd)).decode("utf-8").strip()
         except subprocess.CalledProcessError:
             return "Failed"
-
-    @property
-    def notebook_names(self):
-        """Return notebook names"""
-        return ext_split(self.notebooks, ".ipynb")
 
     @property
     def setup_names(self):
