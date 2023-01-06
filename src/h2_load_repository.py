@@ -7,7 +7,7 @@ import os
 
 from future.moves.urllib.parse import urlparse
 
-from src import consts
+import consts
 import config
 from database import Repository, connect
 from h1_utils import find_files, vprint, join_paths, find_files_in_path
@@ -131,35 +131,11 @@ def load_repository(session, domain, repo, check_repo_only=True, branch=None,
         return repository
 
     vprint(1, "Finding files")
-    notebooks = [
-        file.relative_to(full_dir)
-        for file in find_files(full_dir, "*.ipynb")
-        if ".ipynb_checkpoints" not in str(file)
-    ]
-
-    setups, requirements, pipfiles, pipfile_locks = find_files_in_path(
-        full_dir, [
-            "setup.py", "requirements.txt", "Pipfile", "Pipfile.lock"
-        ]
-    )
 
     repository = Repository(
         domain=domain, repository=repo,
         hash_dir1=part, hash_dir2=end,
         commit=commit,
-
-        notebooks_count=len(notebooks),
-        setups_count=len(setups),
-        requirements_count=len(requirements),
-        pipfiles_count=len(pipfiles),
-        pipfile_locks_count=len(pipfile_locks),
-
-        notebooks=join_paths(notebooks),
-        setups=join_paths(setups),
-        requirements=join_paths(requirements),
-        pipfiles=join_paths(pipfiles),
-        pipfile_locks=join_paths(pipfile_locks),
-
         processed=consts.R_OK,
     )
     session.add(repository)

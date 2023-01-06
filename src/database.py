@@ -69,17 +69,13 @@ class Repository(Base):
     hash_dir1 = Column(String)
     hash_dir2 = Column(String)
     commit = Column(String)
+    processed = Column(Integer, default=0)
+
     notebooks_count = Column(Integer)
     setups_count = Column(Integer)
     requirements_count = Column(Integer)
-    notebooks = Column(String)
-    setups = Column(String)
-    requirements = Column(String)
-    processed = Column(Integer, default=0)
     pipfiles_count = Column(Integer)
     pipfile_locks_count = Column(Integer)
-    pipfiles = Column(String)
-    pipfile_locks = Column(String)
 
     notebooks_objs = one_to_many("Notebook", "repository_obj")
     cell_objs = one_to_many("Cell", "repository_obj")
@@ -152,31 +148,6 @@ class Repository(Base):
             ], cwd=str(cwd)).decode("utf-8").strip()
         except subprocess.CalledProcessError:
             return "Failed"
-
-    @property
-    def notebook_names(self):
-        """Return notebook names"""
-        return ext_split(self.notebooks, ".ipynb")
-
-    @property
-    def setup_names(self):
-        """Return setup names"""
-        return ext_split(self.setups, "setup.py")
-
-    @property
-    def requirement_names(self):
-        """Return requirement names"""
-        return ext_split(self.requirements, "requirements.txt")
-
-    @property
-    def pipfile_names(self):
-        """Return pipfile names"""
-        return ext_split(self.pipfiles, "Pipfile")
-
-    @property
-    def pipfile_lock_names(self):
-        """Return pipfile locks names"""
-        return ext_split(self.pipfile_locks, "Pipfile.lock")
 
     @force_encoded_string_output
     def __repr__(self):
