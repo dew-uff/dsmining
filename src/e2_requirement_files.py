@@ -33,7 +33,6 @@ def process_requirement_file(session, repository, req_names, reqformat,
         zip_path = config.Path(repository.hash_dir2)
     finished = True
 
-    req_param = MAP[reqformat] + "_names"
     for item in req_names:
         name = str(item)
         if not name:
