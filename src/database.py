@@ -149,26 +149,6 @@ class Repository(Base):
         except subprocess.CalledProcessError:
             return "Failed"
 
-    @property
-    def setup_names(self):
-        """Return setup names"""
-        return ext_split(self.setups, "setup.py")
-
-    @property
-    def requirement_names(self):
-        """Return requirement names"""
-        return ext_split(self.requirements, "requirements.txt")
-
-    @property
-    def pipfile_names(self):
-        """Return pipfile names"""
-        return ext_split(self.pipfiles, "Pipfile")
-
-    @property
-    def pipfile_lock_names(self):
-        """Return pipfile locks names"""
-        return ext_split(self.pipfile_locks, "Pipfile.lock")
-
     @force_encoded_string_output
     def __repr__(self):
         return u"<Repository({}:{})>".format(self.id, self.repository)
