@@ -77,11 +77,6 @@ class Repository(Base):
     pipfiles_count = Column(Integer)
     pipfile_locks_count = Column(Integer)
 
-    setups = Column(String)
-    requirements = Column(String)
-    pipfiles = Column(String)
-    pipfile_locks = Column(String)
-
     notebooks_objs = one_to_many("Notebook", "repository_obj")
     cell_objs = one_to_many("Cell", "repository_obj")
     requirement_files_objs = one_to_many("RequirementFile", "repository_obj")

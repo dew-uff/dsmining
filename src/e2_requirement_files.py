@@ -11,7 +11,9 @@ from h1_utils import vprint, join_paths, StatusLogger, check_exit, savepid
 from h1_utils import find_files_in_path, find_files_in_zip, mount_basedir
 
 
-def process_requirement_file(session, repository, reqformat, skip_if_error=consts.R_REQUIREMENTS_ERROR):
+def process_requirement_file(session, repository, req_names, reqformat,
+                             skip_if_error=consts.R_REQUIREMENTS_ERROR):
+
     """Process requirement file"""
     MAP = {
         "setup.py": "setup",
@@ -30,8 +32,10 @@ def process_requirement_file(session, repository, reqformat, skip_if_error=const
         tarzip = tarfile.open(str(repository.zip_path))
         zip_path = config.Path(repository.hash_dir2)
     finished = True
+
     req_param = MAP[reqformat] + "_names"
-    for name in getattr(repository, req_param):
+    for item in req_names:
+        name = str(item)
         if not name:
             continue
         try:
@@ -105,13 +109,9 @@ def collect_requirements(session, repository):
         repository.pipfiles_count = len(pipfiles)
         repository.pipfile_locks_count = len(pipfile_locks)
 
-        repository.setups = join_paths(setups)
-        repository.requirements = join_paths(requirements)
-        repository.pipfiles = join_paths(pipfiles)
-        repository.pipfile_locks = join_paths(pipfile_locks)
-
     session.add(repository)
     session.commit()
+    return setups, requirements, pipfiles, pipfile_locks
 
 
 def process_repository(session, repository, skip_if_error=consts.R_REQUIREMENTS_ERROR):
@@ -124,10 +124,15 @@ def process_repository(session, repository, skip_if_error=consts.R_REQUIREMENTS_
 
     finished = True
 
-    finished &= process_requirement_file(session, repository, "setup.py", skip_if_error)
-    finished &= process_requirement_file(session, repository, "requirements.txt", skip_if_error)
-    finished &= process_requirement_file(session, repository, "Pipfile", skip_if_error)
-    finished &= process_requirement_file(session, repository, "Pipfile.lock", skip_if_error)
+    setups, requirements, pipfiles, pipfile_locks = collect_requirements(session, repository)
+    finished &= process_requirement_file(session, repository,
+                                         setups, "setup.py", skip_if_error)
+    finished &= process_requirement_file(session, repository,
+                                         requirements, "requirements.txt", skip_if_error)
+    finished &= process_requirement_file(session, repository,
+                                         pipfiles, "Pipfile", skip_if_error)
+    finished &= process_requirement_file(session, repository,
+                                         pipfile_locks, "Pipfile.lock", skip_if_error)
 
     if finished and not repository.processed & skip_if_error:
         repository.processed |= consts.R_REQUIREMENTS_OK
