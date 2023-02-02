@@ -106,7 +106,7 @@ def main():
         apply(
             session,
             status,
-            args.keep_uncompressed,
+            True,
             args.count,
             args.interval,
             args.reverse,

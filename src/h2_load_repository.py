@@ -57,7 +57,7 @@ def git_output(*args, cwd=None):
 
 def clone(part, end, repo, remote, branch=None, commit=None):
     """Clone git repository into a proper directory"""
-    part_dir = config.JUPYTER_REPOS_DIR / "content" / part
+    part_dir = config.SELECTED_REPOS_DIR / "content" / part
     part_dir.mkdir(parents=True, exist_ok=True)
     full_dir = part_dir / end
     if (full_dir.exists() and

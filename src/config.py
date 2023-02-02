@@ -13,25 +13,28 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 MACHINE = os.environ.get("GITHUB_USERNAME")
 
 # Directories
-BASE = os.path.dirname(os.path.realpath(__file__))
-SRC_DIR = BASE + os.sep + 'src'
-DB_DIR = BASE + os.sep + 'db'
-LOGS_DIR = Path(BASE + os.sep + 'logs').expanduser()
+SRC_DIR = os.path.dirname(os.path.realpath(__file__))
+BASE = os.path.dirname(SRC_DIR)
+ROOT = os.path.dirname(BASE)
 
-DATA_DIR = BASE + os.sep + 'data'
+# Database
+DB_DIR = SRC_DIR + os.sep + 'db'
+DB_FILE = DB_DIR + os.sep + 'dbmining.sqlite'
+DB_CONNECTION = f'sqlite:////{DB_FILE}'
 
-REPOS_DIR = DATA_DIR + os.sep + 'repos'
-JUPYTER_REPOS_DIR = Path(REPOS_DIR + os.sep + 'jupyter').expanduser()
-PYTHON_REPOS_DIR = Path(REPOS_DIR + os.sep + 'python').expanduser()
 
+LOGS_DIR = Path(SRC_DIR + os.sep + 'logs').expanduser()
+
+REPOS_DIR = ROOT + os.sep + 'repos'
+SELECTED_REPOS_DIR = Path(REPOS_DIR + os.sep + 'selected').expanduser()
+
+DATA_DIR = SRC_DIR + os.sep + 'data'
 RESOURCE_DIR = DATA_DIR + os.sep + 'resources'
 REPOSITORIES_FILE = RESOURCE_DIR + os.sep + 'repositories.xlsx'
 FILTERED_FILE = RESOURCE_DIR + os.sep + 'filtered_repositories.xlsx'
-JUPYTER_REPOS_FILE = RESOURCE_DIR + os.sep + 'jupyter_repositories.xlsx'
-PYTHON_REPOS_FILE = RESOURCE_DIR + os.sep + 'python_repositories.xlsx'
+SELECTED_REPOS_FILE = RESOURCE_DIR + os.sep + 'selected_repositories.xlsx'
 
-# Database
-DB_CONNECTION = f'sqlite:////{DB_DIR}{os.sep}dbmining.sqlite'
+
 
 # Configs
 VERBOSE = 5

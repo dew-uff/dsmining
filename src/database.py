@@ -96,7 +96,7 @@ class Repository(Base):
     def path(self):
         """Return notebook path"""
         return (
-                config.Path(config.JUPYTER_REPOS_DIR) / "content" /
+                config.Path(config.SELECTED_REPOS_DIR) / "content" /
                 self.hash_dir1 / self.hash_dir2
         )
 

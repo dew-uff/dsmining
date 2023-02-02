@@ -1,13 +1,14 @@
 import os
 import shutil
+from src.config import REPOS_DIR, DB_FILE
 
 REPOS = True
 DATABASE = True
 
 if REPOS:
-   if os.path.exists("data/repos/selected"):
-      shutil.rmtree("data/repos/selected")
+   if os.path.exists(REPOS_DIR):
+      shutil.rmtree(REPOS_DIR)
 
 if DATABASE:
-   if os.path.exists("db/dbmining.sqlite"):
-      os.remove("db/dbmining.sqlite")
+   if os.path.exists(DB_FILE):
+      os.remove(DB_FILE)
