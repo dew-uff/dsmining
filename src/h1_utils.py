@@ -308,7 +308,7 @@ class StatusLogger(object):
 
     def report(self):
         if self.total % self.freq == 0:
-            with open(str(self.file), "w") as csvfile:
+            with open(str(self.file), "a") as csvfile:
                 writer = csv.writer(csvfile)
                 now = time.time()
                 writer.writerow([

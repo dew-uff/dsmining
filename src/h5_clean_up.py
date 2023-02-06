@@ -2,7 +2,7 @@ import os
 import shutil
 from src.config import REPOS_DIR, DB_FILE
 
-REPOS = True
+REPOS = False
 DATABASE = True
 
 if REPOS:

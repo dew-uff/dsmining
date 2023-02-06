@@ -136,7 +136,7 @@ def load_repository(session, domain, repo, check_repo_only=True, branch=None,
         domain=domain, repository=repo,
         hash_dir1=part, hash_dir2=end,
         commit=commit,
-        processed=consts.R_OK,
+        processed=consts.R_LOADED,
     )
     session.add(repository)
     session.commit()

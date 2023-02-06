@@ -1,6 +1,6 @@
 
 # Repositories
-R_OK = 0
+R_LOADED = 0
 R_N_EXTRACTION = 1                   # 2 ** 0
 R_N_ERROR = 2                        # 2 ** 1
 R_COMPRESS_ERROR = 4                 # 2 ** 2
@@ -10,13 +10,15 @@ R_COMMIT_MISMATCH = 32               # 2 ** 5
 R_REQUIREMENTS_ERROR = 64            # 2 ** 6
 R_REQUIREMENTS_OK = 128              # 2 ** 7
 
-R_FAILED_TO_CLONE = 1024             # 2 ** 10
+R_P_EXTRACTION = 256                 # 2 ** 8
+R_P_ERROR = 512                      # 2 ** 9
 
+R_FAILED_TO_CLONE = 1024             # 2 ** 10
 R_TROUBLESOME = 4096                 # 2 ** 12
 R_EXTRACTED_FILES = 8192             # 2 ** 13
 
 R_STATUSES = {
-    R_OK: "load - ok",
+    R_LOADED: "load - ok",
     R_N_EXTRACTION: "notebooks and cells - ok",
     R_N_ERROR: "notebooks and cells - fail",
     R_COMPRESS_ERROR: "compress - fail",
@@ -139,3 +141,8 @@ E_EXECUTED = 32                      # 2 ** 5
 # Requirement File
 
 F_OK = 0
+
+
+# Python Files
+PF_OK= 0
+PF_ERROR = 2

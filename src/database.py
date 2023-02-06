@@ -72,12 +72,14 @@ class Repository(Base):
     processed = Column(Integer, default=0)
 
     notebooks_count = Column(Integer)
+    python_files_count = Column(Integer)
     setups_count = Column(Integer)
     requirements_count = Column(Integer)
     pipfiles_count = Column(Integer)
     pipfile_locks_count = Column(Integer)
 
     notebooks_objs = one_to_many("Notebook", "repository_obj")
+    python_files_objs = one_to_many("PythonFile", "repository_obj")
     cell_objs = one_to_many("Cell", "repository_obj")
     requirement_files_objs = one_to_many("RequirementFile", "repository_obj")
     markdown_features_objs = one_to_many("MarkdownFeature", "repository_obj")
@@ -152,6 +154,38 @@ class Repository(Base):
     @force_encoded_string_output
     def __repr__(self):
         return u"<Repository({}:{})>".format(self.id, self.repository)
+
+
+class PythonFile(Base):
+    """Pyhton File Table"""
+    # pylint: disable=invalid-name
+    __tablename__ = 'python_files'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['repository_id'],
+            ['repositories.id']
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    repository_id = Column(Integer)
+    name = Column(String)
+    total_lines = Column(Integer)
+    processed = Column(Integer, default=0)
+
+
+    repository_obj = many_to_one("Repository", "python_files_objs")
+
+    @property
+    def path(self):
+        """Return python file path"""
+        return self.repository_obj.path / self.name
+
+    @force_encoded_string_output
+    def __repr__(self):
+        return u"<PythonFile({0.repository_id}/{0.id}:{0.name})>".format(
+            self
+        )
 
 
 class Notebook(Base):
