@@ -17,7 +17,7 @@ from h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
 from h1_utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
 from h1_utils import mount_basedir, ignore_surrogates
 from future.utils.surrogateescape import register_surrogateescape
-from e4_extract_files import process_repository
+from e5_extract_files import process_repository
 
 
 class PathLocalChecker(object):

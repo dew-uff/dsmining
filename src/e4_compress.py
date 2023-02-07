@@ -1,10 +1,10 @@
 """Remove processed notebooks from disk"""
 import argparse
-import shutil
-import config
 import os
-import consts
+import shutil
 
+import config
+import consts
 from database import Repository, connect
 from h1_utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
 
