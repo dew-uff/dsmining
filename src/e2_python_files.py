@@ -47,10 +47,13 @@ def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
                 session.delete(python_file)
                 session.commit()
 
+        file_path = str(repository.path) + os.sep + name
+
         python_file = PythonFile(
             repository_id=repository.id,
             name=name,
-            processed=consts.PF_OK,
+            total_lines=len(open(file_path).readlines()),
+            processed=consts.PF_OK
         )
         session.add(python_file)
 
