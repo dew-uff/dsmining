@@ -16,6 +16,7 @@ R_P_ERROR = 512                      # 2 ** 9
 R_FAILED_TO_CLONE = 1024             # 2 ** 10
 R_TROUBLESOME = 4096                 # 2 ** 12
 R_EXTRACTED_FILES = 8192             # 2 ** 13
+R_P_MODULES = 16384                  # 2 ** 14
 
 R_STATUSES = {
     R_LOADED: "load - ok",
@@ -145,4 +146,5 @@ F_OK = 0
 
 # Python Files
 PF_OK= 0
-PF_ERROR = 2
+PF_EXTRACTION = 1                   # 2 ** 0
+PF_ERROR = 2                        # 2 ** 1
