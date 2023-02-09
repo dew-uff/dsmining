@@ -78,16 +78,26 @@ class Repository(Base):
     pipfiles_count = Column(Integer)
     pipfile_locks_count = Column(Integer)
 
-    notebooks_objs = one_to_many("Notebook", "repository_obj")
+
     python_files_objs = one_to_many("PythonFile", "repository_obj")
-    cell_objs = one_to_many("Cell", "repository_obj")
+    python_analyzes_objs = one_to_many("PythonAnalysis", "repository_obj")
+    python_file_modules_objs = one_to_many("PythonFileModule", "repository_obj")
+    python_file_features_objs = one_to_many("PythonFileFeature", "repository_obj")
+    python_file_names_objs = one_to_many("PythonFileName", "repository_obj")
+
+
     requirement_files_objs = one_to_many("RequirementFile", "repository_obj")
+
+    notebooks_objs = one_to_many("Notebook", "repository_obj")
+    cell_objs = one_to_many("Cell", "repository_obj")
     markdown_features_objs = one_to_many("MarkdownFeature", "repository_obj")
     code_analyses_objs = one_to_many("CodeAnalysis", "repository_obj")
     cell_modules_objs = one_to_many("CellModule", "repository_obj")
     cell_features_objs = one_to_many("CellFeature", "repository_obj")
     cell_names_objs = one_to_many("CellName", "repository_obj")
+
     files_objs = one_to_many("RepositoryFile", "repository_obj")
+
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "repository_obj")
     notebook_asts_objs = one_to_many("NotebookAST", "repository_obj")
     notebook_modules_objs = one_to_many("NotebookModule", "repository_obj")
@@ -175,6 +185,12 @@ class PythonFile(Base):
 
 
     repository_obj = many_to_one("Repository", "python_files_objs")
+    python_analyzes_objs = one_to_many("PythonAnalysis", "python_file_obj")
+
+    python_file_modules_objs = one_to_many("PythonFileModule", "python_file_obj")
+    python_file_features_objs = one_to_many("PythonFileFeature", "python_file_obj")
+    python_file_names_objs = one_to_many("PythonFileName", "python_file_obj")
+
 
     @property
     def path(self):
@@ -186,6 +202,383 @@ class PythonFile(Base):
         return u"<PythonFile({0.repository_id}/{0.id}:{0.name})>".format(
             self
         )
+
+
+class PythonAnalysis(Base):
+    """Python Analysis Table"""
+    # pylint: disable=too-few-public-methods, invalid-name
+    __tablename__ = 'python_analyzes'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
+            ['repository_id'],
+            ['repositories.id']
+        ),
+    )
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    repository_id = Column(Integer)
+    python_file_id = Column(Integer)
+    index = Column(Integer)
+
+    # Custom
+    import_star = Column(Integer)
+
+    functions_with_decorators = Column(Integer)
+    classes_with_decorators = Column(Integer)
+    classes_with_bases = Column(Integer)
+
+    delname = Column(Integer)
+    delattr = Column(Integer)
+    delitem = Column(Integer)
+    assignname = Column(Integer)
+    assignattr = Column(Integer)
+    assignitem = Column(Integer)
+
+    ipython = Column(Integer)
+    ipython_superset = Column(Integer)
+
+    # Scope
+    class_importfrom = Column(Integer)
+    global_importfrom = Column(Integer)
+    nonlocal_importfrom = Column(Integer)
+    local_importfrom = Column(Integer)
+    total_importfrom = Column(Integer)
+
+    class_import = Column(Integer)
+    global_import = Column(Integer)
+    nonlocal_import = Column(Integer)
+    local_import = Column(Integer)
+    total_import = Column(Integer)
+
+    class_assign = Column(Integer)
+    global_assign = Column(Integer)
+    nonlocal_assign = Column(Integer)
+    local_assign = Column(Integer)
+    total_assign = Column(Integer)
+
+    class_delete = Column(Integer)
+    global_delete = Column(Integer)
+    nonlocal_delete = Column(Integer)
+    local_delete = Column(Integer)
+    total_delete = Column(Integer)
+
+    class_functiondef = Column(Integer)
+    global_functiondef = Column(Integer)
+    nonlocal_functiondef = Column(Integer)
+    local_functiondef = Column(Integer)
+    total_functiondef = Column(Integer)
+
+    class_classdef = Column(Integer)
+    global_classdef = Column(Integer)
+    nonlocal_classdef = Column(Integer)
+    local_classdef = Column(Integer)
+    total_classdef = Column(Integer)
+
+    # AST
+    # mod
+    ast_module = Column(Integer)  # max
+    ast_interactive = Column(Integer)  # zero
+    ast_expression = Column(Integer)  # zero
+    ast_suite = Column(Integer)  # zero
+
+    #stmt
+    ast_statements = Column(Integer)
+
+    ast_functiondef = Column(Integer)
+    ast_asyncfunctiondef = Column(Integer)
+    ast_classdef = Column(Integer)
+    ast_return = Column(Integer)
+
+    ast_delete = Column(Integer)
+    ast_assign = Column(Integer)
+    ast_augassign = Column(Integer)
+    ast_annassign = Column(Integer)
+
+    ast_print = Column(Integer)
+
+    ast_for = Column(Integer)
+    ast_asyncfor = Column(Integer)
+    ast_while = Column(Integer)
+    ast_if = Column(Integer)
+    ast_with = Column(Integer)
+    ast_asyncwith = Column(Integer)
+
+    ast_raise = Column(Integer)
+    ast_try = Column(Integer)
+    ast_tryexcept = Column(Integer)
+    ast_tryfinally = Column(Integer)
+    ast_assert = Column(Integer)
+
+    ast_import = Column(Integer)
+    ast_importfrom = Column(Integer)
+    ast_exec = Column(Integer)
+    ast_global = Column(Integer)
+    ast_nonlocal = Column(Integer)
+    ast_expr = Column(Integer)
+    ast_pass = Column(Integer)
+    ast_break = Column(Integer)
+    ast_continue = Column(Integer)
+
+    # expr
+    ast_expressions = Column(Integer)
+
+    ast_boolop = Column(Integer)
+    ast_binop = Column(Integer)
+    ast_unaryop = Column(Integer)
+    ast_lambda = Column(Integer)
+    ast_ifexp = Column(Integer)
+    ast_dict = Column(Integer)
+    ast_set = Column(Integer)
+    ast_listcomp = Column(Integer)
+    ast_setcomp = Column(Integer)
+    ast_dictcomp = Column(Integer)
+    ast_generatorexp = Column(Integer)
+
+    ast_await = Column(Integer)
+    ast_yield = Column(Integer)
+    ast_yieldfrom = Column(Integer)
+
+    ast_compare = Column(Integer)
+    ast_call = Column(Integer)
+    ast_num = Column(Integer)
+    ast_str = Column(Integer)
+    ast_formattedvalue = Column(Integer)
+    ast_joinedstr = Column(Integer)
+    ast_bytes = Column(Integer)
+    ast_nameconstant = Column(Integer)
+    ast_ellipsis = Column(Integer)
+    ast_constant = Column(Integer)
+
+    ast_attribute = Column(Integer)
+    ast_subscript = Column(Integer)
+    ast_starred = Column(Integer)
+    ast_name = Column(Integer)
+    ast_list = Column(Integer)
+    ast_tuple = Column(Integer)
+
+    # expr_contex
+    ast_load = Column(Integer)
+    ast_store = Column(Integer)
+    ast_del = Column(Integer)
+    ast_augload = Column(Integer)
+    ast_augstore = Column(Integer)
+    ast_param = Column(Integer)
+
+    # slice
+    ast_slice = Column(Integer)
+    ast_index = Column(Integer)
+
+    # boolop
+    ast_and = Column(Integer)
+    ast_or = Column(Integer)
+
+    # operator
+    ast_add = Column(Integer)
+    ast_sub = Column(Integer)
+    ast_mult = Column(Integer)
+    ast_matmult = Column(Integer)
+    ast_div = Column(Integer)
+    ast_mod = Column(Integer)
+    ast_pow = Column(Integer)
+    ast_lshift = Column(Integer)
+    ast_rshift = Column(Integer)
+    ast_bitor = Column(Integer)
+    ast_bitxor = Column(Integer)
+    ast_bitand = Column(Integer)
+    ast_floordiv = Column(Integer)
+
+    # unaryop
+    ast_invert = Column(Integer)
+    ast_not = Column(Integer)
+    ast_uadd = Column(Integer)
+    ast_usub = Column(Integer)
+
+    # cmpop
+    ast_eq = Column(Integer)
+    ast_noteq = Column(Integer)
+    ast_lt = Column(Integer)
+    ast_lte = Column(Integer)
+    ast_gt = Column(Integer)
+    ast_gte = Column(Integer)
+    ast_is = Column(Integer)
+    ast_isnot = Column(Integer)
+    ast_in = Column(Integer)
+    ast_notin = Column(Integer)
+
+    # others
+    ast_comprehension = Column(Integer)
+    ast_excepthandler = Column(Integer)
+    ast_arguments = Column(Integer)
+    ast_arg = Column(Integer)
+    ast_keyword = Column(Integer)
+    ast_alias = Column(Integer)
+    ast_withitem = Column(Integer)
+
+    # New nodes?
+    ast_others = Column(String)
+
+    processed = Column(Integer)
+    skip = Column(Integer, default=0)
+
+    ast_extslice = Column(Integer, default=0)
+    ast_repr = Column(Integer, default=0)
+
+    python_file_obj = many_to_one("PythonFile", "python_analyzes_objs")
+    repository_obj = many_to_one("Repository", "python_analyzes_objs")
+
+    python_file_modules_objs = one_to_many("PythonFileModule", "analysis_obj")
+    python_file_features_objs = one_to_many("PythonFileFeature", "analysis_obj")
+    python_file_names_objs = one_to_many("PythonFileName", "analysis_obj")
+
+
+    @force_encoded_string_output
+    def __repr__(self):
+        return (
+            u"<PythonAnalysis({0.repository_id}/{0.python_file_id}/{0.id})>"
+            .format(self)
+        )
+
+
+class PythonFileModule(Base):
+    """Python Modules Table"""
+    # pylint: disable=too-few-public-methods, invalid-name
+    __tablename__ = 'python_file_modules'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['analysis_id'],
+            ['python_analyzes.id']
+        ),
+        ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
+            ['repository_id'],
+            ['repositories.id']
+        ),
+    )
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    repository_id = Column(Integer)
+    python_file_id = Column(Integer)
+    analysis_id = Column(Integer)
+    index = Column(Integer)
+
+    line = Column(Integer)
+    import_type = Column(String)
+    module_name = Column(String)
+    local = Column(Boolean)
+    skip = Column(Integer, default=0)
+
+    local_possibility = Column(Integer, default=None)
+    # 0 - impossible
+    # 1 - matches the last part of module_name
+    # 2 - matches all but the first part of module_name
+    # 3 - matches all parts of module_name
+    # 4 - already recognized as local
+
+    python_file_obj = many_to_one("PythonFile", "python_file_modules_objs")
+    repository_obj = many_to_one("Repository", "python_file_modules_objs")
+    analysis_obj = many_to_one("PythonAnalysis", "python_file_modules_objs")
+
+    @force_encoded_string_output
+    def __repr__(self):
+        return (
+            u"<Module({0.repository_id}/{0.python_file_id}/"
+            u"{0.analysis_id}/{0.id}:{0.import_type})>"
+        ).format(self)
+
+
+class PythonFileFeature(Base):
+    """Python File Features Table"""
+    # pylint: disable=too-few-public-methods, invalid-name
+    __tablename__ = 'python_file_features'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['analysis_id'],
+            ['python_analyzes.id']
+        ),
+        ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
+            ['repository_id'],
+            ['repositories.id']
+        ),
+    )
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    repository_id = Column(Integer)
+    python_file_id = Column(Integer)
+    analysis_id = Column(Integer)
+
+    index = Column(Integer)
+    line = Column(Integer)
+    column = Column(Integer)
+    feature_name = Column(String)
+    feature_value = Column(String)
+    skip = Column(Integer, default=0)
+
+    python_file_obj = many_to_one("PythonFile", "python_file_features_objs")
+    repository_obj = many_to_one("Repository", "python_file_features_objs")
+    analysis_obj = many_to_one("PythonAnalysis", "python_file_features_objs")
+
+    @force_encoded_string_output
+    def __repr__(self):
+        return (
+            u"<Feature({0.repository_id}/{0.notebook_id}/"
+            u"{0.analysis_id}/{0.id}:{0.feature_name})>"
+        ).format(self)
+
+
+class PythonFileName(Base):
+    """Pyhton File Names Table"""
+    # pylint: disable=too-few-public-methods, invalid-name
+    __tablename__ = 'python_file_names'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['analysis_id'],
+            ['python_analyzes.id']
+        ),
+        ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
+            ['repository_id'],
+            ['repositories.id']
+        ),
+    )
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    repository_id = Column(Integer)
+    python_file_id = Column(Integer)
+    analysis_id = Column(Integer)
+
+    index = Column(Integer)
+    scope = Column(String)
+    context = Column(String)
+    name = Column(String)
+    count = Column(Integer)
+
+    skip = Column(Integer, default=0)
+
+
+    python_file_obj = many_to_one("PythonFile", "python_file_names_objs")
+    repository_obj = many_to_one("Repository", "python_file_names_objs")
+    analysis_obj = many_to_one("PythonAnalysis", "python_file_names_objs")
+
+    @force_encoded_string_output
+    def __repr__(self):
+        return (
+            u"<Module({0.repository_id}/{0.python_file_id}/"
+            u"{0.analysis_id}/{0.id}:{0.name})>"
+        ).format(self)
 
 
 class Notebook(Base):
