@@ -148,3 +148,13 @@ F_OK = 0
 PF_OK= 0
 PF_EXTRACTION = 1                   # 2 ** 0
 PF_ERROR = 2                        # 2 ** 1
+PF_PROCESS_ERROR = 2                  # 2 ** 1
+PF_PROCESS_OK = 4                     # 2 ** 2
+PF_TIMEOUT = 8                        # 2 ** 3
+PF_SYNTAX_ERROR = 16                  # 2 ** 4
+
+# Python File analyses
+
+PFA_OK = 0
+PFA_SYNTAX_ERROR = 16                  # 2 ** 4
+PFA_TIMEOUT = 32                       # 2 ** 5

@@ -180,6 +180,7 @@ class PythonFile(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
     name = Column(String)
+    source = Column(String)
     total_lines = Column(Integer)
     processed = Column(Integer, default=0)
 
@@ -222,7 +223,6 @@ class PythonAnalysis(Base):
     id = Column(Integer, autoincrement=True, primary_key=True)
     repository_id = Column(Integer)
     python_file_id = Column(Integer)
-    index = Column(Integer)
 
     # Custom
     import_star = Column(Integer)
@@ -466,7 +466,6 @@ class PythonFileModule(Base):
     repository_id = Column(Integer)
     python_file_id = Column(Integer)
     analysis_id = Column(Integer)
-    index = Column(Integer)
 
     line = Column(Integer)
     import_type = Column(String)
@@ -517,7 +516,6 @@ class PythonFileFeature(Base):
     python_file_id = Column(Integer)
     analysis_id = Column(Integer)
 
-    index = Column(Integer)
     line = Column(Integer)
     column = Column(Integer)
     feature_name = Column(String)
@@ -560,7 +558,6 @@ class PythonFileName(Base):
     python_file_id = Column(Integer)
     analysis_id = Column(Integer)
 
-    index = Column(Integer)
     scope = Column(String)
     context = Column(String)
     name = Column(String)

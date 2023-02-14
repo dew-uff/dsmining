@@ -47,11 +47,17 @@ def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
                 session.delete(python_file)
                 session.commit()
 
+        vprint(3, "Loading python file {}".format(name))
+
         file_path = str(repository.path) + os.sep + name
+
+        with open(file_path) as f:
+            source = f.read()
 
         python_file = PythonFile(
             repository_id=repository.id,
             name=name,
+            source=source,
             total_lines=len(open(file_path).readlines()),
             processed=consts.PF_OK
         )
