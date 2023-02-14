@@ -5,7 +5,7 @@ import shutil
 
 import config
 import consts
-from database import Repository, connect
+from src.db.database import Repository, connect
 from h1_utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
 
 

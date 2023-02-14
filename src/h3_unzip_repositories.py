@@ -1,12 +1,11 @@
 """Load notebook and cells"""
-import argparse
 import os
-
+import argparse
 import config
-from src import consts
-
+import consts
 import subprocess
-from database import Repository, connect
+
+from src.db.database import Repository, connect
 from h1_utils import vprint, StatusLogger, mount_basedir
 from h1_utils import check_exit, savepid
 

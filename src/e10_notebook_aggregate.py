@@ -5,9 +5,9 @@ import config
 import consts
 
 from collections import Counter, OrderedDict
-from database import Notebook, connect, NotebookMarkdown, MarkdownFeature, Cell
-from database import NotebookAST, NotebookModule, NotebookFeature, NotebookName
-from database import CodeAnalysis, CellModule, CellFeature, CellName
+from src.db.database import Notebook, connect, NotebookMarkdown, MarkdownFeature, Cell
+from src.db.database import NotebookAST, NotebookModule, NotebookFeature, NotebookName
+from src.db.database import CodeAnalysis, CellModule, CellFeature, CellName
 from h1_utils import vprint, StatusLogger, check_exit, savepid
 
 IGNORE_COLUMNS = {

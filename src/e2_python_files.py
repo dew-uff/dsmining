@@ -4,7 +4,7 @@ import os
 import config
 import consts
 
-from database import PythonFile, Repository, connect
+from src.db.database import PythonFile, Repository, connect
 from h1_utils import vprint, StatusLogger, check_exit, savepid, find_files, mount_basedir
 
 

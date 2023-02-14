@@ -7,8 +7,8 @@ import nbformat as nbf
 import consts
 
 from IPython.core.interactiveshell import InteractiveShell
-from database import Cell, Notebook, Repository, connect
-from h1_utils import find_files, ext_split, timeout, TimeoutError, vprint, StatusLogger, mount_basedir
+from src.db.database import Cell, Notebook, Repository, connect
+from h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger, mount_basedir
 from h1_utils import check_exit, savepid, SafeSession
 from h3_unzip_repositories import unzip_repository
 

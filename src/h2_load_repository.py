@@ -1,17 +1,15 @@
 """Load Repository"""
+import os
+import consts
+import config
 import argparse
 import hashlib
 import subprocess
 import shutil
-import os
 
 from future.moves.urllib.parse import urlparse
-
-import consts
-import config
-from database import Repository, connect
-from h1_utils import find_files, vprint, join_paths, find_files_in_path
-from h1_utils import mount_basedir, savepid
+from src.db.database import Repository, connect
+from h1_utils import mount_basedir, savepid, vprint
 
 
 def extract_domain_repository(url):

@@ -1,7 +1,6 @@
 """Load markdown features"""
 import argparse
 import os
-import sys
 
 import mistune
 
@@ -12,7 +11,7 @@ from nltk.corpus import stopwords
 import config
 import consts
 
-from database import Cell, Notebook, MarkdownFeature, connect
+from src.db.database import Cell, MarkdownFeature, connect
 from h1_utils import vprint, StatusLogger, check_exit, savepid
 
 

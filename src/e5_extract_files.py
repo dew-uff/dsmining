@@ -5,7 +5,7 @@ import tarfile
 import config
 import consts
 
-from database import Repository, RepositoryFile, connect
+from src.db.database import Repository, RepositoryFile, connect
 from h1_utils import vprint, StatusLogger, check_exit, savepid
 from h1_utils import mount_basedir, ignore_surrogates
 from future.utils.surrogateescape import register_surrogateescape

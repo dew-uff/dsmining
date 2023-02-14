@@ -4,7 +4,7 @@ import os
 import config
 import consts
 
-from database import CellModule, RepositoryFile, connect
+from src.db.database import CellModule, RepositoryFile, connect
 from h1_utils import vprint, StatusLogger, check_exit, savepid
 
 

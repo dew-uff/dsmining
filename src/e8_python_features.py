@@ -1,17 +1,15 @@
 """Load Pyhton features"""
 import argparse
 import os
-import sys
 import ast
 import tarfile
 import config
 import consts
 
-from itertools import groupby
-from database import PythonFile, PythonFileFeature, PythonFileModule, PythonFileName, PythonAnalysis, connect, Cell 
-from database import RepositoryFile
+from src.db.database import PythonFile, PythonFileFeature, PythonFileModule, PythonFileName, PythonAnalysis, connect, Cell
+from src.db.database import RepositoryFile
 from h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
-from h1_utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
+from h1_utils import timeout, TimeoutError, SafeSession
 from h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
 from e5_extract_files import process_repository

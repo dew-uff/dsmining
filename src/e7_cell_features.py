@@ -8,8 +8,8 @@ import config
 import consts
 
 from itertools import groupby
-from database import Cell, CellFeature, CellModule, CellName, CodeAnalysis, connect
-from database import RepositoryFile
+from src.db.database import Cell, CellFeature, CellModule, CellName, CodeAnalysis, connect
+from src.db.database import RepositoryFile
 from h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
 from h1_utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
 from h1_utils import mount_basedir

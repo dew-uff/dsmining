@@ -1,9 +1,9 @@
-notebooks_with_modules = 77.39\%
-notebooks_with_modules_total = 243
-notebooks_with_local_modules = 2.87\%
-notebooks_with_local_modules_total = 9
-notebooks_with_external_modules = 77.39\%
-notebooks_with_external_modules_total = 243
+notebooks_with_modules = 77.02\%
+notebooks_with_modules_total = 191
+notebooks_with_local_modules = 2.82\%
+notebooks_with_local_modules_total = 7
+notebooks_with_external_modules = 77.02\%
+notebooks_with_external_modules_total = 191
 notebooks_with_test = 0.00\%
 notebooks_with_test_total = 0
 notebooks_with_unittest = 0.00\%

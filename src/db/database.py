@@ -1,18 +1,16 @@
 """Handles database model and connection"""
 import sys
+import src.config as config
 import subprocess
-from contextlib import contextmanager
 
+from src.config import DB_CONNECTION
+from contextlib import contextmanager
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Interval
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from sqlalchemy import ForeignKeyConstraint
-
-
-import config
-from h1_utils import version_string_to_list, ext_split
-from config import DB_CONNECTION
+from src.h1_utils import version_string_to_list, ext_split
 
 
 BigInt = Integer

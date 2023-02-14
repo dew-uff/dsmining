@@ -1,7 +1,7 @@
 import pandas as pd
 
 from config import SELECTED_REPOS_FILE
-from database import connect, Repository
+from src.db.database import connect, Repository
 from h1_utils import mount_basedir
 from h2_load_repository import load_repository
 
