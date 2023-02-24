@@ -97,10 +97,10 @@ class Repository(Base):
     files_objs = one_to_many("RepositoryFile", "repository_obj")
 
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "repository_obj")
-    notebook_asts_objs = one_to_many("NotebookAST", "repository_obj")
-    notebook_modules_objs = one_to_many("NotebookModule", "repository_obj")
-    notebook_features_objs = one_to_many("NotebookFeature", "repository_obj")
-    notebook_names_objs = one_to_many("NotebookName", "repository_obj")
+    asts_objs = one_to_many("AST", "repository_obj")
+    modules_objs = one_to_many("Module", "repository_obj")
+    features_objs = one_to_many("Feature", "repository_obj")
+    names_objs = one_to_many("Name", "repository_obj")
 
     @property
     def path(self):
@@ -190,10 +190,10 @@ class PythonFile(Base):
     python_file_features_objs = one_to_many("PythonFileFeature", "python_file_obj")
     python_file_names_objs = one_to_many("PythonFileName", "python_file_obj")
 
-    notebook_asts_objs = one_to_many("NotebookAST", "python_file_obj")
-    notebook_modules_objs = one_to_many("NotebookModule", "python_file_obj")
-    notebook_features_objs = one_to_many("NotebookFeature", "python_file_obj")
-    notebook_names_objs = one_to_many("NotebookName", "python_file_obj")
+    asts_objs = one_to_many("AST", "python_file_obj")
+    modules_objs = one_to_many("Module", "python_file_obj")
+    features_objs = one_to_many("Feature", "python_file_obj")
+    names_objs = one_to_many("Name", "python_file_obj")
 
     @property
     def path(self):
@@ -617,10 +617,10 @@ class Notebook(Base):
     cell_features_objs = one_to_many("CellFeature", "notebook_obj")
     cell_names_objs = one_to_many("CellName", "notebook_obj")
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "notebook_obj")
-    notebook_asts_objs = one_to_many("NotebookAST", "notebook_obj")
-    notebook_modules_objs = one_to_many("NotebookModule", "notebook_obj")
-    notebook_features_objs = one_to_many("NotebookFeature", "notebook_obj")
-    notebook_names_objs = one_to_many("NotebookName", "notebook_obj")
+    asts_objs = one_to_many("AST", "notebook_obj")
+    modules_objs = one_to_many("Module", "notebook_obj")
+    features_objs = one_to_many("Feature", "notebook_obj")
+    names_objs = one_to_many("Name", "notebook_obj")
 
 
     @property
@@ -1517,10 +1517,10 @@ class NotebookMarkdown(Base):
         )
 
 
-class NotebookAST(Base):
-    """Notebook AST Analysis Table"""
+class AST(Base):
+    """ AST Analysis Table"""
     # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'notebook_asts'
+    __tablename__ = 'asts'
     __table_args__ = (
         ForeignKeyConstraint(
             ['notebook_id'],
@@ -1746,22 +1746,26 @@ class NotebookAST(Base):
     ast_extslice = Column(Integer, default=0)
     ast_repr = Column(Integer, default=0)
 
-    notebook_obj = many_to_one("Notebook", "notebook_asts_objs")
-    python_file_obj = many_to_one("PythonFile", "notebook_asts_objs")
-    repository_obj = many_to_one("Repository", "notebook_asts_objs")
+    notebook_obj = many_to_one("Notebook", "asts_objs")
+    python_file_obj = many_to_one("PythonFile", "asts_objs")
+    repository_obj = many_to_one("Repository", "asts_objs")
 
     @force_encoded_string_output
     def __repr__(self):
-        return (
-            u"<NotebookAST({0.repository_id}/{0.notebook_id}/{0.id})>"
-            .format(self)
-        )
+        if self.type == 'notebook':
+            return (
+                u"<AST({0.repository_id}/{0.notebook_id}/{0.id})>"
+            ).format(self)
+        elif self.type == 'python_file':
+            return (
+                u"<AST({0.repository_id}/{0.python_file_id}/{0.id})>"
+            ).format(self)
 
 
-class NotebookModule(Base):
-    """Notebook Modules Table"""
+class Module(Base):
+    """Modules Table"""
     # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'notebook_modules'
+    __tablename__ = 'modules'
     __table_args__ = (
         ForeignKeyConstraint(
             ['notebook_id'],
@@ -1818,21 +1822,26 @@ class NotebookModule(Base):
 
     skip = Column(Integer, default=0)
 
-    notebook_obj = many_to_one("Notebook", "notebook_modules_objs")
-    python_file_obj = many_to_one("PythonFile", "notebook_modules_objs")
-    repository_obj = many_to_one("Repository", "notebook_modules_objs")
+    notebook_obj = many_to_one("Notebook", "modules_objs")
+    python_file_obj = many_to_one("PythonFile", "modules_objs")
+    repository_obj = many_to_one("Repository", "modules_objs")
 
     @force_encoded_string_output
     def __repr__(self):
-        return (
-            u"<NotebookModule({0.repository_id}/{0.notebook_id}/{0.id})>"
-        ).format(self)
+        if self.type == 'notebook':
+            return (
+                u"<Module({0.repository_id}/{0.notebook_id}/{0.id})>"
+            ).format(self)
+        elif self.type == 'python_file':
+            return (
+                u"<Module({0.repository_id}/{0.python_file_id}/{0.id})>"
+            ).format(self)
 
 
-class NotebookFeature(Base):
-    """Notebook Features Table"""
+class Feature(Base):
+    """Features Table"""
     # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'notebook_features'
+    __tablename__ = 'features'
     __table_args__ = (
         ForeignKeyConstraint(
             ['notebook_id'],
@@ -1885,21 +1894,26 @@ class NotebookFeature(Base):
 
     skip = Column(Integer, default=0)
 
-    notebook_obj = many_to_one("Notebook", "notebook_features_objs")
-    python_file_obj = many_to_one("PythonFile", "notebook_features_objs")
-    repository_obj = many_to_one("Repository", "notebook_features_objs")
+    notebook_obj = many_to_one("Notebook", "features_objs")
+    python_file_obj = many_to_one("PythonFile", "features_objs")
+    repository_obj = many_to_one("Repository", "features_objs")
 
     @force_encoded_string_output
     def __repr__(self):
-        return (
-            u"<NotebookFeature({0.repository_id}/{0.notebook_id}/{0.id})>"
-        ).format(self)
+        if self.type == 'notebook':
+            return (
+                u"<Feature({0.repository_id}/{0.notebook_id}/{0.id})>"
+            ).format(self)
+        elif self.type == 'python_file':
+            return (
+                u"<Feature({0.repository_id}/{0.python_file_id}/{0.id})>"
+            ).format(self)
 
 
-class NotebookName(Base):
-    """Notebook Names Table"""
+class Name(Base):
+    """Names Table"""
     # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'notebook_names'
+    __tablename__ = 'names'
     __table_args__ = (
         ForeignKeyConstraint(
             ['notebook_id'],
@@ -2042,15 +2056,20 @@ class NotebookName(Base):
 
     skip = Column(Integer, default=0)
 
-    notebook_obj = many_to_one("Notebook", "notebook_names_objs")
-    python_file_obj = many_to_one("PythonFile", "notebook_names_objs")
-    repository_obj = many_to_one("Repository", "notebook_names_objs")
+    notebook_obj = many_to_one("Notebook", "names_objs")
+    python_file_obj = many_to_one("PythonFile", "names_objs")
+    repository_obj = many_to_one("Repository", "names_objs")
 
     @force_encoded_string_output
     def __repr__(self):
-        return (
-            u"<NotebookName({0.repository_id}/{0.notebook_id}/{0.id})>"
-        ).format(self)
+        if self.type == 'notebook':
+            return (
+                u"<Name({0.repository_id}/{0.notebook_id}/{0.id})>"
+            ).format(self)
+        elif self.type == 'python_file':
+            return (
+                u"<Name({0.repository_id}/{0.python_file_id}/{0.id})>"
+            ).format(self)
 
 
 @contextmanager
