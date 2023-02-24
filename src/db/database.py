@@ -190,6 +190,10 @@ class PythonFile(Base):
     python_file_features_objs = one_to_many("PythonFileFeature", "python_file_obj")
     python_file_names_objs = one_to_many("PythonFileName", "python_file_obj")
 
+    notebook_asts_objs = one_to_many("NotebookAST", "python_file_obj")
+    notebook_modules_objs = one_to_many("NotebookModule", "python_file_obj")
+    notebook_features_objs = one_to_many("NotebookFeature", "python_file_obj")
+    notebook_names_objs = one_to_many("NotebookName", "python_file_obj")
 
     @property
     def path(self):
@@ -1523,6 +1527,10 @@ class NotebookAST(Base):
             ['notebooks.id']
         ),
         ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
             ['repository_id'],
             ['repositories.id']
         ),
@@ -1530,7 +1538,9 @@ class NotebookAST(Base):
 
     id = Column(Integer, autoincrement=True, primary_key=True)
     repository_id = Column(Integer)
+    type = Column(String)
     notebook_id = Column(Integer)
+    python_file_id = Column(Integer)
 
     cell_count = Column(Integer)
 
@@ -1737,6 +1747,7 @@ class NotebookAST(Base):
     ast_repr = Column(Integer, default=0)
 
     notebook_obj = many_to_one("Notebook", "notebook_asts_objs")
+    python_file_obj = many_to_one("PythonFile", "notebook_asts_objs")
     repository_obj = many_to_one("Repository", "notebook_asts_objs")
 
     @force_encoded_string_output
@@ -1757,6 +1768,10 @@ class NotebookModule(Base):
             ['notebooks.id']
         ),
         ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
             ['repository_id'],
             ['repositories.id']
         ),
@@ -1764,7 +1779,9 @@ class NotebookModule(Base):
 
     id = Column(Integer, autoincrement=True, primary_key=True)
     repository_id = Column(Integer)
+    type = Column(String)
     notebook_id = Column(Integer)
+    python_file_id = Column(Integer)
 
     index = Column(String)
     index_count = Column(Integer)
@@ -1802,6 +1819,7 @@ class NotebookModule(Base):
     skip = Column(Integer, default=0)
 
     notebook_obj = many_to_one("Notebook", "notebook_modules_objs")
+    python_file_obj = many_to_one("PythonFile", "notebook_modules_objs")
     repository_obj = many_to_one("Repository", "notebook_modules_objs")
 
     @force_encoded_string_output
@@ -1821,6 +1839,10 @@ class NotebookFeature(Base):
             ['notebooks.id']
         ),
         ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
             ['repository_id'],
             ['repositories.id']
         ),
@@ -1828,7 +1850,9 @@ class NotebookFeature(Base):
 
     id = Column(Integer, autoincrement=True, primary_key=True)
     repository_id = Column(Integer)
+    type = Column(String)
     notebook_id = Column(Integer)
+    python_file_id = Column(Integer)
 
     index = Column(String)
     index_count = Column(Integer)
@@ -1862,6 +1886,7 @@ class NotebookFeature(Base):
     skip = Column(Integer, default=0)
 
     notebook_obj = many_to_one("Notebook", "notebook_features_objs")
+    python_file_obj = many_to_one("PythonFile", "notebook_features_objs")
     repository_obj = many_to_one("Repository", "notebook_features_objs")
 
     @force_encoded_string_output
@@ -1881,6 +1906,10 @@ class NotebookName(Base):
             ['notebooks.id']
         ),
         ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
             ['repository_id'],
             ['repositories.id']
         ),
@@ -1888,7 +1917,9 @@ class NotebookName(Base):
 
     id = Column(Integer, autoincrement=True, primary_key=True)
     repository_id = Column(Integer)
+    type = Column(String)
     notebook_id = Column(Integer)
+    python_file_id = Column(Integer)
 
     index = Column(String)
     index_count = Column(Integer)
@@ -2012,6 +2043,7 @@ class NotebookName(Base):
     skip = Column(Integer, default=0)
 
     notebook_obj = many_to_one("Notebook", "notebook_names_objs")
+    python_file_obj = many_to_one("PythonFile", "notebook_names_objs")
     repository_obj = many_to_one("Repository", "notebook_names_objs")
 
     @force_encoded_string_output

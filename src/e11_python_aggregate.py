@@ -4,75 +4,53 @@ import os
 import config
 import consts
 
-from src.db.database import Notebook, connect, NotebookMarkdown, MarkdownFeature, Cell
+from src.db.database import PythonFile, connect, NotebookMarkdown,  Cell
 from src.db.database import NotebookAST, NotebookModule, NotebookFeature, NotebookName
 from src.db.database import CodeAnalysis, CellModule, CellFeature, CellName
 from h1_utils import vprint, StatusLogger, check_exit, savepid
 from h5_aggregation_helpers import calculate_markdown, calculate_ast, calculate_modules
 from h5_aggregation_helpers import calculate_names, calculate_features
 
-TYPE = "notebook"
+TYPE = "python_file"
 
-def process_notebook(session, notebook, skip_if_error):
-    if notebook.processed & consts.N_AGGREGATE_ERROR:
-        notebook.processed -= consts.N_AGGREGATE_ERROR
-        session.add(notebook)
-    if notebook.processed & consts.N_AGGREGATE_OK:
+def process_python_file(session, python_file, skip_if_error):
+    if python_file.processed & consts.PF_AGGREGATE_ERROR:
+        python_file.processed -= consts.PF_AGGREGATE_ERROR
+        session.add(python_file)
+    if python_file.processed & consts.PF_AGGREGATE_OK:
         return "already processed"
 
-    if notebook.kernel == 'no-kernel' and notebook.nbformat == '0':
-        notebook.processed |= consts.N_AGGREGATE_OK
-        session.add(notebook)
-        return "invalid notebook format. Do not aggregate it"
+    agg_ast = calculate_ast(session, python_file, TYPE)
 
-    agg_markdown = calculate_markdown(session, notebook)
-
-    if notebook.markdown_cells != agg_markdown["cell_count"]:
-        notebook.processed |= consts.N_AGGREGATE_ERROR
-        session.add(notebook)
-        return "incomplete markdown analysis"
-
-    if notebook.language != "python" or notebook.language_version == "unknown":
-        session.add(NotebookMarkdown(**agg_markdown))
-        notebook.processed |= consts.N_AGGREGATE_OK
-        session.add(notebook)
-        return "ok - non python notebook"
-
-    agg_ast = calculate_ast(session, notebook, TYPE)
-
-    if notebook.code_cells != agg_ast["cell_count"]:
-        notebook.processed |= consts.N_AGGREGATE_ERROR
-        session.add(notebook)
+    if not agg_ast["cell_count"]:
+        python_file.processed |= consts.PF_AGGREGATE_ERROR
+        session.add(python_file)
         return "incomplete code analysis"
 
-    syntax_error = bool(list(notebook.cell_objs.filter(
-        Cell.processed.op("&")(consts.C_SYNTAX_ERROR) == consts.C_SYNTAX_ERROR
-    )))
+    syntax_error = bool(PythonFile.processed.op("&")(consts.PF_SYNTAX_ERROR) == consts.PF_SYNTAX_ERROR)
 
     if syntax_error:
-        session.add(NotebookMarkdown(**agg_markdown))
-        notebook.processed |= consts.N_AGGREGATE_OK
-        notebook.processed |= consts.N_SYNTAX_ERROR
-        session.add(notebook)
+        python_file.processed |= consts.PF_AGGREGATE_OK
+        python_file.processed |= consts.PF_SYNTAX_ERROR
+        session.add(python_file)
         return "ok - syntax error"
 
-    agg_modules = calculate_modules(session, notebook, TYPE)
-    agg_features = calculate_features(session, notebook, TYPE)
-    agg_names = calculate_names(session, notebook, TYPE)
+    agg_modules = calculate_modules(session, python_file, TYPE)
+    agg_features = calculate_features(session, python_file, TYPE)
+    agg_names = calculate_names(session, python_file, TYPE)
 
-    session.add(NotebookMarkdown(**agg_markdown))
     session.add(NotebookAST(**agg_ast))
     session.add(NotebookModule(**agg_modules))
     session.add(NotebookFeature(**agg_features))
     session.add(NotebookName(**agg_names))
-    notebook.processed |= consts.N_AGGREGATE_OK
-    session.add(notebook)
+    python_file.processed |= consts.PF_AGGREGATE_OK
+    session.add(python_file)
 
     return "ok"
 
 
-def load_repository(session, notebook, repository_id):
-    if repository_id != notebook.repository_id:
+def load_repository(session, python_file, repository_id):
+    if repository_id != python_file.repository_id:
         try:
             session.commit()
         except Exception as err:
@@ -81,7 +59,7 @@ def load_repository(session, notebook, repository_id):
             ))
 
         vprint(0, 'Processing repository: {}'.format(repository_id))
-        return notebook.repository_id
+        return python_file.repository_id
 
     return repository_id
 
@@ -92,18 +70,17 @@ def apply(
 ):
     """Extract code cell features"""
     filters = [
-        Notebook.processed.op("&")(consts.N_AGGREGATE_OK) == 0,
-        Notebook.processed.op("&")(skip_if_error) == 0,
-        Notebook.processed.op("&")(consts.N_GENERIC_LOAD_ERROR) == 0,
+        PythonFile.processed.op("&")(consts.PF_AGGREGATE_OK) == 0,
+        PythonFile.processed.op("&")(skip_if_error) == 0,
     ]
     if interval:
         filters += [
-            Notebook.repository_id >= interval[0],
-            Notebook.repository_id <= interval[1],
+            PythonFile.repository_id >= interval[0],
+            PythonFile.repository_id <= interval[1],
         ]
 
     query = (
-        session.query(Notebook)
+        session.query(PythonFile)
         .filter(*filters)
     )
 
@@ -113,28 +90,28 @@ def apply(
 
     if reverse:
         query = query.order_by(
-            Notebook.repository_id.desc(),
-            Notebook.id.desc(),
+            PythonFile.repository_id.desc(),
+            PythonFile.id.desc(),
         )
     else:
         query = query.order_by(
-            Notebook.repository_id.asc(),
-            Notebook.id.asc(),
+            PythonFile.repository_id.asc(),
+            PythonFile.id.asc(),
         )
 
     repository_id = None
 
-    for notebook in query:
+    for python_file in query:
         if check_exit(check):
             session.commit()
             vprint(0, 'Found .exit file. Exiting')
             return
         status.report()
 
-        repository_id = load_repository(session, notebook, repository_id)
+        repository_id = load_repository(session, python_file, repository_id)
 
-        vprint(1, 'Processing notebook: {}'.format(notebook))
-        result = process_notebook(session, notebook, skip_if_error)
+        vprint(1, 'Processing Python File: {}'.format(python_file))
+        result = process_python_file(session, python_file, skip_if_error)
         vprint(1, result)
         status.count += 1
     session.commit()
@@ -171,7 +148,7 @@ def main():
         apply(
             session,
             status,
-            0 if args.retry_errors else consts.N_AGGREGATE_ERROR,
+            0 if args.retry_errors else consts.PF_AGGREGATE_ERROR,
             args.count,
             args.interval,
             args.reverse,
