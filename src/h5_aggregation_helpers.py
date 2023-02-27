@@ -132,7 +132,6 @@ def calculate_modules(session, file, file_type):
     for module in query:
         if file_type == "notebook":
             temp_agg["index"][str(module.index)] = 1
-        # local = module.local or (module.local_possibility > 0)
         local = module.local
 
         key = MODULE_LOCAL[local] + "_" + module.import_type

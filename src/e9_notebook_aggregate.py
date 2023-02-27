@@ -4,9 +4,8 @@ import os
 import config
 import consts
 
-from src.db.database import Notebook, connect, NotebookMarkdown, MarkdownFeature, Cell
+from src.db.database import Notebook, connect, NotebookMarkdown, Cell
 from src.db.database import AST, Module, Feature, Name
-from src.db.database import CodeAnalysis, CellModule, CellFeature, CellName
 from h1_utils import vprint, StatusLogger, check_exit, savepid
 from h5_aggregation_helpers import calculate_markdown, calculate_ast, calculate_modules
 from h5_aggregation_helpers import calculate_names, calculate_features

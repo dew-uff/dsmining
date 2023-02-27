@@ -475,13 +475,6 @@ class PythonFileModule(Base):
     local = Column(Boolean)
     skip = Column(Integer, default=0)
 
-    local_possibility = Column(Integer, default=None)
-    # 0 - impossible
-    # 1 - matches the last part of module_name
-    # 2 - matches all but the first part of module_name
-    # 3 - matches all parts of module_name
-    # 4 - already recognized as local
-
     python_file_obj = many_to_one("PythonFile", "python_file_modules_objs")
     repository_obj = many_to_one("Repository", "python_file_modules_objs")
     analysis_obj = many_to_one("PythonAnalysis", "python_file_modules_objs")
@@ -1191,12 +1184,6 @@ class CellModule(Base):
     local = Column(Boolean)
     skip = Column(Integer, default=0)
 
-    local_possibility = Column(Integer, default=None)
-    # 0 - impossible
-    # 1 - matches the last part of module_name
-    # 2 - matches all but the first part of module_name
-    # 3 - matches all parts of module_name
-    # 4 - already recognized as local
 
     cell_obj = many_to_one("Cell", "cell_modules_objs")
     notebook_obj = many_to_one("Notebook", "cell_modules_objs")
