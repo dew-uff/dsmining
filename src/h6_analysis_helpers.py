@@ -278,3 +278,26 @@ def cell_distribution(filename, width, height, select, bins, cell_type_bins_arra
         ax.spines['right'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
         ax.spines['left'].set_visible(False)
+
+
+def get_python_version(python_notebooks):
+    python_notebooks = python_notebooks.assign(minor_version=lambda x: x.language_version.str[:3])
+    python_notebooks = python_notebooks.assign(major_version=lambda x: x.language_version.str[:1])
+    python_version = python_notebooks.minor_version.value_counts(dropna=False) \
+        .rename_axis('Versions').to_frame("Notebooks")
+
+    pv = python_version[:7].reset_index(level=0)
+    others = pd.DataFrame(data={
+        'Versions': ['Other Versions'],
+        'Notebooks': [python_version['Notebooks'][7:].sum()]
+    })
+
+    pv2 = pd.concat([pv, others]).reset_index(drop=True) \
+        .sort_values(by='Notebooks', ascending=False)
+
+    unknown = pv2.query("Versions=='unk'")
+    if not unknown.empty:
+        index = unknown.index[0]
+        pv2.at[index, "Versions"] = 'Unknown'
+
+    return pv2
