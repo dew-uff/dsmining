@@ -28,6 +28,11 @@ def process_python_file(session, python_file, skip_if_error):
 
     syntax_error = bool(PythonFile.processed.op("&")(consts.PF_SYNTAX_ERROR) == consts.PF_SYNTAX_ERROR)
 
+    if python_file.total_lines == 0:
+        python_file.processed |= consts.PF_AGGREGATE_OK
+        session.add(python_file)
+        return "ok - empty python_file"
+
     if syntax_error:
         python_file.processed |= consts.PF_AGGREGATE_OK
         python_file.processed |= consts.PF_SYNTAX_ERROR
