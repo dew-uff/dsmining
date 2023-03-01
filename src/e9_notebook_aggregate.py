@@ -31,7 +31,7 @@ def process_notebook(session, notebook, skip_if_error):
         session.add(notebook)
         return "incomplete markdown analysis"
 
-    if notebook.language != "python" or notebook.language_version == "unknown":
+    if notebook.language != "python":
         session.add(NotebookMarkdown(**agg_markdown))
         notebook.processed |= consts.N_AGGREGATE_OK
         session.add(notebook)
