@@ -2,12 +2,11 @@
 import argparse
 import os
 import tarfile
-import config
-import consts
-
+import src.config as config
+import src.consts as consts
 from src.db.database import Repository, RepositoryFile, connect
-from h1_utils import vprint, StatusLogger, check_exit, savepid
-from h1_utils import mount_basedir, ignore_surrogates
+from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
+from src.helpers.h1_utils import mount_basedir, ignore_surrogates
 from future.utils.surrogateescape import register_surrogateescape
 
 

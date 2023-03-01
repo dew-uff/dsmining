@@ -2,15 +2,15 @@
 
 import argparse
 import os
-import config
 import nbformat as nbf
-import consts
+import src.config as config
+import src.consts as consts
 
 from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, Repository, connect
-from h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger, mount_basedir
-from h1_utils import check_exit, savepid, SafeSession
-from h3_unzip_repositories import unzip_repository
+from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger, mount_basedir
+from src.helpers.h1_utils import check_exit, savepid, SafeSession
+from src.helpers.h3_unzip_repositories import unzip_repository
 
 
 def cell_output_formats(cell):

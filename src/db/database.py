@@ -10,8 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Interval
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from sqlalchemy import ForeignKeyConstraint
-from src.h1_utils import version_string_to_list, ext_split
-
+from src.helpers.h1_utils import version_string_to_list
 
 BigInt = Integer
 Base = declarative_base()  # pylint: disable=invalid-name

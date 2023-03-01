@@ -2,8 +2,8 @@ import pandas as pd
 
 from config import SELECTED_REPOS_FILE
 from src.db.database import connect, Repository
-from h1_utils import mount_basedir
-from h2_load_repository import load_repository
+from src.helpers.h1_utils import mount_basedir
+from src.helpers.h2_load_repository import load_repository
 
 df = pd.read_excel(SELECTED_REPOS_FILE, keep_default_na=False)
 print('Total repositories: ',len(df))

@@ -8,11 +8,11 @@ from nbconvert.filters.markdown_mistune import MarkdownWithMath
 from langdetect import detect
 from nltk.corpus import stopwords
 
-import config
-import consts
+import src.config as config
+import src.consts as consts
 
 from src.db.database import Cell, MarkdownFeature, connect
-from h1_utils import vprint, StatusLogger, check_exit, savepid
+from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
 
 
 # Map based on stopwords.fileids() and !ls $langdetect.PROFILES_DIRECTORY

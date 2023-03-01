@@ -1,9 +1,12 @@
+import sys
 import os
+src = os.path.dirname(os.path.abspath(''))
+if src not in sys.path: sys.path.append(src)
+
 import re
 import ast
-import sys
 
-from h1_utils import to_unicode, ignore_surrogates
+from src.helpers.h1_utils import to_unicode, ignore_surrogates
 from contextlib import contextmanager
 from collections import Counter, OrderedDict, defaultdict
 

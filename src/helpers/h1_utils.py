@@ -12,8 +12,8 @@ import csv
 from contextlib import contextmanager
 from timeout_decorator import timeout, TimeoutError, timeout_decorator
 from pytz import unicode
-import config
-from config import Path
+import src.config as config
+from src.config import Path
 
 
 def ignore_surrogates(original):
@@ -96,14 +96,14 @@ def vprint(verbose, *args):
 def savepid():
     try:
         pid = os.getpid()
-        with open(".pid", "a") as fil:
+        with open("../.pid", "a") as fil:
             fil.write("{}\n".format(pid))
         yield pid
     finally:
-        with open(".pid", "r") as fil:
+        with open("../.pid", "r") as fil:
             pids = fil.readlines()
 
-        with open(".pid", "w") as fil:
+        with open("../.pid", "w") as fil:
             fil.write("\n".join(
                 p.strip()
                 for p in pids

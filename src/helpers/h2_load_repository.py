@@ -1,7 +1,11 @@
 """Load Repository"""
+import sys
 import os
-import consts
-import config
+src = os.path.dirname(os.path.abspath(''))
+if src not in sys.path: sys.path.append(src)
+
+import src.consts as consts
+import src.config as config
 import argparse
 import hashlib
 import subprocess
@@ -9,7 +13,7 @@ import shutil
 
 from future.moves.urllib.parse import urlparse
 from src.db.database import Repository, connect
-from h1_utils import mount_basedir, savepid, vprint
+from src.helpers.h1_utils import mount_basedir, savepid, vprint
 
 
 def extract_domain_repository(url):

@@ -3,10 +3,10 @@ import argparse
 import os
 import shutil
 
-import config
-import consts
+import src.config as config
+import src.consts as consts
 from src.db.database import Repository, connect
-from h1_utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
+from src.helpers.h1_utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
 
 
 def apply(session, status, keep, count, interval, reverse, check):

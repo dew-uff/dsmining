@@ -1,13 +1,17 @@
 """Load notebook and cells"""
+import sys
 import os
+src = os.path.dirname(os.path.abspath(''))
+if src not in sys.path: sys.path.append(src)
+
 import argparse
-import config
-import consts
+import src.config as config
+import src.consts as consts
 import subprocess
 
 from src.db.database import Repository, connect
-from h1_utils import vprint, StatusLogger, mount_basedir
-from h1_utils import check_exit, savepid
+from src.helpers.h1_utils import vprint, StatusLogger, mount_basedir
+from src.helpers.h1_utils import check_exit, savepid
 
 
 def unzip_repository(session, repository):
