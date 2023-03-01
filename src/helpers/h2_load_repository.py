@@ -10,9 +10,10 @@ import argparse
 import hashlib
 import subprocess
 import shutil
+from datetime import datetime
 
 from future.moves.urllib.parse import urlparse
-from src.db.database import Repository, connect
+from src.db.database import Repository, Commit, connect
 from src.helpers.h1_utils import mount_basedir, savepid, vprint
 
 
@@ -80,25 +81,28 @@ def clone(part, end, repo, remote, branch=None, commit=None):
             args = [
                 "--git-dir", str(full_dir / ".git"),
                 "--work-tree", str(full_dir),
-                "checkout", commit
+                "checkout"
             ]
             if git(*args) != 0:
                 raise EnvironmentError("Checkout failed for {}/{}".format(
                     repo, commit
                 ))
-    return full_dir
+
+            commits = load_commits(full_dir)
+            return full_dir, commits
+    return full_dir, None
 
 
 def load_repository_from_url(session, url, branch=None,
                              commit=None, clone_existing=False):
     """Clone repository and extract its information from URL"""
     domain, repo = extract_domain_repository(url)
-    return load_repository(
+    return load_repository_and_commits(
         session, domain, repo,
         branch=branch, commit=commit, clone_existing=clone_existing)
 
 
-def load_repository(session, domain, repo, check_repo_only=True, branch=None,
+def load_repository_and_commits(session, domain, repo, check_repo_only=True, branch=None,
                     commit=None, clone_existing=False):
     """Clone repository and extract its information"""
     vprint(0, "Processing repository: {}".format(repo))
@@ -114,7 +118,7 @@ def load_repository(session, domain, repo, check_repo_only=True, branch=None,
     part, end = extract_hash_parts(repo)
     remote = get_remote(domain, repo)
     vprint(1, "Remote: {}".format(remote))
-    full_dir = clone(part, end, repo, remote, branch, commit)
+    full_dir, all_commits = clone(part, end, repo, remote, branch, commit)
 
     commit = git_output(
         "rev-parse", "HEAD", cwd=str(full_dir)
@@ -140,13 +144,39 @@ def load_repository(session, domain, repo, check_repo_only=True, branch=None,
         commit=commit,
         processed=consts.R_LOADED,
     )
-    session.add(repository)
+    if all_commits:
+        session.dependent_add(
+            repository, [Commit(**commitrow) for commitrow in all_commits], "repository_id"
+        )
+    else:
+        session.add(repository)
+
     session.commit()
     # vprint("Removing .git directory")
     # shutil.rmtree(str(repository.path / ".git"), ignore_errors=True)
     vprint(1, "Done. ID={}".format(repository.id))
 
     return repository
+
+def load_commits(full_dir):
+    git_log_commits = subprocess.check_output(
+        ['git', "--git-dir", str(full_dir / ".git"),
+         'log', '--no-merges', '--pretty=format:%ci,%h,%an,%s'], stderr=subprocess.STDOUT
+    ).decode("utf-8").split("\n")
+
+    commits_info = []
+    for c in git_log_commits:
+        commit_date, commit_hash, author, message = c.split(',', 3)
+        commit_row = {
+            "repository_id": None,
+            "hash": commit_hash,
+            "date": datetime.strptime(commit_date[:19], '%Y-%m-%d %H:%M:%S'),
+            "author": author,
+            "message": message
+        }
+        commits_info.append(commit_row)
+    return commits_info
+
 
 
 def main():

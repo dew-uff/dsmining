@@ -68,6 +68,8 @@ class Repository(Base):
     commit = Column(String)
     processed = Column(Integer, default=0)
 
+    commits_objs = one_to_many("Commit", "repository_obj")
+
     notebooks_count = Column(Integer)
     python_files_count = Column(Integer)
     setups_count = Column(Integer)
@@ -161,6 +163,26 @@ class Repository(Base):
     @force_encoded_string_output
     def __repr__(self):
         return u"<Repository({}:{})>".format(self.id, self.repository)
+
+
+class Commit(Base):
+    """Commits Table"""
+    # pylint: disable=invalid-name
+    __tablename__ = 'commits'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['repository_id'],
+            ['repositories.id']
+        ),
+    )
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    repository_id = Column(Integer)
+    hash = Column(String)
+    date = Column(DateTime)
+    author = Column(String)
+    message = Column(String)
+
+    repository_obj = many_to_one("Repository", "commits_objs")
 
 
 class PythonFile(Base):
