@@ -1,6 +1,9 @@
 """Load Repository"""
 import sys
 import os
+
+import pytz
+
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
@@ -11,6 +14,7 @@ import hashlib
 import subprocess
 import shutil
 from datetime import datetime
+from dateutil import parser
 
 from future.moves.urllib.parse import urlparse
 from src.db.database import Repository, Commit, connect
@@ -166,11 +170,13 @@ def load_commits(full_dir):
 
     commits_info = []
     for c in git_log_commits:
-        commit_date, commit_hash, author, message = c.split(',', 3)
+        commit_datetime, commit_hash, author, message = c.split(',', 3)
+        commit_datetime = datetime.strptime(commit_datetime, "%Y-%m-%d %H:%M:%S %z")
+        commit_datetime = commit_datetime.astimezone(pytz.timezone('GMT'))
         commit_row = {
             "repository_id": None,
             "hash": commit_hash,
-            "date": datetime.strptime(commit_date[:19], '%Y-%m-%d %H:%M:%S'),
+            "date": commit_datetime,
             "author": author,
             "message": message
         }

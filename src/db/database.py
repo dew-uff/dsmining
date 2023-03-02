@@ -178,7 +178,7 @@ class Commit(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
     hash = Column(String)
-    date = Column(DateTime)
+    date = Column(DateTime(timezone=True))
     author = Column(String)
     message = Column(String)
 
