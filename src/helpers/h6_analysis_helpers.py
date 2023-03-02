@@ -13,7 +13,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import dask.dataframe as dd
-import config
+import src.config as config
 
 from dask.dataframe.core import Series as DaskSeries
 from dask.array.core import Array as DaskArray
@@ -93,14 +93,19 @@ def dask_from_query(session, query, file):
 
 
 def display_counts(
-    counts, width=20, show_values=False, plot=True, template="{0:,g}", template2="{0:,g}", cut=None, logy=True
+    df, width=20, show_values=False, plot=True, template="{0:,g}", template2="{0:,g}", cut=None, logy=True,
+    color='b'
 ):
+    counter = Counter()
+    df.agg(lambda x: counter.update(x))
+    del counter['']
+    counts = pd.Series(counter).sort_values(ascending=False)
     counts = counts.compute() if isinstance(counts, DaskSeries) else counts
     if cut:
         counts = counts[cut]
     if isinstance(counts, pd.Series):
         counts = counts.to_frame()
-    ax = counts.plot.bar(logy=logy)
+    ax = counts.plot.bar(logy=logy, color=color)
     ax.get_yaxis().set_major_formatter(
         matplotlib.ticker.FuncFormatter(lambda x, p: template2.format(x)))
     if show_values:
@@ -113,7 +118,7 @@ def display_counts(
         plt.show()
         display(counts)
     else:
-        return fig, counts
+        return fig, ax, counts
 
 
 def violinplot(column, tick, lim):
@@ -301,3 +306,20 @@ def get_python_version(python_notebooks):
         pv2.at[index, "Versions"] = 'Unknown'
 
     return pv2
+
+def get_toplevel_modules(modules):
+    columns = [
+        "any_any", "local_any", "external_any",
+        "any_import_from", "local_import_from", "external_import_from",
+        "any_import", "local_import", "external_import",
+        "any_load_ext", "local_load_ext", "external_load_ext",
+    ]
+    count_columns = [c + "_count" for c in columns]
+    for column in columns:
+        modules[column] = modules[column].apply(lambda c: {a for a in c.split(",") if a})
+        modules["toplevel_" + column] = modules[column].apply(lambda imports: {
+            getitem(x.split("."), 0, x) for x in imports
+        })
+        modules["toplevel_" + column + "_count"] = modules["toplevel_" + column].apply(len)
+
+    return modules
