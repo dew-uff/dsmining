@@ -66,10 +66,24 @@ class Repository(Base):
     hash_dir1 = Column(String)
     hash_dir2 = Column(String)
     commit = Column(String)
+
+    is_mirror = Column(Boolean)
+    disk_usage = Column(String)
+    primary_language = Column(String)
+    languages = Column(Integer)
+    contributors = Column(Integer)
+    watchers = Column(Integer)
+    stargazers = Column(Integer)
+    forks = Column(Integer)
+    issues = Column(Integer)
+    commits = Column(Integer)
+    pull_requests = Column(Integer)
+    branches = Column(Integer)
+    tags = Column(Integer)
+    releases = Column(Integer)
+    description = Column(String)
+
     processed = Column(Integer, default=0)
-
-    commits_objs = one_to_many("Commit", "repository_obj")
-
     notebooks_count = Column(Integer)
     python_files_count = Column(Integer)
     setups_count = Column(Integer)
@@ -77,7 +91,7 @@ class Repository(Base):
     pipfiles_count = Column(Integer)
     pipfile_locks_count = Column(Integer)
 
-
+    commits_objs = one_to_many("Commit", "repository_obj")
     python_files_objs = one_to_many("PythonFile", "repository_obj")
     python_analyzes_objs = one_to_many("PythonAnalysis", "repository_obj")
     python_file_modules_objs = one_to_many("PythonFileModule", "repository_obj")
@@ -177,6 +191,7 @@ class Commit(Base):
     )
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
+    type = Column(String)
     hash = Column(String)
     date = Column(DateTime(timezone=True))
     author = Column(String)

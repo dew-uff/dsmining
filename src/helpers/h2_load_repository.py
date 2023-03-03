@@ -106,9 +106,26 @@ def load_repository_from_url(session, url, branch=None,
         branch=branch, commit=commit, clone_existing=clone_existing)
 
 
-def load_repository_and_commits(session, domain, repo, check_repo_only=True, branch=None,
+def load_repository_and_commits(session, domain, repository, check_repo_only=True, branch=None,
                     commit=None, clone_existing=False):
     """Clone repository and extract its information"""
+    repo = f'{repository.owner}/{repository.name}'
+    is_mirror = repository.isMirror
+    disk_usage = repository.diskUsage
+    primary_language = repository.primaryLanguage
+    languages = repository.languages
+    contributors = repository.contributors
+    watchers = repository.watchers
+    stargazers = repository.stargazers
+    forks = repository.forks
+    issues = repository.issues
+    commits = repository.commits
+    pull_requests = repository.pullRequests
+    branches = repository.branches
+    tags = repository.tags
+    releases = repository.releases
+    description = repository.description
+
     vprint(0, "Processing repository: {}".format(repo))
     if check_repo_only:
         repository = session.query(Repository).filter(
@@ -144,8 +161,14 @@ def load_repository_and_commits(session, domain, repo, check_repo_only=True, bra
 
     repository = Repository(
         domain=domain, repository=repo,
-        hash_dir1=part, hash_dir2=end,
-        commit=commit,
+        hash_dir1=part, hash_dir2=end, commit=commit,
+        is_mirror=is_mirror, disk_usage=disk_usage,
+        primary_language=primary_language, languages=languages,
+        contributors=contributors, watchers=watchers,
+        stargazers=stargazers, forks=forks,
+        issues=issues, commits=commits,
+        pull_requests=pull_requests, branches=branches,
+        tags=tags, releases=releases, description=description,
         processed=consts.R_LOADED,
     )
     if all_commits:
@@ -162,25 +185,45 @@ def load_repository_and_commits(session, domain, repo, check_repo_only=True, bra
 
     return repository
 
+def format_commit(line, commit_type ):
+    commit_datetime, commit_hash, author, message = line.split(',', 3)
+    commit_datetime = datetime.strptime(commit_datetime, "%Y-%m-%d %H:%M:%S %z")
+    commit_datetime = commit_datetime.astimezone(pytz.timezone('GMT'))
+    commit_row = {
+        "repository_id": None,
+        "type":commit_type,
+        "hash": commit_hash,
+        "date": commit_datetime,
+        "author": author,
+        "message": message
+    }
+    return commit_row
 def load_commits(full_dir):
+
     git_log_commits = subprocess.check_output(
         ['git', "--git-dir", str(full_dir / ".git"),
          'log', '--no-merges', '--pretty=format:%ci,%h,%an,%s'], stderr=subprocess.STDOUT
-    ).decode("utf-8").split("\n")
+    ).decode("utf-8")
 
     commits_info = []
-    for c in git_log_commits:
-        commit_datetime, commit_hash, author, message = c.split(',', 3)
-        commit_datetime = datetime.strptime(commit_datetime, "%Y-%m-%d %H:%M:%S %z")
-        commit_datetime = commit_datetime.astimezone(pytz.timezone('GMT'))
-        commit_row = {
-            "repository_id": None,
-            "hash": commit_hash,
-            "date": commit_datetime,
-            "author": author,
-            "message": message
-        }
-        commits_info.append(commit_row)
+
+    if git_log_commits:
+        git_log_commits = git_log_commits.split("\n")
+        for cc in git_log_commits:
+            commit_row = format_commit(cc, "commit")
+            commits_info.append(commit_row)
+
+    git_log_merges = subprocess.check_output(
+        ['git', "--git-dir", str(full_dir / ".git"),
+         'log', '--merges', '--pretty=format:%ci,%h,%an,%s'], stderr=subprocess.STDOUT
+    ).decode("utf-8")
+
+    if git_log_merges:
+        git_log_merges = git_log_merges.split("\n")
+        for cm in git_log_merges:
+            commit_row = format_commit(cm, "merge")
+            commits_info.append(commit_row)
+
     return commits_info
 
 

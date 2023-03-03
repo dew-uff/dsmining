@@ -323,3 +323,48 @@ def get_toplevel_modules(modules):
         modules["toplevel_" + column + "_count"] = modules["toplevel_" + column].apply(len)
 
     return modules
+
+
+def calculate_nested_frequencies(repositories_with_commits, commits):
+    frequency = []
+    frequency_days = []
+    for index, repository in repositories_with_commits.iterrows():
+        repository_id = repository.repository_id
+        current_repository_commits = commits[commits.repository_id == repository_id].sort_values(by="date")
+        durations = []
+        previous = None
+        for index2, commit in current_repository_commits.iterrows():
+            if not previous:
+                previous = commit.date
+            else:
+                duration = commit.date - previous
+                durations.append(duration)
+                previous = commit.date
+        durations = pd.DataFrame(durations, columns=["timedelta"])
+        mean = durations.timedelta.mean()
+        frequency.append(mean)
+        frequency_days.append(mean.days)
+    repositories_with_commits['frequency_timedelta'] = frequency
+    repositories_with_commits['frequency_days'] = frequency_days
+
+def create_repositories_piechart(repository_attribute, attribute_name,
+                                 bins=None, labels=None):
+    if bins is None:
+        bins = [0, 1, 2, 5, 10, 20, 50, 100, 50000]
+    if labels is None:
+        labels = ["1", "2", "3-5", "6-10", "11-20", "21-50", "51-100", "> 100"]
+
+
+    attribute = pd.cut(repository_attribute[f"{attribute_name}"], bins=bins).value_counts() \
+        .rename_axis('repositories').to_frame(attribute_name).reset_index(level=0).sort_values(by='repositories')
+    attribute["labels"] = labels
+    attribute = attribute[attribute[f"{attribute_name}"] > 0]
+    fig, ax = plt.subplots(figsize=(15, 4))
+    attribute.plot \
+        .pie(ax=ax, y=f"{attribute_name}", title=f"Number of {attribute_name.capitalize()} per Repository",
+             labels=attribute.labels, ylabel=f'{attribute_name.capitalize()}', cmap="cool",
+             autopct=(lambda prct_value: '{:.1f}%\n{:.0f}'
+                      .format(prct_value, (len(repository_attribute) * prct_value / 100))
+                      )).get_legend().remove()
+    ax.yaxis.set_label_coords(-0.1, 0.5)
+    return fig, ax
