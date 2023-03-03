@@ -346,6 +346,7 @@ def calculate_nested_frequencies(repositories_with_commits, commits):
         frequency_days.append(mean.days)
     repositories_with_commits['frequency_timedelta'] = frequency
     repositories_with_commits['frequency_days'] = frequency_days
+    return  repositories_with_commits
 
 def create_repositories_piechart(repository_attribute, attribute_name,
                                  bins=None, labels=None):
