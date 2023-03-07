@@ -6,7 +6,7 @@ import tarfile
 import src.config as config
 import src.consts as consts
 
-from src.db.database import PythonFile, PythonFileModule, PythonAnalysis, connect, Cell
+from src.db.database import PythonFile, PythonFileModule, PythonAnalysis, connect, Cell, PythonFileDataIO
 from src.db.database import RepositoryFile
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
 from src.helpers.h1_utils import timeout, TimeoutError, SafeSession
@@ -17,7 +17,7 @@ from src.helpers.h4_ast_classes import PathLocalChecker, SetLocalChecker
 from src.helpers.h4_ast_classes import CompressedLocalChecker, CellVisitor
 
 
-@timeout(1 * 60, use_signals=False)
+# @timeout(1 * 60, use_signals=False)
 def extract_features(text, checker):
     """Use cell visitor to extract features from cell text"""
     visitor = CellVisitor(checker)
@@ -30,6 +30,7 @@ def extract_features(text, checker):
     return (
         visitor.counter,
         visitor.modules,
+        visitor.data_ios
     )
 
 
@@ -69,9 +70,12 @@ def process_python_file(
 
     try:
         error = False
+        analysis = None
+        modules = None
+        data_ios = None
         try:
             vprint(2, "Extracting features")
-            analysis, modules = extract_features(python_file.source, checker)
+            analysis, modules, data_ios = extract_features(python_file.source, checker)
             processed = consts.PFA_OK
         except TimeoutError:
             processed = consts.PFA_TIMEOUT
@@ -110,6 +114,16 @@ def process_python_file(
                 local=local,
             ))
 
+        for line, type_, caller, function_name, source in data_ios:
+            dependents.append(PythonFileDataIO(
+                repository_id=repository_id,
+                python_file_id=python_file.id,
+                line=line,
+                type=type_,
+                caller=caller,
+                function_name=function_name,
+                source=source,
+            ))
 
         vprint(2, "Adding session objects")
         session.dependent_add(

@@ -8,7 +8,7 @@ import src.config as config
 import src.consts as consts
 
 from itertools import groupby
-from src.db.database import Cell, CellModule, CodeAnalysis, connect
+from src.db.database import Cell, CellModule, CodeAnalysis, connect, CellDataIO
 from src.db.database import RepositoryFile
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
 from src.helpers.h1_utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
@@ -32,6 +32,7 @@ def extract_features(text, checker):
     return (
         visitor.counter,
         visitor.modules,
+        visitor.data_ios
     )
 
 
@@ -52,10 +53,7 @@ def process_code_cell(
 
     if retry:
         deleted = (
-            session.query(CellFeature).filter(
-                CellFeature.cell_id == cell.id
-            ).delete()
-            + session.query(CellModule).filter(
+            session.query(CellModule).filter(
                 CellModule.cell_id == cell.id
             ).delete()
             + session.query(CodeAnalysis).filter(
@@ -74,9 +72,12 @@ def process_code_cell(
 
     try:
         error = False
+        analysis = None
+        modules = None
+        data_ios = None
         try:
             vprint(2, "Extracting features")
-            analysis, modules = extract_features(cell.source, checker)
+            analysis, modules, data_ios = extract_features(cell.source, checker)
             processed = consts.A_OK
         except TimeoutError:
             processed = consts.A_TIMEOUT
@@ -119,6 +120,18 @@ def process_code_cell(
                 import_type=import_type,
                 module_name=module_name,
                 local=local,
+            ))
+
+        for line, type_, caller, function_name, source in data_ios:
+            dependents.append(CellDataIO(
+                repository_id=repository_id,
+                notebook_id=notebook_id,
+                cell_id=cell.id,
+                line=line,
+                type=type_,
+                caller=caller,
+                function_name=function_name,
+                source=source,
             ))
 
         vprint(2, "Adding session objects")

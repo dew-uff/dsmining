@@ -139,11 +139,16 @@ class CellVisitor(ast.NodeVisitor):
 
         self.ipython_features = []
         self.modules = []
+        self.data_ios = []
         self.local_checker = local_checker
 
     def new_module(self, line, type_, name):
         """Insert new module"""
         self.modules.append((line, type_, name, self.local_checker.is_local(name)))
+
+    def new_data_io(self, line, type_, module_name, function_name, file_name):
+        """Insert new data input or output"""
+        self.data_ios.append((line, type_, module_name, function_name, file_name))
 
     @contextmanager
     def set_scope(self, scope):
@@ -309,41 +314,23 @@ class CellVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Call(self, node):
-        """get_ipython().<method> calls"""
 
         func = node.func
         if not isinstance(func, ast.Attribute):
             return self.generic_visit(node)
+
         value = func.value
-        if not isinstance(value, ast.Call):
-            return self.generic_visit(node)
-        value_func = value.func
-        if not isinstance(value_func, ast.Name):
-            return self.generic_visit(node)
-        if value_func.id != "get_ipython":
-            return self.generic_visit(node)
-        args = node.args
-        if not args:
-            return self.generic_visit(node)
-        if not isinstance(args[0], ast.Str):
-            return self.generic_visit(node)
-        if not args[0].s:
-            return self.generic_visit(node)
+        if isinstance(value, ast.Name):
+            caller = value.id
+            function_name= func.attr
+            source= node.args[0].value
 
-        self.count_simple("ipython_superset")
 
-        type_ = func.attr
-        split = args[0].s.split()
-        name, = split[0:1] or ['']
-
-        self.ipython_features.append((node.lineno, node.col_offset, type_, name))
-
-        if name == "load_ext":
-            try:
-                module = split[1] if len(split) > 1 else args[1].s
-            except IndexError:
-                return
-            self.new_module(node.lineno, "load_ext", module)
+            if caller and function_name and source:
+                if "read" in function_name:
+                    self.new_data_io(node.lineno, 'input', caller, function_name, source)
+                if "to_" in function_name:
+                    self.new_data_io(node.lineno, 'output', caller, function_name, source)
 
     def visit_Subscript(self, node):
         """Collect In, Out, _oh, _ih"""
