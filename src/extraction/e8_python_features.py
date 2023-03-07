@@ -6,7 +6,7 @@ import tarfile
 import src.config as config
 import src.consts as consts
 
-from src.db.database import PythonFile, PythonFileFeature, PythonFileModule, PythonFileName, PythonAnalysis, connect, Cell
+from src.db.database import PythonFile, PythonFileModule, PythonAnalysis, connect, Cell
 from src.db.database import RepositoryFile
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
 from src.helpers.h1_utils import timeout, TimeoutError, SafeSession
@@ -30,8 +30,6 @@ def extract_features(text, checker):
     return (
         visitor.counter,
         visitor.modules,
-        visitor.ipython_features,
-        visitor.names
     )
 
 
@@ -52,14 +50,8 @@ def process_python_file(
 
     if retry:
         deleted = (
-            session.query(PythonFileFeature).filter(
-                PythonFileFeature.python_file_id == python_file.id
-            ).delete()
             + session.query(PythonFileModule).filter(
                 PythonFileModule.python_file_id == python_file.id
-            ).delete()
-            + session.query(PythonFileName).filter(
-                PythonFileName.python_file_id == python_file.id
             ).delete()
             + session.query(PythonAnalysis).filter(
                 PythonAnalysis.python_file_id == python_file.id
@@ -79,7 +71,7 @@ def process_python_file(
         error = False
         try:
             vprint(2, "Extracting features")
-            analysis, modules, features, names = extract_features(python_file.source, checker)
+            analysis, modules = extract_features(python_file.source, checker)
             processed = consts.PFA_OK
         except TimeoutError:
             processed = consts.PFA_TIMEOUT
@@ -97,8 +89,6 @@ def process_python_file(
             }
             analysis["ast_others"] = ""
             modules = []
-            features = []
-            names = {}
         else:
             vprint(3, "Ok")
 
@@ -120,28 +110,7 @@ def process_python_file(
                 local=local,
             ))
 
-        for line, column, feature_name, feature_value in features:
-            dependents.append(PythonFileFeature(
-                repository_id=repository_id,
-                python_file_id=python_file.id,
 
-                line=line,
-                column=column,
-                feature_name="IPython/" + feature_name,
-                feature_value=feature_value,
-            ))
-
-        for (scope, context), values in names.items():
-            for name, count in values.items():
-                dependents.append(PythonFileName(
-                    repository_id=repository_id,
-                    python_file_id=python_file.id,
-
-                    scope=scope,
-                    context=context,
-                    name=name,
-                    count=count,
-                ))
         vprint(2, "Adding session objects")
         session.dependent_add(
             python_analysis, dependents, "analysis_id"

@@ -8,7 +8,7 @@ import src.config as config
 import src.consts as consts
 
 from itertools import groupby
-from src.db.database import Cell, CellFeature, CellModule, CellName, CodeAnalysis, connect
+from src.db.database import Cell, CellModule, CodeAnalysis, connect
 from src.db.database import RepositoryFile
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
 from src.helpers.h1_utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
@@ -32,8 +32,6 @@ def extract_features(text, checker):
     return (
         visitor.counter,
         visitor.modules,
-        visitor.ipython_features,
-        visitor.names
     )
 
 
@@ -60,9 +58,6 @@ def process_code_cell(
             + session.query(CellModule).filter(
                 CellModule.cell_id == cell.id
             ).delete()
-            + session.query(CellName).filter(
-                CellName.cell_id == cell.id
-            ).delete()
             + session.query(CodeAnalysis).filter(
                 CodeAnalysis.cell_id == cell.id
             ).delete()
@@ -81,7 +76,7 @@ def process_code_cell(
         error = False
         try:
             vprint(2, "Extracting features")
-            analysis, modules, features, names = extract_features(cell.source, checker)
+            analysis, modules = extract_features(cell.source, checker)
             processed = consts.A_OK
         except TimeoutError:
             processed = consts.A_TIMEOUT
@@ -100,7 +95,6 @@ def process_code_cell(
             analysis["ast_others"] = ""
             modules = []
             features = []
-            names = {}
         else:
             vprint(3, "Ok")
 
@@ -127,32 +121,6 @@ def process_code_cell(
                 local=local,
             ))
 
-        for line, column, feature_name, feature_value in features:
-            dependents.append(CellFeature(
-                repository_id=repository_id,
-                notebook_id=notebook_id,
-                cell_id=cell.id,
-                index=cell.index,
-
-                line=line,
-                column=column,
-                feature_name="IPython/" + feature_name,
-                feature_value=feature_value,
-            ))
-
-        for (scope, context), values in names.items():
-            for name, count in values.items():
-                dependents.append(CellName(
-                    repository_id=repository_id,
-                    notebook_id=notebook_id,
-                    cell_id=cell.id,
-                    index=cell.index,
-
-                    scope=scope,
-                    context=context,
-                    name=name,
-                    count=count,
-                ))
         vprint(2, "Adding session objects")
         session.dependent_add(
             code_analysis, dependents, "analysis_id"

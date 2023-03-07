@@ -5,10 +5,9 @@ import src.config as config
 import src.consts as consts
 
 from src.db.database import PythonFile, connect
-from src.db.database import AST, Module, Feature, Name
+from src.db.database import AST, Module
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
 from src.helpers.h5_aggregation_helpers import calculate_ast, calculate_modules
-from src.helpers.h5_aggregation_helpers import calculate_names, calculate_features
 
 TYPE = "python_file"
 
@@ -40,13 +39,9 @@ def process_python_file(session, python_file, skip_if_error):
         return "ok - syntax error"
 
     agg_modules = calculate_modules(session, python_file, TYPE)
-    agg_features = calculate_features(session, python_file, TYPE)
-    agg_names = calculate_names(session, python_file, TYPE)
 
     session.add(AST(**agg_ast))
     session.add(Module(**agg_modules))
-    session.add(Feature(**agg_features))
-    session.add(Name(**agg_names))
     python_file.processed |= consts.PF_AGGREGATE_OK
     session.add(python_file)
 

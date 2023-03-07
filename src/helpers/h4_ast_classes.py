@@ -140,7 +140,6 @@ class CellVisitor(ast.NodeVisitor):
         self.ipython_features = []
         self.modules = []
         self.local_checker = local_checker
-        self.names = defaultdict(Counter)
 
     def new_module(self, line, type_, name):
         """Insert new module"""
@@ -178,14 +177,6 @@ class CellVisitor(ast.NodeVisitor):
         self.counter["total_{}".format(name)] += 1
         return scope
 
-    def count_name(self, varname, mode, scope=None):
-        if varname in self.globals:
-            scope = "global"
-        if varname in self.nonlocals:
-            scope = "nonlocal"
-        scope = scope or self.scope or "main"
-        self.names[(scope, mode)][varname] += 1
-
     def count_targets(self, targets, name, sub_name):
         for target in targets:
             if isinstance(target, ast.Name):
@@ -222,7 +213,6 @@ class CellVisitor(ast.NodeVisitor):
         self.visit_children(node)
 
     def visit_FunctionDef(self, node, simple="ast_functiondef"):
-        self.count_name(node.name, "function")
         self.count_simple("ast_statements")
         self.count_simple(simple)
         self.count("functiondef", node.name)
@@ -241,7 +231,6 @@ class CellVisitor(ast.NodeVisitor):
         self.visit_FunctionDef(node, simple="ast_asyncfunctiondef")
 
     def visit_ClassDef(self, node):
-        self.count_name(node.name, "class")
         self.count_simple("ast_statements")
         self.count_simple("ast_classdef")
         self.count("classdef", node.name)
@@ -295,7 +284,6 @@ class CellVisitor(ast.NodeVisitor):
             self.new_module(node.lineno, "import", import_.name)
         for alias in node.names:
             name = alias.asname or alias.name
-            self.count_name(name, "import")
             self.count("import", name)
         self.generic_visit(node)
 
@@ -307,7 +295,6 @@ class CellVisitor(ast.NodeVisitor):
         )
         for alias in node.names:
             name = alias.asname or alias.name
-            self.count_name(name, "importfrom")
             if name == "*":
                 self.count_simple("import_star")
             self.count("importfrom", name)
@@ -374,7 +361,6 @@ class CellVisitor(ast.NodeVisitor):
 
     def visit_Name(self, node):
         """Collect _, __, ___, _i, _ii, _iii, _0, _1, _i0, _i1, ..., _sh"""
-        self.count_name(node.id, type(node.ctx).__name__.lower())
         self.generic_visit(node)
         type_ = None
         underscore_num = re.findall(r"(^_(i)?\d*$)", node.id)

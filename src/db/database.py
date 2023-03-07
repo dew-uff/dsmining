@@ -95,8 +95,6 @@ class Repository(Base):
     python_files_objs = one_to_many("PythonFile", "repository_obj")
     python_analyzes_objs = one_to_many("PythonAnalysis", "repository_obj")
     python_file_modules_objs = one_to_many("PythonFileModule", "repository_obj")
-    python_file_features_objs = one_to_many("PythonFileFeature", "repository_obj")
-    python_file_names_objs = one_to_many("PythonFileName", "repository_obj")
 
 
     requirement_files_objs = one_to_many("RequirementFile", "repository_obj")
@@ -106,16 +104,12 @@ class Repository(Base):
     markdown_features_objs = one_to_many("MarkdownFeature", "repository_obj")
     code_analyses_objs = one_to_many("CodeAnalysis", "repository_obj")
     cell_modules_objs = one_to_many("CellModule", "repository_obj")
-    cell_features_objs = one_to_many("CellFeature", "repository_obj")
-    cell_names_objs = one_to_many("CellName", "repository_obj")
 
     files_objs = one_to_many("RepositoryFile", "repository_obj")
 
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "repository_obj")
     asts_objs = one_to_many("AST", "repository_obj")
     modules_objs = one_to_many("Module", "repository_obj")
-    features_objs = one_to_many("Feature", "repository_obj")
-    names_objs = one_to_many("Name", "repository_obj")
 
     @property
     def path(self):
@@ -223,13 +217,9 @@ class PythonFile(Base):
     python_analyzes_objs = one_to_many("PythonAnalysis", "python_file_obj")
 
     python_file_modules_objs = one_to_many("PythonFileModule", "python_file_obj")
-    python_file_features_objs = one_to_many("PythonFileFeature", "python_file_obj")
-    python_file_names_objs = one_to_many("PythonFileName", "python_file_obj")
 
     asts_objs = one_to_many("AST", "python_file_obj")
     modules_objs = one_to_many("Module", "python_file_obj")
-    features_objs = one_to_many("Feature", "python_file_obj")
-    names_objs = one_to_many("Name", "python_file_obj")
 
     @property
     def path(self):
@@ -469,8 +459,6 @@ class PythonAnalysis(Base):
     repository_obj = many_to_one("Repository", "python_analyzes_objs")
 
     python_file_modules_objs = one_to_many("PythonFileModule", "analysis_obj")
-    python_file_features_objs = one_to_many("PythonFileFeature", "analysis_obj")
-    python_file_names_objs = one_to_many("PythonFileName", "analysis_obj")
 
 
     @force_encoded_string_output
@@ -523,92 +511,6 @@ class PythonFileModule(Base):
         ).format(self)
 
 
-class PythonFileFeature(Base):
-    """Python File Features Table"""
-    # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'python_file_features'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['analysis_id'],
-            ['python_analyzes.id']
-        ),
-        ForeignKeyConstraint(
-            ['python_file_id'],
-            ['python_files.id']
-        ),
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    repository_id = Column(Integer)
-    python_file_id = Column(Integer)
-    analysis_id = Column(Integer)
-
-    line = Column(Integer)
-    column = Column(Integer)
-    feature_name = Column(String)
-    feature_value = Column(String)
-    skip = Column(Integer, default=0)
-
-    python_file_obj = many_to_one("PythonFile", "python_file_features_objs")
-    repository_obj = many_to_one("Repository", "python_file_features_objs")
-    analysis_obj = many_to_one("PythonAnalysis", "python_file_features_objs")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        return (
-            u"<Feature({0.repository_id}/{0.notebook_id}/"
-            u"{0.analysis_id}/{0.id}:{0.feature_name})>"
-        ).format(self)
-
-
-class PythonFileName(Base):
-    """Pyhton File Names Table"""
-    # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'python_file_names'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['analysis_id'],
-            ['python_analyzes.id']
-        ),
-        ForeignKeyConstraint(
-            ['python_file_id'],
-            ['python_files.id']
-        ),
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    repository_id = Column(Integer)
-    python_file_id = Column(Integer)
-    analysis_id = Column(Integer)
-
-    scope = Column(String)
-    context = Column(String)
-    name = Column(String)
-    count = Column(Integer)
-
-    skip = Column(Integer, default=0)
-
-
-    python_file_obj = many_to_one("PythonFile", "python_file_names_objs")
-    repository_obj = many_to_one("Repository", "python_file_names_objs")
-    analysis_obj = many_to_one("PythonAnalysis", "python_file_names_objs")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        return (
-            u"<Module({0.repository_id}/{0.python_file_id}/"
-            u"{0.analysis_id}/{0.id}:{0.name})>"
-        ).format(self)
-
-
 class Notebook(Base):
     """Notebook Table"""
     # pylint: disable=invalid-name
@@ -643,13 +545,9 @@ class Notebook(Base):
     markdown_features_objs = one_to_many("MarkdownFeature", "notebook_obj")
     code_analyses_objs = one_to_many("CodeAnalysis", "notebook_obj")
     cell_modules_objs = one_to_many("CellModule", "notebook_obj")
-    cell_features_objs = one_to_many("CellFeature", "notebook_obj")
-    cell_names_objs = one_to_many("CellName", "notebook_obj")
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "notebook_obj")
     asts_objs = one_to_many("AST", "notebook_obj")
     modules_objs = one_to_many("Module", "notebook_obj")
-    features_objs = one_to_many("Feature", "notebook_obj")
-    names_objs = one_to_many("Name", "notebook_obj")
 
 
     @property
@@ -714,8 +612,6 @@ class Cell(Base):
     markdown_features_objs = one_to_many("MarkdownFeature", "cell_obj")
     code_analyses_objs = one_to_many("CodeAnalysis", "cell_obj")
     cell_modules_objs = one_to_many("CellModule", "cell_obj")
-    cell_features_objs = one_to_many("CellFeature", "cell_obj")
-    cell_names_objs = one_to_many("CellName", "cell_obj")
 
     @force_encoded_string_output
     def __repr__(self):
@@ -1173,8 +1069,6 @@ class CodeAnalysis(Base):
     notebook_obj = many_to_one("Notebook", "code_analyses_objs")
     repository_obj = many_to_one("Repository", "code_analyses_objs")
     cell_modules_objs = one_to_many("CellModule", "analysis_obj")
-    cell_features_objs = one_to_many("CellFeature", "analysis_obj")
-    cell_names_objs = one_to_many("CellName", "analysis_obj")
 
     @force_encoded_string_output
     def __repr__(self):
@@ -1233,104 +1127,6 @@ class CellModule(Base):
             u"{0.cell_id}[{0.index}]/{0.analysis_id}/{0.id}:{0.import_type})>"
         ).format(self)
 
-
-class CellFeature(Base):
-    """Cell Features Table"""
-    # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'cell_features'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['analysis_id'],
-            ['code_analyses.id']
-        ),
-        ForeignKeyConstraint(
-            ['cell_id'],
-            ['cells.id']
-        ),
-        ForeignKeyConstraint(
-            ['notebook_id'],
-            ['notebooks.id']
-        ),
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    repository_id = Column(Integer)
-    notebook_id = Column(Integer)
-    cell_id = Column(Integer)
-    index = Column(Integer)
-    analysis_id = Column(Integer)
-
-    line = Column(Integer)
-    column = Column(Integer)
-    feature_name = Column(String)
-    feature_value = Column(String)
-    skip = Column(Integer, default=0)
-
-    cell_obj = many_to_one("Cell", "cell_features_objs")
-    notebook_obj = many_to_one("Notebook", "cell_features_objs")
-    repository_obj = many_to_one("Repository", "cell_features_objs")
-    analysis_obj = many_to_one("CodeAnalysis", "cell_features_objs")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        return (
-            u"<Feature({0.repository_id}/{0.notebook_id}/"
-            u"{0.cell_id}[{0.index}]/{0.analysis_id}/{0.id}:{0.feature_name})>"
-        ).format(self)
-
-
-class CellName(Base):
-    """Cell Names Table"""
-    # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'cell_names'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['analysis_id'],
-            ['code_analyses.id']
-        ),
-        ForeignKeyConstraint(
-            ['cell_id'],
-            ['cells.id']
-        ),
-        ForeignKeyConstraint(
-            ['notebook_id'],
-            ['notebooks.id']
-        ),
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    repository_id = Column(Integer)
-    notebook_id = Column(Integer)
-    cell_id = Column(Integer)
-    index = Column(Integer)
-    analysis_id = Column(Integer)
-
-    scope = Column(String)
-    context = Column(String)
-    name = Column(String)
-    count = Column(Integer)
-
-    skip = Column(Integer, default=0)
-
-    cell_obj = many_to_one("Cell", "cell_names_objs")
-    notebook_obj = many_to_one("Notebook", "cell_names_objs")
-    repository_obj = many_to_one("Repository", "cell_names_objs")
-    analysis_obj = many_to_one("CodeAnalysis", "cell_names_objs")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        return (
-            u"<Module({0.repository_id}/{0.notebook_id}/"
-            u"{0.cell_id}[{0.index}]/{0.analysis_id}/{0.id}:{0.name})>"
-        ).format(self)
 
 
 class RepositoryFile(Base):
@@ -1860,239 +1656,6 @@ class Module(Base):
                 u"<Module({0.repository_id}/{0.python_file_id}/{0.id})>"
             ).format(self)
 
-
-class Feature(Base):
-    """Features Table"""
-    # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'features'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['notebook_id'],
-            ['notebooks.id']
-        ),
-        ForeignKeyConstraint(
-            ['python_file_id'],
-            ['python_files.id']
-        ),
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    repository_id = Column(Integer)
-    type = Column(String)
-    notebook_id = Column(Integer)
-    python_file_id = Column(Integer)
-
-    index = Column(String)
-    index_count = Column(Integer)
-
-    any = Column(String)
-    any_count = Column(Integer)
-
-    shadown_ref = Column(String)
-    shadown_ref_count = Column(Integer)
-    output_ref = Column(String)
-    output_ref_count = Column(Integer)
-    system = Column(String)
-    system_count = Column(Integer)
-    set_next_input = Column(String)
-    set_next_input_count = Column(Integer)
-    input_ref = Column(String)
-    input_ref_count = Column(Integer)
-    magic = Column(String)
-    magic_count = Column(Integer)
-    run_line_magic = Column(String)
-    run_line_magic_count = Column(Integer)
-    run_cell_magic = Column(String)
-    run_cell_magic_count = Column(Integer)
-    getoutput = Column(String)
-    getoutput_count = Column(Integer)
-    set_hook = Column(String)
-    set_hook_count = Column(Integer)
-
-    others = Column(String)
-
-    skip = Column(Integer, default=0)
-
-    notebook_obj = many_to_one("Notebook", "features_objs")
-    python_file_obj = many_to_one("PythonFile", "features_objs")
-    repository_obj = many_to_one("Repository", "features_objs")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        if self.type == 'notebook':
-            return (
-                u"<Feature({0.repository_id}/{0.notebook_id}/{0.id})>"
-            ).format(self)
-        elif self.type == 'python_file':
-            return (
-                u"<Feature({0.repository_id}/{0.python_file_id}/{0.id})>"
-            ).format(self)
-
-
-class Name(Base):
-    """Names Table"""
-    # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'names'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['notebook_id'],
-            ['notebooks.id']
-        ),
-        ForeignKeyConstraint(
-            ['python_file_id'],
-            ['python_files.id']
-        ),
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    repository_id = Column(Integer)
-    type = Column(String)
-    notebook_id = Column(Integer)
-    python_file_id = Column(Integer)
-
-    index = Column(String)
-    index_count = Column(Integer)
-
-    any_any = Column(String)
-    any_any_counts = Column(String)
-    any_class = Column(String)
-    any_class_counts = Column(String)
-    any_import = Column(String)
-    any_import_counts = Column(String)
-    any_importfrom = Column(String)
-    any_importfrom_counts = Column(String)
-    any_function = Column(String)
-    any_function_counts = Column(String)
-    any_param = Column(String)
-    any_param_counts = Column(String)
-    any_del = Column(String)
-    any_del_counts = Column(String)
-    any_load = Column(String)
-    any_load_counts = Column(String)
-    any_store = Column(String)
-    any_store_counts = Column(String)
-
-    nonlocal_any = Column(String)
-    nonlocal_any_counts = Column(String)
-    nonlocal_class = Column(String)
-    nonlocal_class_counts = Column(String)
-    nonlocal_import = Column(String)
-    nonlocal_import_counts = Column(String)
-    nonlocal_importfrom = Column(String)
-    nonlocal_importfrom_counts = Column(String)
-    nonlocal_function = Column(String)
-    nonlocal_function_counts = Column(String)
-    nonlocal_param = Column(String)
-    nonlocal_param_counts = Column(String)
-    nonlocal_del = Column(String)
-    nonlocal_del_counts = Column(String)
-    nonlocal_load = Column(String)
-    nonlocal_load_counts = Column(String)
-    nonlocal_store = Column(String)
-    nonlocal_store_counts = Column(String)
-
-    local_any = Column(String)
-    local_any_counts = Column(String)
-    local_class = Column(String)
-    local_class_counts = Column(String)
-    local_import = Column(String)
-    local_import_counts = Column(String)
-    local_importfrom = Column(String)
-    local_importfrom_counts = Column(String)
-    local_function = Column(String)
-    local_function_counts = Column(String)
-    local_param = Column(String)
-    local_param_counts = Column(String)
-    local_del = Column(String)
-    local_del_counts = Column(String)
-    local_load = Column(String)
-    local_load_counts = Column(String)
-    local_store = Column(String)
-    local_store_counts = Column(String)
-
-    class_any = Column(String)
-    class_any_counts = Column(String)
-    class_class = Column(String)
-    class_class_counts = Column(String)
-    class_import = Column(String)
-    class_import_counts = Column(String)
-    class_importfrom = Column(String)
-    class_importfrom_counts = Column(String)
-    class_function = Column(String)
-    class_function_counts = Column(String)
-    class_param = Column(String)
-    class_param_counts = Column(String)
-    class_del = Column(String)
-    class_del_counts = Column(String)
-    class_load = Column(String)
-    class_load_counts = Column(String)
-    class_store = Column(String)
-    class_store_counts = Column(String)
-
-    global_any = Column(String)
-    global_any_counts = Column(String)
-    global_class = Column(String)
-    global_class_counts = Column(String)
-    global_import = Column(String)
-    global_import_counts = Column(String)
-    global_importfrom = Column(String)
-    global_importfrom_counts = Column(String)
-    global_function = Column(String)
-    global_function_counts = Column(String)
-    global_param = Column(String)
-    global_param_counts = Column(String)
-    global_del = Column(String)
-    global_del_counts = Column(String)
-    global_load = Column(String)
-    global_load_counts = Column(String)
-    global_store = Column(String)
-    global_store_counts = Column(String)
-
-    main_any = Column(String)
-    main_any_counts = Column(String)
-    main_class = Column(String)
-    main_class_counts = Column(String)
-    main_import = Column(String)
-    main_import_counts = Column(String)
-    main_importfrom = Column(String)
-    main_importfrom_counts = Column(String)
-    main_function = Column(String)
-    main_function_counts = Column(String)
-    main_param = Column(String)
-    main_param_counts = Column(String)
-    main_del = Column(String)
-    main_del_counts = Column(String)
-    main_load = Column(String)
-    main_load_counts = Column(String)
-    main_store = Column(String)
-    main_store_counts = Column(String)
-
-    others = Column(String)
-
-    skip = Column(Integer, default=0)
-
-    notebook_obj = many_to_one("Notebook", "names_objs")
-    python_file_obj = many_to_one("PythonFile", "names_objs")
-    repository_obj = many_to_one("Repository", "names_objs")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        if self.type == 'notebook':
-            return (
-                u"<Name({0.repository_id}/{0.notebook_id}/{0.id})>"
-            ).format(self)
-        elif self.type == 'python_file':
-            return (
-                u"<Name({0.repository_id}/{0.python_file_id}/{0.id})>"
-            ).format(self)
 
 
 @contextmanager

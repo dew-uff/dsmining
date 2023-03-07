@@ -1,5 +1,5 @@
 from collections import Counter, OrderedDict
-from src.db.database import CodeAnalysis, CellModule, CellFeature, CellName, MarkdownFeature
+from src.db.database import CodeAnalysis, CellModule, MarkdownFeature
 
 IGNORE_COLUMNS = {
     "id", "repository_id", "notebook_id", "cell_id", "index",
@@ -150,112 +150,6 @@ def calculate_modules(session, file, file_type):
     for attr, elements in temp_agg.items():
         agg[attr] = ",".join(elements)
         agg[attr + "_count"] = len(elements)
-
-    agg["others"] = ",".join(others)
-    agg["repository_id"] = file.repository_id
-    agg[f"{file_type}_id"] = file.id
-    agg["type"] = file_type
-    return agg
-
-
-def calculate_features(session, file, file_type):
-    temp_agg = {
-        col: OrderedDict()
-        for col in FEATURES.values()
-    }
-    temp_agg["index"] = OrderedDict()
-    others = []
-    def add_feature(key, feature):
-        if key in temp_agg:
-            temp_agg[key][feature.feature_value] = 1
-        else:
-            others.append("{}:{}".format(key, feature.feature_value))
-
-
-
-    if file_type == 'notebook':
-        query = (
-            file.cell_features_objs
-            .order_by(CellFeature.index.asc())
-        )
-    elif file_type == 'python_file':
-        query = (
-            file.python_file_features_objs
-            # .order_by(PythonModule.id.asc())
-        )
-    else:
-        return "invalid file type. Unable to aggregate it"
-
-    for feature in query:
-        if file_type == "notebook":
-            temp_agg["index"][str(feature.index)] = 1
-        key = FEATURES.get(feature.feature_name, feature.feature_name)
-        add_feature(key, feature)
-
-        key = "any"
-        add_feature(key, feature)
-    agg = {}
-    for attr, elements in temp_agg.items():
-        agg[attr] = ",".join(elements)
-        agg[attr + "_count"] = len(elements)
-
-    agg["others"] = ",".join(others)
-    agg["repository_id"] = file.repository_id
-    agg[f"{file_type}_id"] = file.id
-    agg["type"] = file_type
-    return agg
-
-
-def calculate_names(session, file, file_type):
-    temp_agg = {
-        (scope + "_" + context): Counter()
-        for scope in NAME_SCOPES
-        for context in NAME_CONTEXTS
-    }
-    index = OrderedDict()
-    others = []
-    def add_key(key, name):
-        if key in temp_agg:
-            temp_agg[key][name.name] += name.count
-        else:
-            others.append("{}:{}({})".format(key, name.name, name.count))
-
-    if file_type == 'notebook':
-        query = (
-            file.cell_names_objs
-            .order_by(CellName.index.asc())
-        )
-    elif file_type == 'python_file':
-        query = (
-            file.python_file_names_objs
-            # .order_by(PythonAnalysis.id.asc())
-        )
-    else:
-        return "invalid file type. Unable to aggregate it"
-
-
-    for name in query:
-        if file_type == "notebook":
-            index[str(name.index)] = 1
-        key = name.scope + "_" + name.context
-        add_key(key, name)
-
-        key = name.scope + "_any"
-        add_key(key, name)
-
-        key = "any_" + name.context
-        add_key(key, name)
-
-        key = "any_any"
-        add_key(key, name)
-
-    agg = {}
-    agg["index"] = ",".join(index)
-    agg["index_count"] = len(index)
-    for attr, elements in temp_agg.items():
-        mc = elements.most_common()
-        agg[attr] = ",".join(str(name) for name, _ in mc)
-        agg[attr + "_counts"] = ",".join(str(count) for _, count in mc)
 
     agg["others"] = ",".join(others)
     agg["repository_id"] = file.repository_id

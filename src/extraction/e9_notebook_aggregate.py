@@ -5,10 +5,10 @@ import src.config as config
 import src.consts as consts
 
 from src.db.database import Notebook, connect, NotebookMarkdown, Cell
-from src.db.database import AST, Module, Feature, Name
+from src.db.database import AST, Module
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
 from src.helpers.h5_aggregation_helpers import calculate_markdown, calculate_ast, calculate_modules
-from src.helpers.h5_aggregation_helpers import calculate_names, calculate_features
+
 
 TYPE = "notebook"
 
@@ -56,14 +56,11 @@ def process_notebook(session, notebook, skip_if_error):
         return "ok - syntax error"
 
     agg_modules = calculate_modules(session, notebook, TYPE)
-    agg_features = calculate_features(session, notebook, TYPE)
-    agg_names = calculate_names(session, notebook, TYPE)
+
 
     session.add(NotebookMarkdown(**agg_markdown))
     session.add(AST(**agg_ast))
     session.add(Module(**agg_modules))
-    session.add(Feature(**agg_features))
-    session.add(Name(**agg_names))
     notebook.processed |= consts.N_AGGREGATE_OK
     session.add(notebook)
 
