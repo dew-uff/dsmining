@@ -5,6 +5,7 @@ if src not in sys.path: sys.path.append(src)
 
 import re
 import ast
+import astunparse
 
 from src.helpers.h1_utils import to_unicode, ignore_surrogates
 from contextlib import contextmanager
@@ -146,9 +147,9 @@ class CellVisitor(ast.NodeVisitor):
         """Insert new module"""
         self.modules.append((line, type_, name, self.local_checker.is_local(name)))
 
-    def new_data_io(self, line, type_, module_name, function_name, file_name):
+    def new_data_io(self, line, type_, module_name, function_name, source, source_type):
         """Insert new data input or output"""
-        self.data_ios.append((line, type_, module_name, function_name, file_name))
+        self.data_ios.append((line, type_, module_name, function_name, source, source_type))
 
     @contextmanager
     def set_scope(self, scope):
@@ -313,24 +314,51 @@ class CellVisitor(ast.NodeVisitor):
         self.nonlocals.update(node.names)
         self.generic_visit(node)
 
-    def visit_Call(self, node):
 
-        func = node.func
-        if not isinstance(func, ast.Attribute):
-            return self.generic_visit(node)
-
-        value = func.value
+    @staticmethod
+    def get_function_data(function):
+        function_name = function.attr
+        value = function.value
+        caller = None
         if isinstance(value, ast.Name):
             caller = value.id
-            function_name= func.attr
-            source= node.args[0].value
+
+        return caller, function_name
+
+    @staticmethod
+    def get_source_type(arguments):
+        if len(arguments) >= 1:
+            first_arg = arguments[0]
+            source = astunparse.unparse(first_arg).replace('\n', '')
+            source_type = str(type(first_arg))
+            return source, source_type
+        return None
 
 
-            if caller and function_name and source:
-                if "read" in function_name:
-                    self.new_data_io(node.lineno, 'input', caller, function_name, source)
-                if "to_" in function_name:
-                    self.new_data_io(node.lineno, 'output', caller, function_name, source)
+    def visit_Call(self, node):
+
+        function = node.func
+        arguments =  node.args
+
+        if not isinstance(function, ast.Attribute):
+            return self.generic_visit(node)
+
+        caller, function_name = self.get_function_data(function)
+
+        if not (caller and function_name):
+            return self.generic_visit(node)
+
+        if "read" in function_name:
+            source, source_type = self.get_source_type(arguments)
+            if not source or not source_type:
+                return self.generic_visit(node)
+            self.new_data_io(node.lineno, 'input', caller, function_name, source, source_type)
+
+        if "to_" in function_name:
+            source, source_type = self.get_source_type(arguments)
+            if not source or not source_type:
+                return self.generic_visit(node)
+            self.new_data_io(node.lineno, 'output', caller, function_name, source, source_type)
 
     def visit_Subscript(self, node):
         """Collect In, Out, _oh, _ih"""

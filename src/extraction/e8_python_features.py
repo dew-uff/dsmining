@@ -114,7 +114,7 @@ def process_python_file(
                 local=local,
             ))
 
-        for line, type_, caller, function_name, source in data_ios:
+        for line, type_, caller, function_name, source, source_type in data_ios:
             dependents.append(PythonFileDataIO(
                 repository_id=repository_id,
                 python_file_id=python_file.id,
@@ -123,6 +123,7 @@ def process_python_file(
                 caller=caller,
                 function_name=function_name,
                 source=source,
+                source_type=source_type
             ))
 
         vprint(2, "Adding session objects")

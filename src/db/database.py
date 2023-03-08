@@ -545,6 +545,7 @@ class PythonFileDataIO(Base):
     caller = Column(String)
     function_name = Column(String)
     source = Column(String)
+    source_type = Column(String)
     skip = Column(Integer, default=0)
 
     python_file_obj = many_to_one("PythonFile", "python_file_data_ios_objs")
@@ -1213,6 +1214,7 @@ class CellDataIO(Base):
     caller = Column(String)
     function_name = Column(String)
     source = Column(String)
+    source_type = Column(String)
     skip = Column(Integer, default=0)
 
     cell_obj = many_to_one("Cell", "cell_data_ios_objs")

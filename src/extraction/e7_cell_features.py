@@ -19,7 +19,7 @@ from src.helpers.h4_ast_classes import PathLocalChecker, SetLocalChecker
 from src.helpers.h4_ast_classes import CompressedLocalChecker, CellVisitor
 
 
-@timeout(1 * 60, use_signals=False)
+# @timeout(1 * 60, use_signals=False)
 def extract_features(text, checker):
     """Use cell visitor to extract features from cell text"""
     visitor = CellVisitor(checker)
@@ -122,7 +122,7 @@ def process_code_cell(
                 local=local,
             ))
 
-        for line, type_, caller, function_name, source in data_ios:
+        for line, type_, caller, function_name, source, source_type in data_ios:
             dependents.append(CellDataIO(
                 repository_id=repository_id,
                 notebook_id=notebook_id,
@@ -132,6 +132,7 @@ def process_code_cell(
                 caller=caller,
                 function_name=function_name,
                 source=source,
+                source_type=source_type
             ))
 
         vprint(2, "Adding session objects")

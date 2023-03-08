@@ -25,9 +25,10 @@ future = "*"
 chardet = "*"
 IPython = "*"
 nbformat = "*"
-langdetect= "*"
+langdetect = "*"
 nltk = "*"
-mistune="==0.8.4"
+mistune ="==0.8.4"
+astunparse = "*"
 
 [dev-packages]
 
