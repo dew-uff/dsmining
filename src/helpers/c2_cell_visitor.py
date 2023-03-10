@@ -6,63 +6,8 @@ if src not in sys.path: sys.path.append(src)
 import re
 import ast
 import astunparse
-
-from src.helpers.h1_utils import to_unicode, ignore_surrogates
 from contextlib import contextmanager
-from collections import Counter, OrderedDict, defaultdict
-
-
-class PathLocalChecker(object):
-    """Check if module is local by looking at the directory"""
-
-    def __init__(self, path):
-        path = to_unicode(path)
-        self.base = os.path.dirname(path)
-
-    def exists(self, path):
-        return os.path.exists(path)
-
-    def is_local(self, module):
-        """Check if module is local by checking if its package exists"""
-        if module.startswith("."):
-            return True
-        path = self.base
-        for part in module.split("."):
-            path = os.path.join(path, part)
-            if not self.exists(path) and not self.exists(path + u".py"):
-                return False
-        return True
-
-
-class SetLocalChecker(PathLocalChecker):
-    """Check if module is local by looking at a set"""
-
-    def __init__(self, dirset, notebook_path):
-        path = to_unicode(notebook_path)
-        self.base = os.path.dirname(path)
-        self.dirset = dirset
-
-    def exists(self, path):
-        path, _ = ignore_surrogates(path)
-        if path[0] == "/":
-            path = path[1:]
-        return path in self.dirset or (path + "/") in self.dirset
-
-
-class CompressedLocalChecker(PathLocalChecker):
-    """Check if module is local by looking at the zip file"""
-
-    def __init__(self, tarzip, notebook_path):
-        path = to_unicode(notebook_path)
-        self.base = os.path.dirname(path)
-        self.tarzip = tarzip
-
-    def exists(self, path):
-        try:
-            self.tarzip.getmember(path)
-            return True
-        except KeyError:
-            return False
+from collections import OrderedDict
 
 
 class CellVisitor(ast.NodeVisitor):
@@ -112,6 +57,9 @@ class CellVisitor(ast.NodeVisitor):
             "keyword", "alias", "withitem",
         ]
 
+        input_modes = ["r","rb"]
+        output_modes = ["w","wb", "x", "xb", "a", "ab"]
+
         for nodetype in custom:
             self.counter[nodetype] = 0
         for nodetype in scoped:
@@ -133,6 +81,8 @@ class CellVisitor(ast.NodeVisitor):
 
         self.statements = set(statements)
         self.expressions = set(expressions)
+        self.input_modes = set(input_modes)
+        self.output_modes = set(output_modes)
 
         self.scope = None
         self.globals = set()
@@ -334,6 +284,31 @@ class CellVisitor(ast.NodeVisitor):
             return source, source_type
         return None
 
+    def visit_With(self, node):
+        items = node.items
+        if len(items) == 0 or not items[0].context_expr:
+            return self.generic_visit(node)
+
+        context = items[0].context_expr
+
+        if not isinstance(context, ast.Call) or len(context.args) < 2:
+            return self.generic_visit(node)
+
+        source = astunparse.unparse(context.args[0]).replace('\n', '')
+        source_type = str(type(context.args[0]))
+        open_mode = astunparse.unparse(context.args[1]).replace("\n", "").replace("'", "")
+
+        if not context.func or not context.func.id:
+            return self.generic_visit(node)
+
+        function_name = context.func.id
+        if open_mode and function_name and source and source_type:
+            if open_mode in self.input_modes:
+                self.new_data_io(node.lineno, 'input', 'with', function_name, source, source_type)
+            elif open_mode in self.output_modes:
+                self.new_data_io(node.lineno, 'output', 'with', function_name, source, source_type)
+
+        self.visit_children(node, node.body)
 
     def visit_Call(self, node):
 

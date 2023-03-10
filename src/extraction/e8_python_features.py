@@ -13,8 +13,8 @@ from src.helpers.h1_utils import timeout, TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
 from e5_extract_files import process_repository
-from src.helpers.h4_ast_classes import PathLocalChecker, SetLocalChecker
-from src.helpers.h4_ast_classes import CompressedLocalChecker, CellVisitor
+from src.helpers.c1_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
+from src.helpers.c2_cell_visitor import  CellVisitor
 
 
 # @timeout(1 * 60, use_signals=False)
