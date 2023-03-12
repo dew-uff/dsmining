@@ -1,11 +1,12 @@
+import ast
 import sys
 import os
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
-import ast
 from src.helpers.c2_cell_visitor import CellVisitor
 from src.helpers.c1_checkers import PathLocalChecker
+
 
 class TestCellVisitorNewDataIO:
     def setup_method(self):
@@ -167,13 +168,14 @@ class TestCellVisitorGetSourceData:
         upper_function = "order"
         function_name = "read_csv"
         source = "'data.csv'"
+        upper_source = f"{function_name}({source})"
 
-        node = ast.parse(f"{upper_function}({function_name}({source}))")
+        node = ast.parse(f"{upper_function}({upper_source})")
         args = node.body[0].value.args
 
         result_source, result_source_type = self.cell_visitor.get_source_data(args)
-        assert result_source is None
-        assert result_source_type is None
+        assert result_source == upper_source
+        assert result_source_type == ast.Call.__name__
 
 
 class TestCellVisitorVisitCall:
@@ -214,13 +216,15 @@ class TestCellVisitorVisitCall:
         self.cell_visitor.visit(node)
 
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, \
-            result_caller, result_function_name, \
+        result_line, result_type, result_caller,\
+            result_function_name, result_function_type,\
             result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type,
-                result_caller, result_function_name,
+        assert (result_line, result_type, result_caller,
+                result_function_name, result_function_type,
                 result_source, result_source_type
-                ) == (1, "output", caller, function_name, source, str(ast.Constant))
+                ) == (1, "output", caller,
+                      function_name, ast.Attribute.__name__,
+                      source, ast.Constant.__name__)
 
 
     """ Function Type"""
