@@ -32,6 +32,7 @@ astunparse = "*"
 pytest = "*"
 coverage = "*"
 pytest-mock = "*"
+pylint = "*"
 
 [dev-packages]
 

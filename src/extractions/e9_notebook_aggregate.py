@@ -4,52 +4,62 @@ import os
 import src.config as config
 import src.consts as consts
 
-from src.db.database import PythonFile, connect
-from src.db.database import AST, Module
+from src.db.database import Notebook, connect, NotebookMarkdown, Cell
+from src.db.database import Module
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-from src.helpers.h5_aggregation_helpers import calculate_ast, calculate_modules
+from src.helpers.h5_aggregation_helpers import calculate_markdown, calculate_modules
 
-TYPE = "python_file"
 
-def process_python_file(session, python_file, skip_if_error):
-    if python_file.processed & consts.PF_AGGREGATE_ERROR:
-        python_file.processed -= consts.PF_AGGREGATE_ERROR
-        session.add(python_file)
-    if python_file.processed & consts.PF_AGGREGATE_OK:
+TYPE = "notebook"
+
+def process_notebook(session, notebook, skip_if_error):
+    if notebook.processed & consts.N_AGGREGATE_ERROR:
+        notebook.processed -= consts.N_AGGREGATE_ERROR
+        session.add(notebook)
+    if notebook.processed & consts.N_AGGREGATE_OK:
         return "already processed"
 
-    agg_ast = calculate_ast(session, python_file, TYPE)
+    if notebook.kernel == 'no-kernel' and notebook.nbformat == '0':
+        notebook.processed |= consts.N_AGGREGATE_OK
+        session.add(notebook)
+        return "invalid notebook format. Do not aggregate it"
 
-    if not agg_ast["cell_count"]:
-        python_file.processed |= consts.PF_AGGREGATE_ERROR
-        session.add(python_file)
-        return "incomplete code analysis"
+    agg_markdown = calculate_markdown(session, notebook)
 
-    syntax_error = bool(PythonFile.processed.op("&")(consts.PF_SYNTAX_ERROR) == consts.PF_SYNTAX_ERROR)
+    if notebook.markdown_cells != agg_markdown["cell_count"]:
+        notebook.processed |= consts.N_AGGREGATE_ERROR
+        session.add(notebook)
+        return "incomplete markdown analysis"
 
-    if python_file.total_lines == 0:
-        python_file.processed |= consts.PF_AGGREGATE_OK
-        session.add(python_file)
-        return "ok - empty python_file"
+    if notebook.language != "python":
+        session.add(NotebookMarkdown(**agg_markdown))
+        notebook.processed |= consts.N_AGGREGATE_OK
+        session.add(notebook)
+        return "ok - non python notebook"
+
+    syntax_error = bool(list(notebook.cell_objs.filter(
+        Cell.processed.op("&")(consts.C_SYNTAX_ERROR) == consts.C_SYNTAX_ERROR
+    )))
 
     if syntax_error:
-        python_file.processed |= consts.PF_AGGREGATE_OK
-        python_file.processed |= consts.PF_SYNTAX_ERROR
-        session.add(python_file)
+        session.add(NotebookMarkdown(**agg_markdown))
+        notebook.processed |= consts.N_AGGREGATE_OK
+        notebook.processed |= consts.N_SYNTAX_ERROR
+        session.add(notebook)
         return "ok - syntax error"
 
-    agg_modules = calculate_modules(session, python_file, TYPE)
+    agg_modules = calculate_modules(session, notebook, TYPE)
 
-    session.add(AST(**agg_ast))
+    session.add(NotebookMarkdown(**agg_markdown))
     session.add(Module(**agg_modules))
-    python_file.processed |= consts.PF_AGGREGATE_OK
-    session.add(python_file)
+    notebook.processed |= consts.N_AGGREGATE_OK
+    session.add(notebook)
 
     return "ok"
 
 
-def load_repository(session, python_file, repository_id):
-    if repository_id != python_file.repository_id:
+def load_repository(session, notebook, repository_id):
+    if repository_id != notebook.repository_id:
         try:
             session.commit()
         except Exception as err:
@@ -58,7 +68,7 @@ def load_repository(session, python_file, repository_id):
             ))
 
         vprint(0, 'Processing repository: {}'.format(repository_id))
-        return python_file.repository_id
+        return notebook.repository_id
 
     return repository_id
 
@@ -69,17 +79,18 @@ def apply(
 ):
     """Extract code cell features"""
     filters = [
-        PythonFile.processed.op("&")(consts.PF_AGGREGATE_OK) == 0,
-        PythonFile.processed.op("&")(skip_if_error) == 0,
+        Notebook.processed.op("&")(consts.N_AGGREGATE_OK) == 0,
+        Notebook.processed.op("&")(skip_if_error) == 0,
+        Notebook.processed.op("&")(consts.N_GENERIC_LOAD_ERROR) == 0,
     ]
     if interval:
         filters += [
-            PythonFile.repository_id >= interval[0],
-            PythonFile.repository_id <= interval[1],
+            Notebook.repository_id >= interval[0],
+            Notebook.repository_id <= interval[1],
         ]
 
     query = (
-        session.query(PythonFile)
+        session.query(Notebook)
         .filter(*filters)
     )
 
@@ -89,28 +100,28 @@ def apply(
 
     if reverse:
         query = query.order_by(
-            PythonFile.repository_id.desc(),
-            PythonFile.id.desc(),
+            Notebook.repository_id.desc(),
+            Notebook.id.desc(),
         )
     else:
         query = query.order_by(
-            PythonFile.repository_id.asc(),
-            PythonFile.id.asc(),
+            Notebook.repository_id.asc(),
+            Notebook.id.asc(),
         )
 
     repository_id = None
 
-    for python_file in query:
+    for notebook in query:
         if check_exit(check):
             session.commit()
             vprint(0, 'Found .exit file. Exiting')
             return
         status.report()
 
-        repository_id = load_repository(session, python_file, repository_id)
+        repository_id = load_repository(session, notebook, repository_id)
 
-        vprint(1, 'Processing Python File: {}'.format(python_file))
-        result = process_python_file(session, python_file, skip_if_error)
+        vprint(1, 'Processing notebook: {}'.format(notebook))
+        result = process_notebook(session, notebook, skip_if_error)
         vprint(1, result)
         status.count += 1
     session.commit()
@@ -147,7 +158,7 @@ def main():
         apply(
             session,
             status,
-            0 if args.retry_errors else consts.PF_AGGREGATE_ERROR,
+            0 if args.retry_errors else consts.N_AGGREGATE_ERROR,
             args.count,
             args.interval,
             args.reverse,

@@ -1,15 +1,17 @@
-"""Load Pyhton features"""
+"""Load markdown features"""
 import argparse
 import os
+import sys
 import ast
 import tarfile
 import src.config as config
 import src.consts as consts
 
-from src.db.database import PythonFile, PythonFileModule, PythonAnalysis, connect, Cell, PythonFileDataIO
+from itertools import groupby
+from src.db.database import Cell, CellModule, connect, CellDataIO
 from src.db.database import RepositoryFile
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
-from src.helpers.h1_utils import timeout, TimeoutError, SafeSession
+from src.helpers.h1_utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
 from e5_extract_files import process_repository
@@ -26,120 +28,111 @@ def extract_features(text, checker):
     except ValueError:
         raise SyntaxError("Invalid escape")
     visitor.visit(parsed)
-    visitor.counter["ast_others"] = visitor.counter["ast_others"].strip()
     return (
-        visitor.counter,
         visitor.modules,
         visitor.data_ios
     )
 
 
-def process_python_file(
-    session, repository_id, python_file, checker,
-    skip_if_error=consts.PF_PROCESS_ERROR,
-    skip_if_syntaxerror=consts.PF_SYNTAX_ERROR,
-    skip_if_timeout=consts.PF_TIMEOUT,
+def process_code_cell(
+    session, repository_id, notebook_id, cell, checker,
+    skip_if_error=consts.C_PROCESS_ERROR,
+    skip_if_syntaxerror=consts.C_SYNTAX_ERROR,
+    skip_if_timeout=consts.C_TIMEOUT,
 ):
-    """Process Python File to collect features"""
-    if python_file.processed & consts.PF_PROCESS_OK:
+    """Process Markdown Cell to collect features"""
+    if cell.processed & consts.C_PROCESS_OK:
         return 'already processed'
 
     retry = False
-    retry |= not skip_if_error and python_file.processed & consts.PF_PROCESS_ERROR
-    retry |= not skip_if_syntaxerror and python_file.processed & consts.PF_SYNTAX_ERROR
-    retry |= not skip_if_timeout and python_file.processed & consts.PF_TIMEOUT
+    retry |= not skip_if_error and cell.processed & consts.C_PROCESS_ERROR
+    retry |= not skip_if_syntaxerror and cell.processed & consts.C_SYNTAX_ERROR
+    retry |= not skip_if_timeout and cell.processed & consts.C_TIMEOUT
 
     if retry:
         deleted = (
-            + session.query(PythonFileModule).filter(
-                PythonFileModule.python_file_id == python_file.id
+            session.query(CellModule).filter(
+                CellModule.cell_id == cell.id
             ).delete()
-            + session.query(PythonAnalysis).filter(
-                PythonAnalysis.python_file_id == python_file.id
-            ).delete()
+            # + session.query(CodeAnalysis).filter(
+            #     CodeAnalysis.cell_id == cell.id
+            # ).delete()
         )
         if deleted:
             vprint(2, "Deleted {} rows".format(deleted))
-        if python_file.processed & consts.PF_PROCESS_ERROR:
-            python_file.processed -= consts.PF_PROCESS_ERROR
-        if python_file.processed & consts.PF_SYNTAX_ERROR:
-            python_file.processed -= consts.PF_SYNTAX_ERROR
-        if python_file.processed & consts.PF_TIMEOUT:
-            python_file.processed -= consts.PF_TIMEOUT
-        session.add(python_file)
+        if cell.processed & consts.C_PROCESS_ERROR:
+            cell.processed -= consts.C_PROCESS_ERROR
+        if cell.processed & consts.C_SYNTAX_ERROR:
+            cell.processed -= consts.C_SYNTAX_ERROR
+        if cell.processed & consts.C_TIMEOUT:
+            cell.processed -= consts.C_TIMEOUT
+        session.add(cell)
 
     try:
         error = False
-        analysis = None
         modules = None
         data_ios = None
         try:
             vprint(2, "Extracting features")
-            analysis, modules, data_ios = extract_features(python_file.source, checker)
-            processed = consts.PFA_OK
+            modules, data_ios = extract_features(cell.source, checker)
+            processed = consts.A_OK
         except TimeoutError:
-            processed = consts.PFA_TIMEOUT
-            python_file.processed |= consts.PF_TIMEOUT
+            processed = consts.A_TIMEOUT
+            cell.processed |= consts.C_TIMEOUT
             error = True
         except SyntaxError:
-            processed = consts.PFA_SYNTAX_ERROR
-            python_file.processed |= consts.PF_SYNTAX_ERROR
+            processed = consts.A_SYNTAX_ERROR
+            cell.processed |= consts.C_SYNTAX_ERROR
             error = True
         if error:
             vprint(3, "Failed: {}".format(processed))
-            analysis = {
-                x.name: 0 for x in PythonAnalysis.__table__.columns
-                if x.name not in {"id", "repository_id", "python_file_id", "index"}
-            }
-            analysis["ast_others"] = ""
             modules = []
+            data_ios = []
         else:
             vprint(3, "Ok")
 
-        analysis["processed"] = processed
-
-        python_analysis = PythonAnalysis(
-            repository_id=repository_id,
-            python_file_id=python_file.id,
-            **analysis
-        )
-        dependents = []
+        vprint(2, "Adding session objects")
         for line, import_type, module_name, local in modules:
-            dependents.append(PythonFileModule(
+            session.add(CellModule(
                 repository_id=repository_id,
-                python_file_id=python_file.id,
+                notebook_id=notebook_id,
+                cell_id=cell.id,
+                index=cell.index,
+
                 line=line,
                 import_type=import_type,
                 module_name=module_name,
                 local=local,
             ))
 
-        for line, type_, caller, function_name, source, source_type in data_ios:
-            dependents.append(PythonFileDataIO(
+        for line, type_, caller,\
+                function_name, function_type,\
+                source, source_type in data_ios:
+            session.add(CellDataIO(
                 repository_id=repository_id,
-                python_file_id=python_file.id,
+                notebook_id=notebook_id,
+                cell_id=cell.id,
+                index=cell.index,
+
                 line=line,
                 type=type_,
                 caller=caller,
                 function_name=function_name,
+                function_type=function_type,
                 source=source,
                 source_type=source_type
             ))
 
-        vprint(2, "Adding session objects")
-        session.dependent_add(
-            python_analysis, dependents, "analysis_id"
-        )
-        python_file.processed |= consts.PF_PROCESS_OK
+        cell.processed |= consts.C_PROCESS_OK
         return "done"
     except Exception as err:
-        python_file.processed |= consts.PF_PROCESS_ERROR
+        cell.processed |= consts.C_PROCESS_ERROR
         if config.VERBOSE > 4:
             import traceback
             traceback.print_exc()
         return 'Failed to process ({})'.format(err)
     finally:
-        session.add(python_file)
+        session.add(cell)
 
 
 def load_archives(session, repository):
@@ -186,49 +179,62 @@ def load_archives(session, repository):
     return True, None
 
 
-def load_repository(session, python_file, skip_repo, repository_id, repository, archives):
-    if repository_id != python_file.repository_id:
-        repository = python_file.repository_obj
+def load_repository(session, cell, skip_repo, repository_id, repository, archives):
+    if repository_id != cell.repository_id:
+        repository = cell.repository_obj
         success, msg = session.commit()
         if not success:
-            vprint(0, 'Failed to save python file from repository {} due to {}'.format(
+            vprint(0, 'Failed to save cells from repository {} due to {}'.format(
                 repository, msg
             ))
 
         vprint(0, 'Processing repository: {}'.format(repository))
-        return False, python_file.repository_id, repository, "todo"
+        return False, cell.repository_id, repository, "todo"
 
     return skip_repo, repository_id, repository, archives
 
 
-def load_checker(
-    session, python_file, dispatches, repository,
-    skip_repo, skip_python_file, archives, checker
+def load_notebook(
+    session, cell, dispatches, repository,
+    skip_repo, skip_notebook, notebook_id, archives, checker
 ):
+    if notebook_id != cell.notebook_id:
+        notebook_id = cell.notebook_id
+        notebook = cell.notebook_obj
 
-    if archives == "todo":
-        skip_repo, archives = load_archives(session, repository)
-        if skip_repo:
-            return skip_repo, skip_python_file, archives, None
-    if archives is None:
-         return True, True, archives, None
+        # if not notebook.compatible_version:
+        #     pyexec = get_pyexec(notebook.py_version, config.VERSIONS)
+        #     if sys.executable != pyexec:
+        #         dispatches.add((notebook.id, pyexec))
+        #         return skip_repo, True, cell.notebook_id, archives, None
 
-    tarzip, repo_path = archives
+        if archives == "todo":
+            skip_repo, archives = load_archives(session, repository)
+            if skip_repo:
+                return skip_repo, skip_notebook, cell.notebook_id, archives, None
+        if archives is None:
+            return True, True, cell.notebook_id, archives, None
 
-    python_file_path = os.path.join(repo_path, python_file.name)
-    try:
-        if isinstance(tarzip, set):
-            checker = SetLocalChecker(tarzip, python_file_path)
-        elif tarzip:
-            checker = CompressedLocalChecker(tarzip, python_file_path)
-        else:
-            checker = PathLocalChecker(python_file_path)
-        if not checker.exists(python_file_path):
-            raise Exception("Repository content problem. Python file not found")
-        return skip_repo, False, archives, checker
-    except Exception as err:
-        vprint(2, "Failed to load python file {} due to {}".format(python_file, err))
-        return skip_repo, True, archives, checker
+        vprint(1, 'Processing notebook: {}'.format(notebook))
+        name = to_unicode(notebook.name)
+
+        tarzip, repo_path = archives
+
+        notebook_path = os.path.join(repo_path, name)
+        try:
+            if isinstance(tarzip, set):
+                checker = SetLocalChecker(tarzip, notebook_path)
+            elif tarzip:
+                checker = CompressedLocalChecker(tarzip, notebook_path)
+            else:
+                checker = PathLocalChecker(notebook_path)
+            if not checker.exists(notebook_path):
+                raise Exception("Repository content problem. Notebook not found")
+            return skip_repo, False, cell.notebook_id, archives, checker
+        except Exception as err:
+            vprint(2, "Failed to load notebook {} due to {}".format(notebook, err))
+            return skip_repo, True, cell.notebook_id, archives, checker
+    return skip_repo, skip_notebook, notebook_id, archives, checker
 
 
 def apply(
@@ -236,13 +242,16 @@ def apply(
     skip_if_error, skip_if_syntaxerror, skip_if_timeout,
     count, interval, reverse, check
 ):
-    """Extract python files features"""
+    """Extract code cell features"""
     while selected_notebooks:
         filters = [
-            PythonFile.processed.op('&')(consts.C_PROCESS_OK) == 0,
-            PythonFile.processed.op('&')(skip_if_error) == 0,
-            PythonFile.processed.op('&')(skip_if_syntaxerror) == 0,
-            PythonFile.processed.op('&')(skip_if_timeout) == 0,
+            Cell.processed.op('&')(consts.C_PROCESS_OK) == 0,
+            Cell.processed.op('&')(skip_if_error) == 0,
+            Cell.processed.op('&')(skip_if_syntaxerror) == 0,
+            Cell.processed.op('&')(skip_if_timeout) == 0,
+            Cell.processed.op('&')(consts.C_UNKNOWN_VERSION) == 0,  # known version
+            Cell.cell_type == 'code',
+            Cell.python.is_(True),
         ]
         if selected_notebooks is not True:
             filters += [
@@ -253,12 +262,12 @@ def apply(
             selected_notebooks = False
             if interval:
                 filters += [
-                    PythonFile.repository_id >= interval[0],
-                    PythonFile.repository_id <= interval[1],
+                    Cell.repository_id >= interval[0],
+                    Cell.repository_id <= interval[1],
                 ]
 
         query = (
-            session.query(PythonFile)
+            session.query(Cell)
             .filter(*filters)
         )
 
@@ -268,11 +277,15 @@ def apply(
 
         if reverse:
             query = query.order_by(
-                PythonFile.repository_id.desc(),
+                Cell.repository_id.desc(),
+                Cell.notebook_id.asc(),
+                Cell.index.asc(),
             )
         else:
             query = query.order_by(
-                PythonFile.repository_id.asc()
+                Cell.repository_id.asc(),
+                Cell.notebook_id.asc(),
+                Cell.index.asc(),
             )
 
         skip_repo = False
@@ -280,10 +293,11 @@ def apply(
         repository = None
         archives = None
 
-        skip_python_file = False
+        skip_notebook = False
+        notebook_id = None
         checker = None
 
-        for python_file in query:
+        for cell in query:
             if check_exit(check):
                 session.commit()
                 vprint(0, 'Found .exit file. Exiting')
@@ -292,27 +306,47 @@ def apply(
 
             with mount_basedir():
                 skip_repo, repository_id, repository, archives = load_repository(
-                    session, python_file, skip_repo, repository_id, repository, archives
+                    session, cell, skip_repo, repository_id, repository, archives
                 )
                 if skip_repo:
                     continue
 
-                skip_repo, skip_python_file, archives, checker = load_checker(
-                    session, python_file, dispatches, repository,
-                    skip_repo, skip_python_file, archives, checker
+                skip_repo, skip_notebook, notebook_id, archives, checker = load_notebook(
+                    session, cell, dispatches, repository,
+                    skip_repo, skip_notebook, notebook_id, archives, checker
                 )
-                # if skip_repo or skip_python_file:
-                #     continue
+                if skip_repo or skip_notebook:
+                    continue
 
-                vprint(2, 'Processing python file: {}'.format(python_file))
-                result = process_python_file(
-                    session, repository_id, python_file, checker,
+                vprint(2, 'Processing cell: {}'.format(cell))
+                result = process_code_cell(
+                    session, repository_id, notebook_id, cell, checker,
                     skip_if_error, skip_if_syntaxerror, skip_if_timeout,
                 )
                 vprint(2, result)
             status.count += 1
         session.commit()
 
+
+def pos_apply(dispatches, retry_errors, retry_timeout, verbose):
+    """Dispatch execution to other python versions"""
+    key = lambda x: x[1]
+    dispatches = sorted(list(dispatches), key=key)
+    for pyexec, disp in groupby(dispatches, key=key):
+        vprint(0, "Dispatching to {}".format(pyexec))
+        extra = []
+        if retry_errors:
+            extra.append("-e")
+        if retry_timeout:
+            extra.append("-t")
+        extra.append("-n")
+
+        notebook_ids = [x[0] for x in disp]
+        while notebook_ids:
+            ids = notebook_ids[:20000]
+            args = extra + ids
+            invoke(pyexec, "-u", __file__, "-v", verbose, *args)
+            notebook_ids = notebook_ids[20000:]
 
 
 def main():
@@ -358,15 +392,21 @@ def main():
                 status,
                 dispatches,
                 args.notebooks or True,
-                0 if args.retry_errors else consts.PF_PROCESS_ERROR,
-                0 if args.retry_syntaxerrors else consts.PF_SYNTAX_ERROR,
-                0 if args.retry_timeout else consts.PF_TIMEOUT,
+                0 if args.retry_errors else consts.C_PROCESS_ERROR,
+                0 if args.retry_syntaxerrors else consts.C_SYNTAX_ERROR,
+                0 if args.retry_timeout else consts.C_TIMEOUT,
                 args.count,
                 args.interval,
                 args.reverse,
                 set(args.check)
             )
 
+        # pos_apply(
+        #     dispatches,
+        #     args.retry_errors,
+        #     args.retry_timeout,
+        #     args.verbose
+        # )
 
 
 if __name__ == '__main__':

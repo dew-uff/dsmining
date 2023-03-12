@@ -1,5 +1,5 @@
 from collections import Counter, OrderedDict
-from src.db.database import CodeAnalysis, CellModule, MarkdownFeature
+from src.db.database import  CellModule, MarkdownFeature
 
 IGNORE_COLUMNS = {
     "id", "repository_id", "notebook_id", "cell_id", "index",
@@ -10,12 +10,6 @@ MARKDOWN_COLUMNS = [
     col.name for col in MarkdownFeature.__table__.columns
     if col.name not in IGNORE_COLUMNS
     if col.name != "language"
-]
-
-AST_COLUMNS = [
-    col.name for col in CodeAnalysis.__table__.columns
-    if col.name not in IGNORE_COLUMNS
-    if col.name != "ast_others"
 ]
 
 MODULE_LOCAL = {
@@ -67,37 +61,6 @@ def calculate_markdown(session, notebook):
     agg_markdown["repository_id"] = notebook.repository_id
     agg_markdown["notebook_id"] = notebook.id
     return agg_markdown
-
-
-def calculate_ast(session, file, file_type):
-    agg_ast = {col: 0 for col in AST_COLUMNS}
-    agg_ast["cell_count"] = 0
-    ast_others = []
-
-    if file_type == 'notebook':
-        query = (
-            file.code_analyses_objs
-            # .order_by(CodeAnalysis.index.asc())
-        )
-    elif file_type == 'python_file':
-        query = (
-            file.python_analyzes_objs
-            # .order_by(PythonAnalysis.id.asc())
-        )
-    else:
-        return "invalid file type. Unable to aggregate it"
-
-    for ast in query:
-        agg_ast["cell_count"] += 1
-        if ast.ast_others:
-            ast_others.append(ast.ast_others)
-        for column in AST_COLUMNS:
-            agg_ast[column] += int(getattr(ast, column))
-    agg_ast["ast_others"] = ",".join(ast_others)
-    agg_ast["repository_id"] = file.repository_id
-    agg_ast[f"{file_type}_id"] = file.id
-    agg_ast["type"] = file_type
-    return agg_ast
 
 
 def calculate_modules(session, file, file_type):

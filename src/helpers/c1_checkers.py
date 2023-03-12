@@ -7,7 +7,7 @@ from src.helpers.h1_utils import to_unicode, ignore_surrogates
 
 
 class PathLocalChecker(object):
-    """Check if module is local by looking at the directory"""
+    """ Checks module locality by looking at the directory """
 
     def __init__(self, path):
         path = to_unicode(path)
@@ -17,7 +17,7 @@ class PathLocalChecker(object):
         return os.path.exists(path)
 
     def is_local(self, module):
-        """Check if module is local by checking if its package exists"""
+        """ Checks if its package exists. """
         if module.startswith("."):
             return True
         path = self.base
@@ -29,7 +29,7 @@ class PathLocalChecker(object):
 
 
 class SetLocalChecker(PathLocalChecker):
-    """Check if module is local by looking at a set"""
+    """ Check if module is local by looking at a set. """
 
     def __init__(self, dirset, notebook_path):
         path = to_unicode(notebook_path)
@@ -44,7 +44,7 @@ class SetLocalChecker(PathLocalChecker):
 
 
 class CompressedLocalChecker(PathLocalChecker):
-    """Check if module is local by looking at the zip file"""
+    """ Checks module locality by looking at the zip file. """
 
     def __init__(self, tarzip, notebook_path):
         path = to_unicode(notebook_path)

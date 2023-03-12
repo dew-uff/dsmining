@@ -1,5 +1,6 @@
-import pandas as pd
+""" Extracts Selected Repositories to Database """
 
+import pandas as pd
 from config import SELECTED_REPOS_FILE
 from src import consts
 from src.db.database import connect, Repository
