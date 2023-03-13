@@ -16,11 +16,13 @@ MACHINE = os.environ.get("GITHUB_USERNAME")
 SRC_DIR = os.path.dirname(os.path.realpath(__file__))
 BASE = os.path.dirname(SRC_DIR)
 ROOT = os.path.dirname(BASE)
+EXTRACTION_DIR = SRC_DIR + os.sep + 'extractions'
 
 # Database
 DB_DIR = SRC_DIR + os.sep + 'db'
 DB_FILE = DB_DIR + os.sep + 'dbmining.sqlite'
 DB_CONNECTION = f'sqlite:////{DB_FILE}'
+DB_CONNECTION_TEST = f'sqlite:////{DB_FILE}_test'
 
 
 LOGS_DIR = Path(SRC_DIR + os.sep + 'logs').expanduser()
@@ -66,24 +68,3 @@ STATUS_FREQUENCY = {
     "execute_repositories": 1,
 }
 
-VERSIONS = {
-    2: {
-        7: {
-            15: "py27",
-        },
-    },
-    3: {
-        4: {
-            5: "py34",
-        },
-        5: {
-            5: "py35",
-        },
-        6: {
-            5: "py36",
-        },
-        7: {
-            0: "py37",
-        },
-    },
-}

@@ -33,6 +33,7 @@ pytest = "*"
 coverage = "*"
 pytest-mock = "*"
 pylint = "*"
+factory-boy = "*"
 
 [dev-packages]
 
