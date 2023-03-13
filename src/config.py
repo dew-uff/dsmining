@@ -29,6 +29,8 @@ LOGS_DIR = Path(SRC_DIR + os.sep + 'logs').expanduser()
 
 REPOS_DIR = ROOT + os.sep + 'repos'
 SELECTED_REPOS_DIR = Path(REPOS_DIR + os.sep + 'selected').expanduser()
+TEST_REPOS_DIR  =str(SELECTED_REPOS_DIR)  + os.sep + 'content' + os.sep + 'test'
+
 
 DATA_DIR = SRC_DIR + os.sep + 'data'
 RESOURCE_DIR = DATA_DIR + os.sep + 'resources'

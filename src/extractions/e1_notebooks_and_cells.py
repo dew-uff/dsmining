@@ -14,10 +14,6 @@ from src.helpers.h2_script_helpers import filter_repositories
 from src.helpers.h3_unzip_repositories import unzip_repository
 
 
-
-
-
-
 def cell_output_formats(cell):
     """Generates output formats from code cells"""
     if cell.get("cell_type") != "code":

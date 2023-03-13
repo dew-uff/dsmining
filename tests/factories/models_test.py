@@ -1,5 +1,5 @@
 import factory
-from src.db.database import Repository
+from src.db.database import Repository, Notebook
 
 def RepositoryFactory(session):
     class _RepositoryFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -9,8 +9,8 @@ def RepositoryFactory(session):
 
         domain = "github.com"
         repository = factory.Sequence(lambda n: 'person{}/respository{}'.format(n+1, n+1))
-        hash_dir1 = "8e"
-        hash_dir2 = "3cb7dbc856becaff503a49f636d04d28043c2a"
+        hash_dir1 = "test"
+        hash_dir2 = factory.Sequence(lambda n: "test_directory{}".format(n+1))
         commit = "8a34a4f653bdbdc01415a94dc20d4e9b97438965"
         is_mirror = 0
         disk_usage = 34707
@@ -24,3 +24,33 @@ def RepositoryFactory(session):
                 session.commit()
 
     return _RepositoryFactory
+
+def NotebookFactory(session):
+    class _NotebookFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = Notebook
+            sqlalchemy_session = session
+
+        name = 'file.ipynb'
+        nbformat = '4.0'
+        kernel = 'python3'
+        language = 'python'
+        language_version = '3.5.1'
+        max_execution_count = 22
+        total_cells = 61
+        code_cells = 22
+        code_cells_with_output = 15
+        markdown_cells = 39
+        raw_cells = 0
+        unknown_cell_formats = 0
+        empty_cells = 0
+        processed = 0
+
+
+        @factory.post_generation
+        def commit_to_db(self, create, extracted, **kwargs):
+            if create:
+                session.add(self)
+                session.commit()
+
+    return _NotebookFactory
