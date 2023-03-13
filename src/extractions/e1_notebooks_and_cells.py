@@ -10,7 +10,12 @@ from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, Repository, connect
 from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger, mount_basedir
 from src.helpers.h1_utils import check_exit, savepid, SafeSession
+from src.helpers.h2_script_helpers import filter_repositories
 from src.helpers.h3_unzip_repositories import unzip_repository
+
+
+
+
 
 
 def cell_output_formats(cell):
@@ -23,7 +28,6 @@ def cell_output_formats(cell):
                 yield data_type
         elif output.get("output_type") == "error":
             yield "error"
-
 
 @timeout(5 * 60, use_signals=False)
 def load_notebook(repository_id, path, notebook_file, nbrow):
@@ -152,38 +156,18 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
     nbrow["processed"] = status
     return nbrow, cells_info
 
-
-def find_notebooks(session, repository):
-    """Finds all jupyter notebooks in the repository"""
-    notebooks = [
-        str(file.relative_to(repository.path))
-        for file in find_files(repository.path, "*.ipynb")
-        if ".ipynb_checkpoints" not in str(file)
-    ]
-
-    repository.notebooks_count = len(notebooks)
-    session.commit()
-
-    return notebooks
-
-def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
-    """Process repository"""
-    if repository.processed & (consts.R_N_EXTRACTION + skip_if_error):
-        return "already processed"
-    if repository.processed & consts.R_N_ERROR:
-        session.add(repository)
-        repository.processed -= consts.R_N_ERROR
-
+def process_notebooks(session, repository, repository_notebooks_names):
     count = 0
-    repository_notebooks_names = find_notebooks(session, repository)
     for name in repository_notebooks_names:
         if not name:
             continue
         count += 1
+
         notebook = session.query(Notebook).filter(
             Notebook.repository_id == repository.id,
             Notebook.name == name,
         ).first()
+
         if notebook is not None:
             if notebook.processed & consts.N_STOPPED:
                 session.delete(notebook)
@@ -241,6 +225,30 @@ def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
             if config.VERBOSE > 4:
                 import traceback
                 traceback.print_exc()
+    return count, repository
+
+def find_notebooks(session, repository):
+    """ Finds all jupyter notebooks files in a repository """
+    notebooks = []
+    files = find_files(repository.path, "*.ipynb")
+    for file in files:
+        if ".ipynb_checkpoints" not in str(file):
+            notebooks.append(str(file.relative_to(repository.path)))
+
+    repository.notebooks_count = len(notebooks)
+    session.commit()
+    return notebooks
+
+def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
+    """Process repository"""
+    if repository.processed & (consts.R_N_EXTRACTION + skip_if_error):
+        return "already processed"
+    if repository.processed & consts.R_N_ERROR:
+        session.add(repository)
+        repository.processed -= consts.R_N_ERROR
+
+    repository_notebooks_names = find_notebooks(session, repository)
+    count, repository = process_notebooks(session, repository, repository_notebooks_names)
 
     if not repository.processed & consts.R_N_ERROR and count == repository.notebooks_count:
         repository.processed |= consts.R_N_EXTRACTION
@@ -258,41 +266,16 @@ def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
 
     return "done"
 
-
 def apply(
         session, status, selected_repositories, skip_if_error,
         count, interval, reverse, check):
     while selected_repositories:
-        filters = [
-            Repository.processed.op("&")(consts.R_N_EXTRACTION) == 0,  # no extraction
-            Repository.processed.op("&")(skip_if_error) == 0,  # no failure
-        ]
-        if selected_repositories is not True:
-            filters += [
-                Repository.id.in_(selected_repositories[:30])
-            ]
-            selected_repositories = selected_repositories[30:]
-        else:
-            selected_repositories = False
-            if interval:
-                filters += [
-                    Repository.id >= interval[0],
-                    Repository.id <= interval[1],
-                ]
 
-        query = session.query(Repository).filter(*filters)
-        if count:
-            print(query.count())
-            return
-
-        if reverse:
-            query = query.order_by(
-                Repository.id.desc()
-            )
-        else:
-            query = query.order_by(
-                Repository.id.asc()
-            )
+        selected_repositories, query = filter_repositories\
+            (session = session, selected_repositories = selected_repositories,
+             skip_if_error = skip_if_error, count = count,
+             interval = interval,reverse = reverse,
+             skip_already_processed = consts.R_N_EXTRACTION)
 
         for repository in query:
             if check_exit(check):

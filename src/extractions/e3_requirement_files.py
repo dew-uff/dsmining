@@ -9,6 +9,7 @@ import src.consts as consts
 from src.db.database import RequirementFile, Repository, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
 from src.helpers.h1_utils import find_files_in_path, find_files_in_zip, mount_basedir
+from src.helpers.h2_script_helpers import filter_repositories
 
 
 def process_requirement_file(session, repository, req_names, reqformat,
@@ -144,35 +145,12 @@ def apply(
         count, interval, reverse, check
 ):
     while selected_repositories:
-        filters = [
-            Repository.processed.op("&")(consts.R_REQUIREMENTS_OK) == 0,
-            Repository.processed.op("&")(skip_if_error) == 0,
-        ]
-        if selected_repositories is not True:
-            filters += [
-                Repository.id.in_(selected_repositories[:30])
-            ]
-            selected_repositories = selected_repositories[30:]
-        else:
-            selected_repositories = False
-            if interval:
-                filters += [
-                    Repository.id >= interval[0],
-                    Repository.id <= interval[1],
-                ]
-        query = session.query(Repository).filter(*filters)
-        if count:
-            print(query.count())
-            return
 
-        if reverse:
-            query = query.order_by(
-                Repository.id.desc()
-            )
-        else:
-            query = query.order_by(
-                Repository.id.asc()
-            )
+        selected_repositories, query = filter_repositories \
+            (session=session, selected_repositories=selected_repositories,
+             skip_if_error=skip_if_error, count=count,
+             interval=interval, reverse=reverse,
+             skip_already_processed=consts.R_REQUIREMENTS_OK)
 
         for repository in query:
             if check_exit(check):

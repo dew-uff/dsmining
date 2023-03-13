@@ -4,11 +4,12 @@ import os
 import src.config as config
 import src.consts as consts
 
-from src.db.database import PythonFile, Repository, connect
+from src.db.database import PythonFile, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, find_files, mount_basedir
+from src.helpers.h2_script_helpers import filter_repositories
 
 
-def find_python_files(session, repository):
+def find_python_files(repository):
     """Finds all python files in the repository but setup.py"""
     python_files = [
         str(file.relative_to(repository.path))
@@ -29,7 +30,7 @@ def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
     finished = True
 
     count = 0
-    repository_python_files_names = find_python_files(session, repository)
+    repository_python_files_names = find_python_files(repository)
 
     for name in repository_python_files_names:
         if not name:
@@ -77,35 +78,11 @@ def apply(
         count, interval, reverse, check
 ):
     while selected_repositories:
-        filters = [
-            Repository.processed.op("&")(consts.R_P_EXTRACTION) == 0,
-            Repository.processed.op("&")(skip_if_error) == 0,
-        ]
-        if selected_repositories is not True:
-            filters += [
-                Repository.id.in_(selected_repositories[:30])
-            ]
-            selected_repositories = selected_repositories[30:]
-        else:
-            selected_repositories = False
-            if interval:
-                filters += [
-                    Repository.id >= interval[0],
-                    Repository.id <= interval[1],
-                ]
-        query = session.query(Repository).filter(*filters)
-        if count:
-            print(query.count())
-            return
-
-        if reverse:
-            query = query.order_by(
-                Repository.id.desc()
-            )
-        else:
-            query = query.order_by(
-                Repository.id.asc()
-            )
+        selected_repositories, query = filter_repositories \
+            (session=session, selected_repositories=selected_repositories,
+             skip_if_error=skip_if_error, count=count,
+             interval=interval, reverse=reverse,
+             skip_already_processed=consts.R_P_EXTRACTION)
 
         for repository in query:
             if check_exit(check):

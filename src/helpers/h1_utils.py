@@ -199,7 +199,7 @@ def invoke(program, *args):
 
 
 def find_files(path, pattern):
-    """Find files recursively"""
+    """ Find files recursively """
     for root, _, filenames in os.walk(str(path)):
         for filename in fnmatch.filter(filenames, pattern):
             f = Path(root) / filename
