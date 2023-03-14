@@ -7,81 +7,14 @@ import src.config as config
 import src.consts as consts
 
 from IPython.core.interactiveshell import InteractiveShell
-from src.db.database import Cell, Notebook, Repository, connect
-from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger, mount_basedir
-from src.helpers.h1_utils import check_exit, savepid, SafeSession
-from src.helpers.h2_script_helpers import filter_repositories
+from src.db.database import Cell, Notebook, connect
+from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger
+from src.helpers.h1_utils import check_exit, savepid, SafeSession, mount_basedir
+from src.helpers.h2_script_helpers import filter_repositories, broken_link, cell_output_formats
 from src.helpers.h3_unzip_repositories import unzip_repository
 
 
-def cell_output_formats(cell):
-    """Generates output formats from code cells"""
-    if cell.get("cell_type") != "code":
-        return
-    for output in cell.get("outputs", []):
-        if output.get("output_type") in {"display_data", "execute_result"}:
-            for data_type in output.get("data", []):
-                yield data_type
-        elif output.get("output_type") == "error":
-            yield "error"
-
-@timeout(5 * 60, use_signals=False)
-def load_notebook(repository_id, path, notebook_file, nbrow):
-    """Extract notebook information and cells from notebook"""
-    # pylint: disable=too-many-locals
-    status = 0
-    try:
-        with open(str(path / notebook_file)) as ofile:
-            notebook = nbf.read(ofile, nbf.NO_CONVERT)
-        nbrow["nbformat"] = "{0[nbformat]}".format(notebook)
-        if "nbformat_minor" in notebook:
-            nbrow["nbformat"] += ".{0[nbformat_minor]}".format(notebook)
-        notebook = nbf.convert(notebook, 4)
-        metadata = notebook["metadata"]
-    except OSError as e:
-        vprint(3, "Failed to open notebook {}".format(e))
-        nbrow["processed"] = consts.N_LOAD_ERROR
-        if os.path.islink(str(path / notebook_file)):
-            import textwrap
-            vprint(3, "Notebook is broken link. Use the following SQL to fix:")
-            text = (textwrap.dedent("""\
-            select notebooks_count, (char_length(newtext) - char_length(replace(newtext, '''', ''))), concat(
-                'update repositories ',
-                'set notebooks_count = ',
-                (char_length(newtext) - char_length(replace(newtext, ';', ''))) + 1,
-                ', notebooks = ''',
-                newtext,
-                ''' where id = ',
-                id,
-                ';'
-            ) from (
-                select id, notebooks_count, replace(
-                    replace(
-                        replace(
-                            notebooks,
-                            '{0};', ''
-                        ),
-                        ';{0}', ''
-                    ),
-                    '''', ''''''
-                ) as newtext
-                from repositories where id = {1}
-            ) as foo;
-            """.format(notebook_file, repository_id)))
-            text = " ".join(x.strip() for x in text.split("\n"))
-            print(text)
-        return nbrow, []
-
-    except Exception as e:  # pylint: disable=broad-except
-        vprint(3, "Failed to load notebook {}".format(e))
-        nbrow["processed"] = consts.N_LOAD_FORMAT_ERROR
-        return nbrow, []
-
-    nbrow["kernel"] = metadata.get("kernelspec", {}).get("name", "no-kernel")
-
-    language_info = metadata.get("language_info", {})
-    nbrow["language"] = language_info.get("name", "unknown")
-    nbrow["language_version"] = language_info.get("version", "unknown")
+def load_cells(repository_id, nbrow, notebook, status):
     shell = InteractiveShell.instance()
     is_python = nbrow["language"] == "python"
     is_unknown_version = nbrow["language_version"] == "unknown"
@@ -89,6 +22,7 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
     cells = notebook["cells"]
     cells_info = []
     exec_count = -1
+
     for index, cell in enumerate(cells):
         vprint(3, "Loading cell {}".format(index))
         cell_exec_count = cell.get("execution_count") or -1
@@ -145,12 +79,59 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
         except KeyError as err:
             vprint(3, "Error on cell extraction: {}".format(err))
             status = consts.N_LOAD_FORMAT_ERROR
+    return nbrow, cells_info, exec_count, status
+
+
+# @timeout(5 * 60, use_signals=False)
+def load_notebook(repository_id, path, notebook_file, nbrow):
+    """ Extract notebook information and cells from notebook """
+    # pylint: disable=too-many-locals
+
+    status = 0
+
+    try:
+        with open(str(path / notebook_file)) as ofile:
+            notebook = nbf.read(ofile, nbf.NO_CONVERT)
+
+        nbrow["nbformat"] = "{0[nbformat]}".format(notebook)
+
+        if "nbformat_minor" in notebook:
+            nbrow["nbformat"] += ".{0[nbformat_minor]}".format(notebook)
+        notebook = nbf.convert(notebook, 4)
+        metadata = notebook["metadata"]
+
+    except OSError as e:
+        vprint(3, "Failed to open notebook {}".format(e))
+
+        nbrow["processed"] = consts.N_LOAD_ERROR
+        if os.path.islink(str(path / notebook_file)):
+            broken_link(notebook_file, repository_id)
+
+        return nbrow, []
+
+    except Exception as e:  # pylint: disable=broad-except
+        vprint(3, "Failed to load notebook {}".format(e))
+
+        nbrow["processed"] = consts.N_LOAD_FORMAT_ERROR
+        return nbrow, []
+
+    nbrow["kernel"] = metadata.get("kernelspec", {}).get("name", "no-kernel")
+
+    language_info = metadata.get("language_info", {})
+    nbrow["language"] = language_info.get("name", "unknown")
+    nbrow["language_version"] = language_info.get("version", "unknown")
+
+    nbrow, cells_info, exec_count, status \
+        = load_cells(repository_id, nbrow, notebook, status)
+
     if nbrow["total_cells"] == 0:
         status = consts.N_LOAD_FORMAT_ERROR
+
 
     nbrow["max_execution_count"] = exec_count
     nbrow["processed"] = status
     return nbrow, cells_info
+
 
 def process_notebooks(session, repository, repository_notebooks_names):
     count = 0
@@ -223,6 +204,7 @@ def process_notebooks(session, repository, repository_notebooks_names):
                 traceback.print_exc()
     return count, repository
 
+
 def find_notebooks(session, repository):
     """ Finds all jupyter notebooks files in a repository """
     notebooks = []
@@ -235,21 +217,22 @@ def find_notebooks(session, repository):
     session.commit()
     return notebooks
 
+
 def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
-    """Process repository"""
+    """ Processes repository """
 
     if repository.processed & consts.R_N_EXTRACTION:
         return "already processed"
 
-    if repository.processed & consts.R_N_ERROR:
+    if repository.processed & skip_if_error:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
-        repository.processed -= consts.R_N_ERROR
+        repository.processed -= skip_if_error
 
     repository_notebooks_names = find_notebooks(session, repository)
     count, repository = process_notebooks(session, repository, repository_notebooks_names)
 
-    if (not (repository.processed & consts.R_N_ERROR)) and (count == repository.notebooks_count):
+    if not (repository.processed & consts.R_N_ERROR) and (count == repository.notebooks_count):
         repository.processed |= consts.R_N_EXTRACTION
         session.add(repository)
 
@@ -265,6 +248,7 @@ def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
         return "failed due {!r}".format(err)
 
     return "done"
+
 
 def apply(
         session, status, selected_repositories, skip_if_error,

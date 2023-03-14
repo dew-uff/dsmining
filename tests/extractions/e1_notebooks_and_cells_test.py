@@ -1,23 +1,18 @@
-import shutil
 import sys
 import os
-import pytest
-from pathlib import Path
-import time
-from src.config import SELECTED_REPOS_DIR, TEST_REPOS_DIR, LOGS_DIR
-from src.extractions.e1_notebooks_and_cells import find_notebooks
-from src.helpers.h1_utils import SafeSession
-from tests.test_helpers.h1_extraction_helpers import mock_load_notebook, mock_load_notebook_error
-
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
 import src.consts as consts
+import src.extractions.e1_notebooks_and_cells as e1
 from src.db.database import Repository, Notebook, Cell
+from src.config import LOGS_DIR, Path
+from src.helpers.h1_utils import SafeSession
+
 from tests.database_test import connection, session
 from tests.factories.models_test import RepositoryFactory, NotebookFactory
-import src.extractions.e1_notebooks_and_cells as e1
-from src.helpers.h1_utils import timeout
+from tests.test_helpers.h1_stubs import stub_load_notebook, stub_load_notebook_error
+
 
 class TestE1NotebooksAndCellsFindNotebooks:
     def test_find_notebooks(self, session, monkeypatch):
@@ -45,10 +40,8 @@ class TestE1NotebooksAndCellsProcessoNotebook:
         repository = RepositoryFactory(session).create(notebooks_count=2)
         repository_notebooks_names = ['file.ipynb']
 
-        if not os.path.exists(repository.path):
-            os.makedirs(repository.path)
-
-        monkeypatch.setattr(e1, 'load_notebook', mock_load_notebook)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr(e1, 'load_notebook', stub_load_notebook)
 
         count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
         safe_session.commit()
@@ -62,8 +55,6 @@ class TestE1NotebooksAndCellsProcessoNotebook:
         assert notebook.repository_id == repository.id
         assert cell.notebook_id == notebook.id
 
-        if os.path.exists(TEST_REPOS_DIR):
-            shutil.rmtree(TEST_REPOS_DIR)
 
     def test_process_notebooks_no_name(self, session):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
@@ -77,21 +68,17 @@ class TestE1NotebooksAndCellsProcessoNotebook:
         assert  (session.query(Cell).count()) == 0
 
 
-    def test_process_notebooks_no_none_stoped(self, session):
+    def test_process_notebooks_no_none_stoped(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id,
                                                    processed = consts.N_STOPPED)
         created = notebook.created_at
-        if not os.path.exists(repository.path):
-            os.makedirs(repository.path)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
 
 
         e1.process_notebooks(safe_session, repository, [notebook.name])
         safe_session.commit()
-
-        if os.path.exists(TEST_REPOS_DIR):
-            shutil.rmtree(TEST_REPOS_DIR)
 
         assert created != session.query(Notebook).all()[0].created_at
 
@@ -113,7 +100,7 @@ class TestE1NotebooksAndCellsProcessoNotebook:
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(session).create(notebooks_count=2)
         repository_notebooks_names = ['file.ipynb']
-        monkeypatch.setattr(e1, 'load_notebook', mock_load_notebook)
+        monkeypatch.setattr(e1, 'load_notebook', stub_load_notebook)
         monkeypatch.setattr(e1, 'unzip_repository', mock_unzip)
         count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
 
@@ -126,7 +113,7 @@ class TestE1NotebooksAndCellsProcessoNotebook:
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(session).create(notebooks_count=2)
         repository_notebooks_names = ['file.ipynb']
-        monkeypatch.setattr(e1, 'load_notebook', mock_load_notebook)
+        monkeypatch.setattr(e1, 'load_notebook', stub_load_notebook)
 
         e1.process_notebooks(safe_session, repository, repository_notebooks_names)
         captured = capsys.readouterr()
@@ -137,10 +124,8 @@ class TestE1NotebooksAndCellsProcessoNotebook:
         repository = RepositoryFactory(session).create(notebooks_count=2)
         repository_notebooks_names = ['file.ipynb']
 
-        if not os.path.exists(repository.path):
-            os.makedirs(repository.path)
-
-        monkeypatch.setattr(e1, 'load_notebook', mock_load_notebook_error)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr(e1, 'load_notebook', stub_load_notebook_error)
 
         count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
 
