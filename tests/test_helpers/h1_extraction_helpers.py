@@ -11,3 +11,6 @@ cells = [
 
 def mock_load_notebook(repository_id, path, notebook_file, _nbrow):
     return nbrow, cells
+
+def mock_load_notebook_error(_repository_id, _path, _notebook_file, _nbrow):
+        raise AttributeError()

@@ -237,16 +237,19 @@ def find_notebooks(session, repository):
 
 def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
     """Process repository"""
-    if repository.processed & (consts.R_N_EXTRACTION + skip_if_error):
+
+    if repository.processed & consts.R_N_EXTRACTION:
         return "already processed"
+
     if repository.processed & consts.R_N_ERROR:
         session.add(repository)
+        vprint(3, "retrying to process {}".format(repository))
         repository.processed -= consts.R_N_ERROR
 
     repository_notebooks_names = find_notebooks(session, repository)
     count, repository = process_notebooks(session, repository, repository_notebooks_names)
 
-    if not repository.processed & consts.R_N_ERROR and count == repository.notebooks_count:
+    if (not (repository.processed & consts.R_N_ERROR)) and (count == repository.notebooks_count):
         repository.processed |= consts.R_N_EXTRACTION
         session.add(repository)
 
@@ -254,11 +257,12 @@ def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
     if not status:
         if repository.processed & consts.R_N_EXTRACTION:
             repository.processed -= consts.R_N_EXTRACTION
+
         if not repository.processed & consts.R_N_ERROR:
             repository.processed += consts.R_N_ERROR
         session.add(repository)
         session.commit()
-        return "Failed due {!r}".format(err)
+        return "failed due {!r}".format(err)
 
     return "done"
 

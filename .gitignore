@@ -57,3 +57,4 @@ src/extractions/log.txt
 dblp.xml
 .DS_Store
 dbmining.sqlite
+dbmining.sqlite_test
