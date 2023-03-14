@@ -25,6 +25,7 @@ def load_cells(repository_id, nbrow, notebook, status):
 
     for index, cell in enumerate(cells):
         vprint(3, "Loading cell {}".format(index))
+
         cell_exec_count = cell.get("execution_count") or -1
         if isinstance(cell_exec_count, str) and cell_exec_count.isdigit():
             cell_exec_count = int(cell_exec_count)
@@ -63,6 +64,7 @@ def load_cells(repository_id, nbrow, notebook, status):
                 "processed": cell_processed,
             }
             cells_info.append(cellrow)
+
             nbrow["total_cells"] += 1
             if cell.get("cell_type") == "code":
                 nbrow["code_cells"] += 1
@@ -76,9 +78,11 @@ def load_cells(repository_id, nbrow, notebook, status):
                 nbrow["unknown_cell_formats"] += 1
             if not cell["source"].strip():
                 nbrow["empty_cells"] += 1
+
         except KeyError as err:
             vprint(3, "Error on cell extraction: {}".format(err))
             status = consts.N_LOAD_FORMAT_ERROR
+
     return nbrow, cells_info, exec_count, status
 
 

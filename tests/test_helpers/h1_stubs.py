@@ -1,4 +1,5 @@
 from src import consts
+import nbformat
 
 nbrow = {'repository_id': 1, 'name': 'file.ipynb', 'nbformat': '4.0', 'kernel': 'python3',
          'language': 'python', 'language_version': '3.5.1', 'max_execution_count': 22, 'total_cells': 61,
@@ -10,38 +11,7 @@ cells = [
      'source': '<!--BOOK_INFORMATION-->\n<img align="left" style="padding-right:10px;" src="figures/PDSH-cover-small.png">\n\n*This notebook contains an excerpt from the [Python Data Science Handbook](http://shop.oreilly.com/product/0636920034919.do) by Jake VanderPlas; the content is available [on GitHub](https://github.com/jakevdp/PythonDataScienceHandbook).*\n\n*The text is released under the [CC-BY-NC-ND license](https://creativecommons.org/licenses/by-nc-nd/3.0/us/legalcode), and code is released under the [MIT license](https://opensource.org/licenses/MIT). If you find this content useful, please consider supporting the work by [buying the book](http://shop.oreilly.com/product/0636920034919.do)!*',
      'python': True, 'processed': 0}]
 
-
-def stub_load_notebook(repository_id, path, notebook_file, _nbrow):
-    return nbrow, cells
-
-def stub_load_notebook_error(_repository_id, _path, _notebook_file, _nbrow):
-        raise AttributeError()
-
-
-
-
-def get_empty_nbrow(repository, name):
-    empty_nbrow = {
-                "repository_id": repository.id,
-                "name": name,
-                "nbformat": 0,
-                "kernel": "no-kernel",
-                "language": "unknown",
-                "language_version": "unknown",
-                "max_execution_count": 0,
-                "total_cells": 0,
-                "code_cells": 0,
-                "code_cells_with_output": 0,
-                "markdown_cells": 0,
-                "raw_cells": 0,
-                "unknown_cell_formats": 0,
-                "empty_cells": 0,
-                "processed": consts.N_OK,
-            }
-    return empty_nbrow
-
-def stub_nbf_read(ofile, nbf):
-    notebook = \
+notebook_dict  = \
         {
             "cells": [
                 {"cell_type": "markdown", "metadata": {}, "source": "# Running Code"},
@@ -69,7 +39,7 @@ def stub_nbf_read(ofile, nbf):
                 },
                 {
                     "cell_type": "code",
-                    "execution_count": 3,
+                    "execution_count": "3",
                     "metadata": {"collapsed": False},
                     "outputs": [{"name": "stdout", "output_type": "stream", "text": "10\n"}],
                     "source": "print(a)",
@@ -229,13 +199,86 @@ def stub_nbf_read(ofile, nbf):
             "nbformat_minor": 0,
         }
 
+
+notebook_dict_code_cell  = \
+        {
+            "cells": [
+                {
+                    "cell_type": "code",
+                    "execution_count": 6,
+                    "metadata": {"collapsed": False},
+                    "outputs": [
+                        {"name": "stdout", "output_type": "stream", "text": "hi, stdout\n"}
+                    ],
+                    "source": 'print("hi, stdout")',
+                },
+            ],
+            "metadata": {
+                "kernelspec": {
+                    "display_name": "Python 3",
+                    "language": "python",
+                    "name": "python3",
+                },
+                "language_info": {
+                    "codemirror_mode": {"name": "ipython", "version": 3},
+                    "file_extension": ".py",
+                    "mimetype": "text/x-python",
+                    "name": "python",
+                    "nbconvert_exporter": "python",
+                    "pygments_lexer": "ipython3",
+                    "version": "3.5.1",
+                },
+            },
+            "nbformat": 4,
+            "nbformat_minor": 0,
+        }
+
+
+def stub_load_notebook(repository_id, path, notebook_file, _nbrow):
+    return nbrow, cells
+
+def stub_load_notebook_error(_repository_id, _path, _notebook_file, _nbrow):
+        raise AttributeError()
+
+
+def get_empty_nbrow(repository, name):
+    empty_nbrow = {
+                "repository_id": repository.id,
+                "name": name,
+                "nbformat": 0,
+                "kernel": "no-kernel",
+                "language": "unknown",
+                "language_version": "unknown",
+                "max_execution_count": 0,
+                "total_cells": 0,
+                "code_cells": 0,
+                "code_cells_with_output": 0,
+                "markdown_cells": 0,
+                "raw_cells": 0,
+                "unknown_cell_formats": 0,
+                "empty_cells": 0,
+                "processed": consts.N_OK,
+            }
+    return empty_nbrow
+
+def get_notebook_node(type_='normal'):
+    if type_ == 'code_cell':
+        notebook = nbformat.from_dict(notebook_dict_code_cell)
+    else:
+        notebook = nbformat.from_dict(notebook_dict)
     return notebook
+
+def stub_nbf_read(ofile, nbf):
+    return get_notebook_node()
 
 def stub_nbf_readOSError(ofile, nbf):
     raise OSError()
 
 def stub_nbf_readException(ofile, nbf):
     raise ValueError()
+
+def stub_IndentationError(arg1, arg2):
+    raise IndentationError()
 
 def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):
     _nbrow = {
@@ -619,3 +662,23 @@ def stub_load_no_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):
     _exec_count = 10
     _status = 0
     return _nbrow, _cells_info, _exec_count, _status
+
+def get_notebook_nbrow(repository_id, name):
+    __nbrow = {
+        "repository_id": repository_id,
+        "name": name,
+        "nbformat": "4.0",
+        "kernel": "python3",
+        "language": "python",
+        "language_version": "3.5.1",
+        "max_execution_count": 0,
+        "total_cells": 0,
+        "code_cells": 0,
+        "code_cells_with_output": 0,
+        "markdown_cells": 0,
+        "raw_cells": 0,
+        "unknown_cell_formats": 0,
+        "empty_cells": 0,
+        "processed": 0,
+    }
+    return __nbrow
