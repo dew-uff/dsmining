@@ -1,5 +1,7 @@
 """Handles database model and connection"""
 import sys
+from datetime import datetime
+
 import src.config as config
 import subprocess
 
@@ -50,6 +52,9 @@ class Query(Base):
     delta = Column(Interval)
     count = Column(Integer)
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
     @force_encoded_string_output
     def __repr__(self):
         return u"<Query({})>".format(self.query)
@@ -90,6 +95,9 @@ class Repository(Base):
     requirements_count = Column(Integer)
     pipfiles_count = Column(Integer)
     pipfile_locks_count = Column(Integer)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     commits_objs = one_to_many("Commit", "repository_obj")
     python_files_objs = one_to_many("PythonFile", "repository_obj")
@@ -191,6 +199,9 @@ class Commit(Base):
     author = Column(String)
     message = Column(String)
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
     repository_obj = many_to_one("Repository", "commits_objs")
 
 
@@ -212,6 +223,8 @@ class PythonFile(Base):
     total_lines = Column(Integer)
     processed = Column(Integer, default=0)
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     repository_obj = many_to_one("Repository", "python_files_objs")
 
@@ -257,6 +270,9 @@ class PythonFileModule(Base):
     local = Column(Boolean)
     skip = Column(Integer, default=0)
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
     python_file_obj = many_to_one("PythonFile", "python_file_modules_objs")
     repository_obj = many_to_one("Repository", "python_file_modules_objs")
 
@@ -294,6 +310,9 @@ class PythonFileDataIO(Base):
     source = Column(String)
     source_type = Column(String)
     skip = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     python_file_obj = many_to_one("PythonFile", "python_file_data_ios_objs")
     repository_obj = many_to_one("Repository", "python_file_data_ios_objs")
@@ -342,6 +361,8 @@ class Notebook(Base):
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "notebook_obj")
     modules_objs = one_to_many("Module", "notebook_obj")
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     @property
     def path(self):
@@ -400,6 +421,9 @@ class Cell(Base):
     processed = Column(Integer, default=0)
     skip = Column(Integer, default=0)
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
     repository_obj = many_to_one("Repository", "cell_objs")
     notebook_obj = many_to_one("Notebook", "cell_objs")
     markdown_features_objs = one_to_many("MarkdownFeature", "cell_obj")
@@ -431,6 +455,9 @@ class RequirementFile(Base):
     content = Column(String)
     processed = Column(Integer, default=0)
     skip = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     repository_obj = many_to_one("Repository", "requirement_files_objs")
 
@@ -613,8 +640,10 @@ class MarkdownFeature(Base):
     latex_lines = Column(Integer)
     latex_words = Column(Integer)
     latex_stopwords = Column(Integer)
-
     skip = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     cell_obj = many_to_one("Cell", "markdown_features_objs")
     notebook_obj = many_to_one("Notebook", "markdown_features_objs")
@@ -661,6 +690,8 @@ class CellModule(Base):
     local = Column(Boolean)
     skip = Column(Integer, default=0)
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     cell_obj = many_to_one("Cell", "cell_modules_objs")
     notebook_obj = many_to_one("Notebook", "cell_modules_objs")
@@ -708,6 +739,9 @@ class CellDataIO(Base):
     source_type = Column(String)
     skip = Column(Integer, default=0)
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
     cell_obj = many_to_one("Cell", "cell_data_ios_objs")
     notebook_obj = many_to_one("Notebook", "cell_data_ios_objs")
     repository_obj = many_to_one("Repository", "cell_data_ios_objs")
@@ -736,6 +770,9 @@ class RepositoryFile(Base):
     size = Column(BigInt)
     skip = Column(Integer, default=0)
     had_surrogates = Column(Boolean, default=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     repository_obj = many_to_one("Repository", "files_objs")
 
@@ -912,8 +949,10 @@ class NotebookMarkdown(Base):
     latex_lines = Column(Integer)
     latex_words = Column(Integer)
     latex_stopwords = Column(Integer)
-
     skip = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     notebook_obj = many_to_one("Notebook", "notebook_markdowns_objs")
     repository_obj = many_to_one("Repository", "notebook_markdowns_objs")
@@ -985,6 +1024,9 @@ class Module(Base):
     others = Column(String)
 
     skip = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     notebook_obj = many_to_one("Notebook", "modules_objs")
     python_file_obj = many_to_one("PythonFile", "modules_objs")
