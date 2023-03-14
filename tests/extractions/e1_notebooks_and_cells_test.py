@@ -34,7 +34,7 @@ class TestE1NotebooksAndCellsFindNotebooks:
         assert file3_relative_path not in notebooks
         assert repository.notebooks_count == 2
 
-class TestE1NotebooksAndCellsProcessoNotebook:
+class TestE1NotebooksAndCellsProcessNotebook:
     def test_process_notebooks(self, session, monkeypatch):
         safe_session =  SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(session).create(notebooks_count=2)

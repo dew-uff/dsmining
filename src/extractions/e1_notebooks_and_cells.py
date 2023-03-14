@@ -82,7 +82,7 @@ def load_cells(repository_id, nbrow, notebook, status):
     return nbrow, cells_info, exec_count, status
 
 
-# @timeout(5 * 60, use_signals=False)
+@timeout(5 * 60, use_signals=False)
 def load_notebook(repository_id, path, notebook_file, nbrow):
     """ Extract notebook information and cells from notebook """
     # pylint: disable=too-many-locals
@@ -126,7 +126,6 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
 
     if nbrow["total_cells"] == 0:
         status = consts.N_LOAD_FORMAT_ERROR
-
 
     nbrow["max_execution_count"] = exec_count
     nbrow["processed"] = status

@@ -17,6 +17,9 @@ def stub_load_notebook(repository_id, path, notebook_file, _nbrow):
 def stub_load_notebook_error(_repository_id, _path, _notebook_file, _nbrow):
         raise AttributeError()
 
+
+
+
 def get_empty_nbrow(repository, name):
     empty_nbrow = {
                 "repository_id": repository.id,
@@ -228,6 +231,11 @@ def stub_nbf_read(ofile, nbf):
 
     return notebook
 
+def stub_nbf_readOSError(ofile, nbf):
+    raise OSError()
+
+def stub_nbf_readException(ofile, nbf):
+    raise ValueError()
 
 def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):
     _nbrow = {
@@ -585,6 +593,29 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):
                         "processed": 0,
                     },
                   ]
+    _exec_count = 10
+    _status = 0
+    return _nbrow, _cells_info, _exec_count, _status
+
+def stub_load_no_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):
+    _nbrow = {
+                "repository_id": 1,
+                "name": "test.ipynb",
+                "nbformat": "4.0",
+                "kernel": "python3",
+                "language": "python",
+                "language_version": "3.5.1",
+                "max_execution_count": 0,
+                "total_cells": 0,
+                "code_cells": 9,
+                "code_cells_with_output": 0,
+                "markdown_cells": 19,
+                "raw_cells": 0,
+                "unknown_cell_formats": 0,
+                "empty_cells": 0,
+                "processed": 0,
+            }
+    _cells_info = []
     _exec_count = 10
     _status = 0
     return _nbrow, _cells_info, _exec_count, _status
