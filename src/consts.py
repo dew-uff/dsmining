@@ -122,8 +122,4 @@ PF_TIMEOUT = 8                        # 2 ** 3
 PF_SYNTAX_ERROR = 16                  # 2 ** 4
 PF_AGGREGATE_OK = 32                  # 2 ** 5
 PF_AGGREGATE_ERROR = 64               # 2 ** 6
-
-# Python File Analyses
-PFA_OK = 0
-PFA_SYNTAX_ERROR = 16                  # 2 ** 4
-PFA_TIMEOUT = 32                       # 2 ** 5
+PF_EMPTY = 128

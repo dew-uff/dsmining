@@ -730,3 +730,6 @@ def get_notebook_nbrow(repository_id, name):
 
 def stub_unzip(session_, repository_):
     return "done"
+
+def stub_unzip_failed(session_, repository_):
+    return "failed"

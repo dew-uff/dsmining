@@ -11,9 +11,19 @@ from src.helpers.h2_script_helpers import filter_repositories
 from src.helpers.h3_unzip_repositories import unzip_repository
 
 
-def find_python_files(repository):
+def find_python_files(session, repository):
     """ Finds all python files in a repository but setup.py """
     python_files = []
+
+    if not repository.path.exists():
+        msg = unzip_repository(session, repository)
+        if msg != "done":
+            vprint(2, "repository not found")
+            repository.processed |= consts.R_UNAVAILABLE_FILES
+            session.add(repository)
+            session.commit()
+            return python_files
+
     files = find_files(repository.path, "*.py")
     for file in files:
         if "/setup.py" not in str(file) and str(file) != 'setup.py':
@@ -61,13 +71,20 @@ def process_python_files(session, repository, python_files_names, count):
             with open(file_path) as f:
                 total = len(f.readlines())
 
+            if total == 0:
+                pf_processed = consts.PF_EMPTY
+            else:
+                pf_processed = consts.PF_OK
+
+
             python_file = PythonFile(
                 repository_id=repository.id,
                 name=name,
                 source=source,
                 total_lines=total,
-                processed=consts.PF_OK
+                processed= pf_processed
             )
+
             session.add(python_file)
         except Exception as err:
 
@@ -96,7 +113,7 @@ def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
         repository.processed -= consts.R_P_ERROR
 
     count = 0
-    repository_python_files_names = find_python_files(repository)
+    repository_python_files_names = find_python_files(repository, session)
 
     count, no_errors = process_python_files(session, repository, repository_python_files_names, count)
     if no_errors:
