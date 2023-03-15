@@ -5,13 +5,11 @@ if src not in sys.path: sys.path.append(src)
 
 import src.consts as consts
 import src.extractions.e2_python_files as e2
-from src.db.database import Repository, Notebook, Cell
-from src.config import LOGS_DIR, Path
-from src.helpers.h1_utils import SafeSession
+from src.db.database import Repository
+from src.config import Path
 
 from tests.database_config import connection, session
-from tests.factories.models_test import RepositoryFactory, NotebookFactory
-from tests.test_helpers.h1_stubs import stub_load_notebook, stub_load_notebook_error
+from tests.factories.models_test import RepositoryFactory
 
 
 class TestE2PythonFilesFindPythonFiles:
@@ -112,23 +110,20 @@ class TestE2PythonFilesProcessRepository:
 
 
 class TestE2PythonFilesProcessPythonFiles:
-    def test_find_python_files(self, session, monkeypatch):
+    def test_process_python_files(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
-        assert len(session.query(Repository).all()) == 1
+        python_files_names = ['test.py']
+        count=0
+        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
 
-        file1_relative_path = 'test.py'
-        file2_relative_path = 'to/file.py'
-        file3_relative_path = 'setup.py'
-        file4_relative_path = 'abc123/setup.py'
-        def mock_find_python_files(path, pattern):
-            return [Path(f'{repository.path}/{file1_relative_path}'),
-                    Path(f'{repository.path}/{file2_relative_path}'),
-                    Path(f'{repository.path}/{file3_relative_path}'),
-                    Path(f'{repository.path}/{file4_relative_path}')]
-        monkeypatch.setattr(e2, 'find_files', mock_find_python_files)
+        assert count == 1
+        assert no_errors is True
 
-        python_files = e2.find_python_files(repository)
-        assert file1_relative_path in python_files
-        assert file2_relative_path in python_files
-        assert file3_relative_path not in python_files
-        assert file4_relative_path not in python_files
+    def test_process_python_files(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create()
+        python_files_names = ['test.py']
+        count=0
+        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+
+        assert count == 1
+        assert no_errors is True
