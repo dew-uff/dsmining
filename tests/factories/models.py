@@ -1,5 +1,6 @@
 import factory
-from src.db.database import Repository, Notebook
+from src.db.database import Repository, Notebook, PythonFile
+
 
 def RepositoryFactory(session):
     class _RepositoryFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -54,3 +55,23 @@ def NotebookFactory(session):
                 session.commit()
 
     return _NotebookFactory
+
+
+def PythonFileFactory(session):
+    class _PythonFileFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = PythonFile
+            sqlalchemy_session = session
+
+        name = 'python_file_1.py'
+        source = 'import matplotlib\nprint("água")\n'
+        total_lines = 2
+        processed = 0
+
+        @factory.post_generation
+        def commit_to_db(self, create, extracted, **kwargs):
+            if create:
+                session.add(self)
+                session.commit()
+
+    return _PythonFileFactory

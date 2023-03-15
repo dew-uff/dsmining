@@ -726,3 +726,7 @@ def get_notebook_nbrow(repository_id, name):
         "processed": 0,
     }
     return __nbrow
+
+
+def stub_unzip(session_, repository_):
+    return "done"

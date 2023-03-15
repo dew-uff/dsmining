@@ -10,8 +10,8 @@ from src.config import LOGS_DIR, Path
 from src.helpers.h1_utils import SafeSession
 
 from tests.database_config import connection, session
-from tests.factories.models_test import RepositoryFactory, NotebookFactory
-from tests.test_helpers.h1_stubs import stub_load_notebook, stub_load_notebook_error
+from tests.factories.models import RepositoryFactory, NotebookFactory
+from tests.test_helpers.h1_stubs import stub_load_notebook, stub_load_notebook_error, stub_unzip
 
 
 class TestE1NotebooksAndCellsFindNotebooks:
@@ -95,13 +95,12 @@ class TestE1NotebooksAndCellsProcessNotebook:
         os.remove(str(LOGS_DIR)+"/todo_delete")
 
     def test_process_notebooks_no_path_done(self, session, monkeypatch):
-        def mock_unzip(session_, repository_):
-            return "done"
+
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(session).create(notebooks_count=2)
         repository_notebooks_names = ['file.ipynb']
         monkeypatch.setattr(e1, 'load_notebook', stub_load_notebook)
-        monkeypatch.setattr(e1, 'unzip_repository', mock_unzip)
+        monkeypatch.setattr(e1, 'unzip_repository', stub_unzip)
         count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
 
         safe_session.commit()

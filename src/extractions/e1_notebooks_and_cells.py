@@ -1,4 +1,4 @@
-"""Load notebook and cells"""
+""" Extracts notebooks and their cells from repositories"""
 
 import argparse
 import os

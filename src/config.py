@@ -7,7 +7,7 @@ if sys.version_info < (3, 5):
 else:
     from pathlib import Path
 
-# Github Credentials
+# GitHub Credentials
 GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 MACHINE = os.environ.get("GITHUB_USERNAME")

@@ -1,4 +1,5 @@
-"""Load python files"""
+""" Extracts python files from repositories"""
+
 import argparse
 import os
 import src.config as config
@@ -30,6 +31,7 @@ def process_python_files(session, repository, python_files_names, count):
         if msg != "done":
             vprint(2, msg)
             no_errors = False
+            return count, no_errors
 
 
     for name in python_files_names:
@@ -56,20 +58,29 @@ def process_python_files(session, repository, python_files_names, count):
             with open(file_path) as f:
                 source = f.read()
 
+            with open(file_path) as f:
+                total = len(f.readlines())
+
             python_file = PythonFile(
                 repository_id=repository.id,
                 name=name,
                 source=source,
-                total_lines=len(open(file_path).readlines()),
+                total_lines=total,
                 processed=consts.PF_OK
             )
             session.add(python_file)
         except Exception as err:
+
             vprint(1, "Failed to load python file {} due {!r}".format(name, err))
-            if config.VERBOSE > 4:
-                import traceback
-                traceback.print_exc()
-            no_errors = False
+
+            # We mark this python file as broken and keep adding the rest.
+            python_file = PythonFile(
+                repository_id=repository.id,
+                name=name,
+                processed=consts.PF_ERROR
+            )
+            session.add(python_file)
+
 
     return count, no_errors
 
@@ -87,8 +98,7 @@ def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
     count = 0
     repository_python_files_names = find_python_files(repository)
 
-    count, no_errors = process_python_files(session, repository,
-                                                  repository_python_files_names, count)
+    count, no_errors = process_python_files(session, repository, repository_python_files_names, count)
     if no_errors:
         repository.processed |= consts.R_P_EXTRACTION
         repository.python_files_count = count

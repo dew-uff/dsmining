@@ -10,7 +10,7 @@ import src.extractions.e1_notebooks_and_cells as e1
 import src.helpers.h2_script_helpers as h2
 from src.consts import N_OK, N_LOAD_ERROR, N_LOAD_FORMAT_ERROR
 from tests.database_config import connection, session
-from tests.factories.models_test import RepositoryFactory
+from tests.factories.models import RepositoryFactory
 from tests.test_helpers.h1_stubs import stub_nbf_read, get_empty_nbrow
 from tests.test_helpers.h1_stubs import stub_load_cells, stub_nbf_readOSError, stub_nbf_readException
 from tests.test_helpers.h1_stubs import stub_load_no_cells

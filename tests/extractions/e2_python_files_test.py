@@ -1,15 +1,21 @@
 import sys
 import os
+
+from unittest.mock import mock_open
+
+from tests.factories.models import PythonFileFactory
+from tests.test_helpers.h1_stubs import stub_unzip
+
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
 import src.consts as consts
 import src.extractions.e2_python_files as e2
-from src.db.database import Repository
+from src.db.database import Repository, PythonFile
 from src.config import Path
 
 from tests.database_config import connection, session
-from tests.factories.models_test import RepositoryFactory
+from tests.factories.models import RepositoryFactory
 
 
 class TestE2PythonFilesFindPythonFiles:
@@ -110,20 +116,120 @@ class TestE2PythonFilesProcessRepository:
 
 
 class TestE2PythonFilesProcessPythonFiles:
-    def test_process_python_files(self, session, monkeypatch):
+    def test_process_python_files_sucess(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         python_files_names = ['test.py']
         count=0
+        source = 'import matplotlib\nprint("test")\n'
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data=source))
+
+
         count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        session.commit()
+        python_file = session.query(PythonFile).all()[0]
 
         assert count == 1
         assert no_errors is True
+        assert python_file.repository_id == repository.id
+        assert python_file.total_lines == 2
+        assert python_file.source == source
 
-    def test_process_python_files(self, session, monkeypatch):
+    def test_process_python_files_path_zip(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create()
         python_files_names = ['test.py']
         count=0
+        source = 'import matplotlib\nprint("test")\n'
+        monkeypatch.setattr(Path, 'exists', lambda path: False)
+        monkeypatch.setattr(e2, 'unzip_repository', stub_unzip)
+        monkeypatch.setattr('builtins.open', mock_open(read_data=source))
+
+
         count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        session.commit()
+        python_file = session.query(PythonFile).all()[0]
+        captured = capsys.readouterr()
 
         assert count == 1
         assert no_errors is True
+        assert python_file.repository_id == repository.id
+        assert 'Unzipping repository' in captured.out
+
+    def test_process_python_files_path_error(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create()
+        python_files_names = ['test.py']
+        count=0
+        monkeypatch.setattr(Path, 'exists', lambda path: False)
+
+
+        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        session.commit()
+        query = session.query(PythonFile).all()
+        captured = capsys.readouterr()
+
+        assert count == 0
+        assert no_errors is False
+        assert query == []
+        assert 'Failed to load notebooks' in captured.out
+
+    def test_process_python_files_no_name(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create()
+        python_files_names = ['']
+        count=0
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+
+        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        session.commit()
+        query = session.query(PythonFile).all()
+
+        assert count == 0
+        assert query == []
+        assert no_errors is True
+
+    def test_process_python_files_already_exists(self, session, monkeypatch, capsys):
+        """ If python file with error, reprocesses """
+
+        count = 0
+        name = "test.py"
+        repository = RepositoryFactory(session).create()
+        python_files_names = [name]
+        python_file = PythonFileFactory(session).create(repository_id=repository.id,
+                                                        name= name,
+                                                        processed= consts.PF_ERROR)
+        initial_created_at = python_file.created_at
+
+
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data="import matplotlib\n"))
+
+        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        session.commit()
+
+        python_file_result = session.query(PythonFile).all()[0]
+
+        assert initial_created_at != python_file_result.created_at
+        assert count == 1
+        assert no_errors is True
+
+    def test_process_python_files_IOError(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create()
+        python_files_names = ['test.py']
+        count = 0
+        source = 'import matplotlib\nprint("test")\n'
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+
+        def raise_error(text): raise FileNotFoundError
+        m = mock_open()
+        m.side_effect = raise_error
+        monkeypatch.setattr('builtins.open', m)
+
+        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        session.commit()
+        python_file = session.query(PythonFile).all()[0]
+
+        assert count == 1
+        assert no_errors is True
+        assert python_file.repository_id == repository.id
+        assert python_file.processed == consts.PF_ERROR
+        assert python_file.source is None
+        assert python_file.total_lines  is None

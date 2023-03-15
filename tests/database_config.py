@@ -3,7 +3,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from src.config import DB_CONNECTION_TEST
 from src.db.database import Base
-from tests.factories.models_test import RepositoryFactory
 
 engine = create_engine(DB_CONNECTION_TEST, convert_unicode=True, echo=False)
 Session = sessionmaker(autocommit=False, autoflush=False)
