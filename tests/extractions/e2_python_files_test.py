@@ -62,7 +62,7 @@ class TestE2PythonFilesFindPythonFiles:
         assert file3_relative_path not in python_files
         assert file4_relative_path not in python_files
 
-    def test_find_python_files_zip_success(self, session, monkeypatch):
+    def test_find_python_files_zip_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
 
 
