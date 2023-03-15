@@ -6,7 +6,7 @@ if src not in sys.path: sys.path.append(src)
 import src.consts as consts
 from src.db.database import Repository
 from src.helpers.h1_utils import SafeSession
-from tests.database_test import connection, session
+from tests.database_config import connection, session
 from tests.factories.models_test import RepositoryFactory
 from src.helpers.h2_script_helpers import filter_repositories
 
