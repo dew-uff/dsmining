@@ -86,7 +86,7 @@ def load_cells(repository_id, nbrow, notebook, status):
     return nbrow, cells_info, exec_count, status
 
 
-@timeout(5 * 60, use_signals=False)
+# @timeout(5 * 60, use_signals=False)
 def load_notebook(repository_id, path, notebook_file, nbrow):
     """ Extract notebook information and cells from notebook """
     # pylint: disable=too-many-locals
@@ -224,13 +224,14 @@ def find_notebooks(session, repository):
 def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
     """ Processes repository """
 
-    if repository.processed & consts.R_N_EXTRACTION:
+    if repository.processed & (consts.R_N_EXTRACTION + skip_if_error):
         return "already processed"
 
-    if repository.processed & skip_if_error:
+
+    if repository.processed & consts.R_N_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
-        repository.processed -= skip_if_error
+        repository.processed -= consts.R_N_ERROR
 
     repository_notebooks_names = find_notebooks(session, repository)
     count, repository = process_notebooks(session, repository, repository_notebooks_names)

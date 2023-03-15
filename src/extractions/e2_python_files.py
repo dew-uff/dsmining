@@ -7,32 +7,32 @@ import src.consts as consts
 from src.db.database import PythonFile, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, find_files, mount_basedir
 from src.helpers.h2_script_helpers import filter_repositories
+from src.helpers.h3_unzip_repositories import unzip_repository
 
 
 def find_python_files(repository):
-    """Finds all python files in the repository but setup.py"""
-    python_files = [
-        str(file.relative_to(repository.path))
-        for file in find_files(repository.path, "*.py")
-        if "/setup.py" not in str(file) and str(file) != 'setup.py'
-    ]
+    """ Finds all python files in a repository but setup.py """
+    python_files = []
+    files = find_files(repository.path, "*.py")
+    for file in files:
+        if "/setup.py" not in str(file) and str(file) != 'setup.py':
+            python_files.append(str(file.relative_to(repository.path)))
+
     return python_files
 
 
-def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
-    """Process repository"""
-    if repository.processed & (consts.R_P_EXTRACTION + skip_if_error):
-        return "already processed"
-    if repository.processed & skip_if_error:
-        session.add(repository)
-        repository.processed -= skip_if_error
+def process_python_files(session, repository, python_files_names, count):
+    no_errors = True
 
-    finished = True
+    if not repository.path.exists():
+        vprint(2, "Unzipping repository: {}".format(repository.zip_path))
+        msg = unzip_repository(session, repository)
+        if msg != "done":
+            vprint(2, msg)
+            no_errors = False
 
-    count = 0
-    repository_python_files_names = find_python_files(repository)
 
-    for name in repository_python_files_names:
+    for name in python_files_names:
         if not name:
             continue
 
@@ -48,28 +48,55 @@ def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
                 session.delete(python_file)
                 session.commit()
 
-        vprint(3, "Loading python file {}".format(name))
+        try:
+            vprint(3, "Loading python file {}".format(name))
 
-        file_path = str(repository.path) + os.sep + name
+            file_path = str(repository.path) + os.sep + name
 
-        with open(file_path) as f:
-            source = f.read()
+            with open(file_path) as f:
+                source = f.read()
 
-        python_file = PythonFile(
-            repository_id=repository.id,
-            name=name,
-            source=source,
-            total_lines=len(open(file_path).readlines()),
-            processed=consts.PF_OK
-        )
-        session.add(python_file)
+            python_file = PythonFile(
+                repository_id=repository.id,
+                name=name,
+                source=source,
+                total_lines=len(open(file_path).readlines()),
+                processed=consts.PF_OK
+            )
+            session.add(python_file)
+        except Exception as err:
+            vprint(1, "Failed to load python file {} due {!r}".format(name, err))
+            if config.VERBOSE > 4:
+                import traceback
+                traceback.print_exc()
+            no_errors = False
+
+    return count, no_errors
 
 
-    if finished and not repository.processed & skip_if_error:
+def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
+    """ Processes repository """
+    if repository.processed & (consts.R_P_EXTRACTION + skip_if_error):
+        return "already processed"
+
+    if repository.processed & consts.R_P_ERROR:
+        session.add(repository)
+        vprint(3, "retrying to process {}".format(repository))
+        repository.processed -= consts.R_P_ERROR
+
+    count = 0
+    repository_python_files_names = find_python_files(repository)
+
+    count, no_errors = process_python_files(session, repository,
+                                                  repository_python_files_names, count)
+    if no_errors:
         repository.processed |= consts.R_P_EXTRACTION
         repository.python_files_count = count
-        session.add(repository)
-        session.commit()
+    else:
+        repository.processed |= consts.R_P_ERROR
+
+    session.add(repository)
+    session.commit()
     return "done"
 
 
