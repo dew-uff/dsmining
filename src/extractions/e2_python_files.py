@@ -113,7 +113,7 @@ def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
         repository.processed -= consts.R_P_ERROR
 
     count = 0
-    repository_python_files_names = find_python_files(repository, session)
+    repository_python_files_names = find_python_files(session, repository)
 
     count, no_errors = process_python_files(session, repository, repository_python_files_names, count)
     if no_errors:
