@@ -6,15 +6,15 @@ import tarfile
 import src.config as config
 import src.consts as consts
 
-from src.db.database import PythonFile, PythonFileModule, connect, Cell, PythonFileDataIO
+from src.db.database import PythonFile, PythonFileModule, connect, PythonFileDataIO
 from src.db.database import RepositoryFile
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
-from src.helpers.h1_utils import timeout, TimeoutError, SafeSession
+from src.helpers.h1_utils import TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
 from e8_extract_files import process_repository
-from src.helpers.c1_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
-from src.helpers.c2_cell_visitor import  CellVisitor
+from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
+from src.classes.c3_cell_visitor import  CellVisitor
 
 
 # @timeout(1 * 60, use_signals=False)

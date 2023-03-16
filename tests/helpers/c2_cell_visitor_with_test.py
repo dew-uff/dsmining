@@ -4,8 +4,8 @@ import os
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
-from src.helpers.c2_cell_visitor import CellVisitor
-from src.helpers.c1_checkers import PathLocalChecker
+from src.classes.c3_cell_visitor import CellVisitor
+from src.classes.c2_local_checkers import PathLocalChecker
 
 
 class TestCellVisitorVisitWith:

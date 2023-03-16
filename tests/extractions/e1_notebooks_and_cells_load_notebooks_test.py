@@ -7,7 +7,7 @@ src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
 import src.extractions.e1_notebooks_and_cells as e1
-import src.helpers.h2_script_helpers as h2
+import src.helpers.h3_script_helpers as h2
 from src.consts import N_OK, N_LOAD_ERROR, N_LOAD_FORMAT_ERROR
 from tests.database_config import connection, session
 from tests.factories.models import RepositoryFactory

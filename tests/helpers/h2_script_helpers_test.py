@@ -8,7 +8,7 @@ from src.db.database import Repository
 from src.helpers.h1_utils import SafeSession
 from tests.database_config import connection, session
 from tests.factories.models import RepositoryFactory
-from src.helpers.h2_script_helpers import filter_repositories
+from src.helpers.h3_script_helpers import filter_repositories
 
 
 class TestH2ScripHelpersFilterRepositories:

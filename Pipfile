@@ -29,6 +29,9 @@ langdetect = "*"
 nltk = "*"
 mistune ="==0.8.4"
 astunparse = "*"
+nbconvert = "*"
+
+# Test related modules
 pytest = "*"
 coverage = "*"
 pytest-mock = "*"

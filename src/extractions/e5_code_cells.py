@@ -1,7 +1,6 @@
 """Load markdown features"""
 import argparse
 import os
-import sys
 import ast
 import tarfile
 import src.config as config
@@ -11,12 +10,12 @@ from itertools import groupby
 from src.db.database import Cell, CellModule, connect, CellDataIO
 from src.db.database import RepositoryFile
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
-from src.helpers.h1_utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
+from src.helpers.h1_utils import invoke, TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
 from e8_extract_files import process_repository
-from src.helpers.c1_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
-from src.helpers.c2_cell_visitor import  CellVisitor
+from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
+from src.classes.c3_cell_visitor import  CellVisitor
 
 
 # @timeout(1 * 60, use_signals=False)

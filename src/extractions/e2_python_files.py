@@ -7,8 +7,8 @@ import src.consts as consts
 
 from src.db.database import PythonFile, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, find_files, mount_basedir
-from src.helpers.h2_script_helpers import filter_repositories
-from src.helpers.h3_unzip_repositories import unzip_repository
+from src.helpers.h3_script_helpers import filter_repositories
+from src.helpers.h4_unzip_repositories import unzip_repository
 
 
 def find_python_files(session, repository):

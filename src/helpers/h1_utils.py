@@ -220,7 +220,7 @@ def join_paths(elements):
 
 
 def find_files_in_path(full_dir, patterns):
-    """Find files in path using patterns"""
+    """Find files in a path using patterns"""
     full_dir = str(full_dir)
     return [
         [

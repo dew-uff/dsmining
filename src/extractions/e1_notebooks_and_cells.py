@@ -10,8 +10,8 @@ from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect
 from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger
 from src.helpers.h1_utils import check_exit, savepid, SafeSession, mount_basedir
-from src.helpers.h2_script_helpers import filter_repositories, broken_link, cell_output_formats
-from src.helpers.h3_unzip_repositories import unzip_repository
+from src.helpers.h3_script_helpers import filter_repositories, broken_link, cell_output_formats
+from src.helpers.h4_unzip_repositories import unzip_repository
 
 
 def load_cells(repository_id, nbrow, notebook, status):
