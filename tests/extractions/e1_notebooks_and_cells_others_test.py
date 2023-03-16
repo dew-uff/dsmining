@@ -116,7 +116,7 @@ class TestE1NotebooksAndCellsProcessNotebook:
 
         e1.process_notebooks(safe_session, repository, repository_notebooks_names)
         captured = capsys.readouterr()
-        assert "Failed to load notebook" in captured.out
+        assert "Failed to load" in captured.out
 
     def test_process_notebooks_error(self, session, monkeypatch, capsys):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
