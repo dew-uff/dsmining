@@ -20,7 +20,7 @@ def unzip_repository(session, repository):
         if not repository.zip_path.exists():
             repository.processed |= consts.R_UNAVAILABLE_FILES
             session.add(repository)
-            return "Failed to load notebooks due <repository not found>"
+            return "Failed to load due <repository not found>"
         uncompressed = subprocess.call([
             "tar", "-xjf", str(repository.zip_path),
             "-C", str(repository.zip_path.parent)

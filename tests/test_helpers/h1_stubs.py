@@ -11,6 +11,8 @@ cells = [
      'source': '<!--BOOK_INFORMATION-->\n<img align="left" style="padding-right:10px;" src="figures/PDSH-cover-small.png">\n\n*This notebook contains an excerpt from the [Python Data Science Handbook](http://shop.oreilly.com/product/0636920034919.do) by Jake VanderPlas; the content is available [on GitHub](https://github.com/jakevdp/PythonDataScienceHandbook).*\n\n*The text is released under the [CC-BY-NC-ND license](https://creativecommons.org/licenses/by-nc-nd/3.0/us/legalcode), and code is released under the [MIT license](https://opensource.org/licenses/MIT). If you find this content useful, please consider supporting the work by [buying the book](http://shop.oreilly.com/product/0636920034919.do)!*',
      'python': True, 'processed': 0}]
 
+REQUIREMENTS_TXT = b"# local package\n-e .\n\n# external requirements\nclick\nSphinx\ncoverage\nawscli\nflake8\npython-dotenv>=0.5.1\n{% if cookiecutter.python_interpreter != 'python3' %}\n\n# backwards compatibility\npathlib2\n{% endif %}"
+
 notebook_dict  = \
         {
             "cells": [

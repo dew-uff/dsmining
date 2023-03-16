@@ -7,8 +7,8 @@ R_COMPRESS_ERROR = 4                 # 2 ** 2
 R_COMPRESS_OK = 8                    # 2 ** 3
 R_UNAVAILABLE_FILES = 16             # 2 ** 4
 R_COMMIT_MISMATCH = 32               # 2 ** 5
-R_REQUIREMENTS_ERROR = 64            # 2 ** 6
-R_REQUIREMENTS_OK = 128              # 2 ** 7
+R_REQUIREMENTS_OK = 64              # 2 ** 7
+R_REQUIREMENTS_ERROR = 128            # 2 ** 6
 
 R_P_EXTRACTION = 256                 # 2 ** 8
 R_P_ERROR = 512                      # 2 ** 9
@@ -110,6 +110,8 @@ E_EXECUTED = 32                      # 2 ** 5
 # Requirement File
 
 F_OK = 0
+F_ERROR = 2
+F_EMPTY = 4
 
 
 # Python Files

@@ -38,50 +38,54 @@ def find_requirements(session, repository):
     session.commit()
     return setups, requirements, pipfiles, pipfile_locks
 
-def process_requirement_file(session, repository, req_names, reqformat,
-                             skip_if_error=consts.R_REQUIREMENTS_ERROR):
-
+def process_requirement_files(session, repository, req_names, reqformat,
+                              skip_if_error=consts.R_REQUIREMENTS_ERROR):
     """ Processes a requirement file """
-
-
-    zip_path = None
-    tarzip = None
+    no_errors = True
 
     if not repository.path.exists():
-        if not repository.zip_path.exists():
-            repository.processed |= consts.R_UNAVAILABLE_FILES
-            session.add(repository)
-            vprint(1, "Failed to load requirement {} due <repository not found>".format(reqformat))
-            return False
-        tarzip = tarfile.open(str(repository.zip_path))
-        zip_path = config.Path(repository.hash_dir2)
-    finished = True
+        vprint(2, "Unzipping repository: {}".format(repository.zip_path))
+        msg = unzip_repository(session, repository)
+        if msg != "done":
+            vprint(2, msg)
+            no_errors = False
+            return no_errors
+
 
     for item in req_names:
         name = str(item)
         if not name:
             continue
+
+        requirement_file = session.query(RequirementFile).filter(
+            RequirementFile.repository_id == repository.id,
+            RequirementFile.name == name,
+        ).first()
+
+        if requirement_file is not None:
+            if requirement_file.processed & consts.R_REQUIREMENTS_ERROR:
+                session.delete(requirement_file)
+                session.commit()
+
         try:
             vprint(2, "Loading requirement {}".format(name))
-            if tarzip:
-                content = tarzip.extractfile(tarzip.getmember(str(zip_path / name))).read()
-            else:
-                with open(str(repository.path / name), "rb") as ofile:
-                    content = ofile.read()
+
+            with open(str(repository.path / name), "rb") as ofile:
+                content = ofile.read()
 
             coding = chardet.detect(content)
             if coding["encoding"] is None:
-                vprint(3, "Codec not detected")
-                continue
+                raise ValueError("Codec not detected")
+
             try:
                 content = content.decode(coding['encoding'])
-            except UnicodeDecodeError:
-                vprint(3, "Invalid codec")
-                continue
+            except Exception:
+                raise ValueError("Invalid codec")
 
             if '\0' in content:
-                vprint(3, "NULL byte in content")
-                continue
+                vprint(3, "Found null byte in content. Replacing it by \\n")
+                content = content.replace("\0", "\n")
+
             requirement_file = RequirementFile(
                 repository_id=repository.id,
                 name=name,
@@ -90,17 +94,19 @@ def process_requirement_file(session, repository, req_names, reqformat,
                 processed=consts.F_OK,
             )
             session.add(requirement_file)
+
         except Exception as err:
-            repository.processed |= skip_if_error
-            session.add(repository)
             vprint(1, "Failed to load requirement {} due {!r}".format(name, err))
-            if config.VERBOSE > 4:
-                import traceback
-                traceback.print_exc()
-            finished = False
-    if tarzip:
-        tarzip.close()
-    return finished
+            # We mark this python file as broken and keep adding the rest.
+            requirement_file = RequirementFile(
+                repository_id=repository.id,
+                name=name,
+                reqformat=reqformat,
+                processed=consts.F_ERROR,
+            )
+            session.add(requirement_file)
+
+    return no_errors
 
 
 def process_repository(session, repository, skip_if_error=consts.R_REQUIREMENTS_ERROR):
@@ -117,14 +123,18 @@ def process_repository(session, repository, skip_if_error=consts.R_REQUIREMENTS_
 
     setups, requirements, pipfiles, pipfile_locks = find_requirements(session, repository)
 
-    no_error &= process_requirement_file(session, repository, setups, "setup.py", skip_if_error)
-    no_error &= process_requirement_file(session, repository, requirements, "requirements.txt", skip_if_error)
-    no_error &= process_requirement_file(session, repository, pipfiles, "Pipfile", skip_if_error)
-    no_error &= process_requirement_file(session, repository,pipfile_locks, "Pipfile.lock", skip_if_error)
+    no_error &= process_requirement_files(session, repository, setups, "setup.py")
+    no_error &= process_requirement_files(session, repository, requirements, "requirements.txt")
+    no_error &= process_requirement_files(session, repository, pipfiles, "Pipfile")
+    no_error &= process_requirement_files(session, repository, pipfile_locks, "Pipfile.lock")
 
-    if no_error and not repository.processed & skip_if_error:
+    if no_error:
         repository.processed |= consts.R_REQUIREMENTS_OK
-        session.add(repository)
+    else:
+        repository.processed |= consts.R_REQUIREMENTS_ERROR
+
+    session.add(repository)
+    session.commit()
     return "done"
 
 

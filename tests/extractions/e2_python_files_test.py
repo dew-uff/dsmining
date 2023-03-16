@@ -223,7 +223,7 @@ class TestE2PythonFilesProcessPythonFiles:
         assert count == 0
         assert no_errors is False
         assert query == []
-        assert 'Failed to load notebooks' in captured.out
+        assert 'Failed to load' in captured.out
 
     def test_process_python_files_no_name(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create()

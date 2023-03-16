@@ -3,15 +3,17 @@ import os
 
 from unittest.mock import mock_open
 
-from tests.factories.models import PythonFileFactory
-from tests.test_helpers.h1_stubs import stub_unzip, stub_unzip_failed
+import chardet
+
+from tests.factories.models import PythonFileFactory, RequirementFileFactory
+from tests.test_helpers.h1_stubs import stub_unzip, stub_unzip_failed, REQUIREMENTS_TXT
 
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
 import src.consts as consts
 import src.extractions.e3_requirement_files as e3
-from src.db.database import Repository, PythonFile
+from src.db.database import Repository, PythonFile, RequirementFile
 from src.config import Path
 from tests.database_config import connection, session
 from tests.factories.models import RepositoryFactory
@@ -86,3 +88,259 @@ class TestE3RequiremtFilesFindRequirements:
         assert pipfiles == []
         assert pipfile_locks == []
         assert repository.processed == consts.R_UNAVAILABLE_FILES
+
+class TestE3RequiremtFilesProcessRepository:
+    def test_process_repository_success(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create()
+        assert repository.python_files_count is None
+
+        file = [Path('setup.py')]
+        monkeypatch.setattr(e3, 'find_requirements',
+                            lambda _session, _repository: [[file], [], [], []])
+        monkeypatch.setattr(e3, 'process_requirement_files',
+                            lambda _session, _repository,
+                                   _python_files_names, count: True)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        output = e3.process_repository(session, repository)
+
+        assert output == "done"
+        assert repository.processed == consts.R_REQUIREMENTS_OK
+
+    def test_process_repository_error(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create()
+
+        file = [Path('setup.py')]
+        monkeypatch.setattr(e3, 'find_requirements',
+                            lambda _session, _repository: [[file], [], [], []])
+        monkeypatch.setattr(e3, 'process_requirement_files',
+                            lambda _session, _repository,
+                                   _python_files_names, count: False)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        output = e3.process_repository(session, repository)
+
+        assert output == "done"
+        assert repository.processed == consts.R_REQUIREMENTS_ERROR
+
+    def test_process_repository_already_processed(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(
+            processed=consts.R_REQUIREMENTS_OK)
+
+        output = e3.process_repository(session, repository)
+
+        assert output == "already processed"
+
+    def test_process_repository_retry_error_success(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create(processed=consts.R_REQUIREMENTS_ERROR)
+
+        file = [Path('setup.py')]
+        monkeypatch.setattr(e3, 'find_requirements',
+                            lambda _session, _repository: [[file], [], [], []])
+        monkeypatch.setattr(e3, 'process_requirement_files',
+                            lambda _session, _repository,
+                                   _python_files_names, count: True)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+
+        output = e3.process_repository(session, repository, skip_if_error=0)
+
+        assert repository.processed == consts.R_REQUIREMENTS_OK
+        captured = capsys.readouterr()
+        assert "retrying to process" in captured.out
+        assert output == "done"
+
+    def test_process_repository_retry_error(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(processed = consts.R_REQUIREMENTS_ERROR)
+        assert repository.python_files_count is None
+
+        file = [Path('setup.py')]
+        monkeypatch.setattr(e3, 'find_requirements',
+                            lambda _session, _repository: [[file], [], [], []])
+        monkeypatch.setattr(e3, 'process_requirement_files',
+                            lambda _session, _repository,
+                                   _python_files_names, count: False)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        output = e3.process_repository(session, repository, skip_if_error=0)
+
+        assert output == "done"
+        assert repository.processed == consts.R_REQUIREMENTS_ERROR
+        assert session.query(Repository).all()[0].python_files_count is None
+
+    def test_process_repository_skip_error(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create(processed=consts.R_REQUIREMENTS_ERROR)
+
+        output = e3.process_repository(session, repository)
+
+        assert output == "already processed"
+
+
+class TestE3RequiremtFiles:
+    def test_process_requirement_files_sucess(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create()
+
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
+        reqformat  = 'requirements.txt'
+        req_names = [Path('requirements.txt')]
+
+        no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
+        session.commit()
+
+        requirement_file = session.query(RequirementFile).all()[0]
+
+        assert no_errors is True
+        assert requirement_file.repository_id == repository.id
+        assert requirement_file.processed == consts.F_OK
+        assert requirement_file.content == REQUIREMENTS_TXT.decode('ascii')
+
+    def test_process_requirement_files_path_zip(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create()
+        reqformat = 'requirements.txt'
+        req_names = [Path('requirements.txt')]
+        monkeypatch.setattr(Path, 'exists', lambda path: False)
+        monkeypatch.setattr(e3, 'unzip_repository', stub_unzip)
+        monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
+
+        no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
+        session.commit()
+
+        requirement_file = session.query(RequirementFile).all()[0]
+
+        captured = capsys.readouterr()
+
+        assert no_errors is True
+        assert requirement_file.repository_id == repository.id
+        assert requirement_file.processed == consts.F_OK
+        assert requirement_file.content == REQUIREMENTS_TXT.decode('ascii')
+        assert 'Unzipping repository' in captured.out
+
+    def test_process_requirement_files_path_error(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create()
+        reqformat = 'requirements.txt'
+        req_names = [Path('requirements.txt')]
+        monkeypatch.setattr(Path, 'exists', lambda path: False)
+
+        no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
+        session.commit()
+
+        query = session.query(RequirementFile).all()
+        captured = capsys.readouterr()
+
+        assert no_errors is False
+        assert query == []
+        assert 'Failed to load' in captured.out
+
+    def test_process_requirement_files_no_name(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create()
+        reqformat = 'requirements.txt'
+        req_names = ['']
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+
+        no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
+        session.commit()
+        query = session.query(PythonFile).all()
+
+        assert query == []
+        assert no_errors is True
+
+    def test_process_python_files_already_exists(self, session, monkeypatch, capsys):
+
+        name = 'requirements.txt'
+        repository = RepositoryFactory(session).create()
+        reqformat = 'requirements.txt'
+        req_names = [Path(name)]
+        python_file = RequirementFileFactory(session).create(repository_id=repository.id,
+                                                        name= name,
+                                                        processed= consts.R_REQUIREMENTS_ERROR)
+        initial_created_at = python_file.created_at
+
+
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
+
+        no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
+        session.commit()
+
+        requirement_file_result = session.query(RequirementFile).all()[0]
+
+        assert requirement_file_result.repository_id == repository.id
+        assert requirement_file_result.processed == consts.F_OK
+        assert initial_created_at != requirement_file_result.created_at
+        assert no_errors is True
+
+    def test_process_requirement_files_no_codec(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create()
+        reqformat = 'requirements.txt'
+        req_names = [Path('requirements.txt')]
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
+        monkeypatch.setattr(chardet, 'detect', lambda content: {'encoding': None, 'confidence': 0.0, 'language': None})
+
+        no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
+        session.commit()
+        requirement_file = session.query(RequirementFile).all()[0]
+        captured = capsys.readouterr()
+
+        assert no_errors is True
+        assert requirement_file.repository_id == repository.id
+        assert requirement_file.processed == consts.F_ERROR
+        assert 'Codec not detected' in captured.out
+
+    def test_process_requirement_files_invalid_codec(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create()
+        reqformat = 'requirements.txt'
+        req_names = [Path('requirements.txt')]
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
+        monkeypatch.setattr(chardet, 'detect', lambda content: {'encoding': 'error', 'confidence': 0.0, 'language': None})
+
+        no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
+        session.commit()
+        requirement_file = session.query(RequirementFile).all()[0]
+        captured = capsys.readouterr()
+
+        assert no_errors is True
+        assert requirement_file.repository_id == repository.id
+        assert requirement_file.processed == consts.F_ERROR
+        assert 'Invalid codec' in captured.out
+
+    def test_process_requirement_files_null_byte(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create()
+
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data= b"test\0test\n"))
+        reqformat = 'requirements.txt'
+        req_names = [Path('requirements.txt')]
+
+        no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
+        session.commit()
+
+        requirement_file = session.query(RequirementFile).all()[0]
+
+        assert no_errors is True
+        assert requirement_file.repository_id == repository.id
+        assert requirement_file.processed == consts.F_OK
+        assert requirement_file.content == "test\ntest\n"
+
+    def test_process_requirement_files_IOError(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create()
+
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
+        reqformat  = 'requirements.txt'
+        req_names = [Path('requirements.txt')]
+
+        def raise_error(text,error): raise FileNotFoundError
+        m = mock_open()
+        m.side_effect = raise_error
+        monkeypatch.setattr('builtins.open', m)
+
+        no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
+        session.commit()
+        captured = capsys.readouterr()
+        requirement_file = session.query(RequirementFile).all()[0]
+
+        assert no_errors is True
+        assert requirement_file.repository_id == repository.id
+        assert requirement_file.processed == consts.F_ERROR
+        assert 'Failed to load' in captured.out
+
+

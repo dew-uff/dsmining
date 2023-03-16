@@ -1,5 +1,5 @@
 import factory
-from src.db.database import Repository, Notebook, PythonFile
+from src.db.database import Repository, Notebook, PythonFile, RequirementFile
 
 
 def RepositoryFactory(session):
@@ -75,3 +75,23 @@ def PythonFileFactory(session):
                 session.commit()
 
     return _PythonFileFactory
+
+def RequirementFileFactory(session):
+
+    class _RequirementFileFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = RequirementFile
+            sqlalchemy_session = session
+
+        name = 'requirements.txt'
+        reqformat = 'requirements.txt'
+        content = 'click\nSphinx\ncoverage\nawscli\nflake8\n'
+        processed = 0
+
+        @factory.post_generation
+        def commit_to_db(self, create, extracted, **kwargs):
+            if create:
+                session.add(self)
+                session.commit()
+
+    return _RequirementFileFactory
