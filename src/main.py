@@ -15,13 +15,13 @@ ORDER = [
     "e1_notebooks_and_cells",
     "e2_python_files",
     "e3_requirement_files",
-    "e4_compress",
-    "e5_extract_files",
-    "e6_markdown_features",
-    "e7_cell_features",
-    "e8_python_features",
-    "e9_notebook_aggregate",
-    "e10_python_aggregate"
+    "e4_markdown_cells",
+    "e5_code_cells",
+    "e6_python_files",
+    "e7_compress",
+    "e8_extract_files",
+    "p1_notebook_aggregate",
+    "p2_python_aggregate"
 ]
 
 

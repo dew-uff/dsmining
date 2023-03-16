@@ -12,7 +12,7 @@ from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_u
 from src.helpers.h1_utils import timeout, TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
-from e5_extract_files import process_repository
+from e8_extract_files import process_repository
 from src.helpers.c1_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
 from src.helpers.c2_cell_visitor import  CellVisitor
 
@@ -70,13 +70,13 @@ def process_python_file(
         try:
             vprint(2, "Extracting features")
             modules, data_ios = extract_features(python_file.source, checker)
-            processed = consts.PFA_OK
+            processed = consts.PF_OK
         except TimeoutError:
-            processed = consts.PFA_TIMEOUT
+            processed = consts.PF_TIMEOUT
             python_file.processed |= consts.PF_TIMEOUT
             error = True
         except SyntaxError:
-            processed = consts.PFA_SYNTAX_ERROR
+            processed = consts.PF_SYNTAX_ERROR
             python_file.processed |= consts.PF_SYNTAX_ERROR
             error = True
         if error:
@@ -216,25 +216,26 @@ def load_checker(
 
 
 def apply(
-    session, status, dispatches, selected_notebooks,
+    session, status, dispatches, selected_python_filess,
     skip_if_error, skip_if_syntaxerror, skip_if_timeout,
     count, interval, reverse, check
 ):
     """Extract python files features"""
-    while selected_notebooks:
+    while selected_python_filess:
         filters = [
-            PythonFile.processed.op('&')(consts.C_PROCESS_OK) == 0,
+            PythonFile.processed.op('&')(consts.PF_OK) == 0,
+            PythonFile.processed.op('&')(consts.PF_EMPTY) == 0,
             PythonFile.processed.op('&')(skip_if_error) == 0,
             PythonFile.processed.op('&')(skip_if_syntaxerror) == 0,
             PythonFile.processed.op('&')(skip_if_timeout) == 0,
         ]
-        if selected_notebooks is not True:
+        if selected_python_filess is not True:
             filters += [
-                Cell.notebook_id.in_(selected_notebooks[:30])
+                PythonFile.notebook_id.in_(selected_python_filess[:30])
             ]
-            selected_notebooks = selected_notebooks[30:]
+            selected_python_filess = selected_python_filess[30:]
         else:
-            selected_notebooks = False
+            selected_python_filess = False
             if interval:
                 filters += [
                     PythonFile.repository_id >= interval[0],
@@ -307,9 +308,9 @@ def main():
         description='Execute repositories')
     parser.add_argument('-v', '--verbose', type=int, default=config.VERBOSE,
                         help='increase output verbosity')
-    parser.add_argument("-n", "--notebooks", type=int, default=None,
+    parser.add_argument("-n", "--python_files", type=int, default=None,
                         nargs="*",
-                        help="notebooks ids")
+                        help="python_files ids")
     parser.add_argument('-e', '--retry-errors', action='store_true',
                         help='retry errors')
     parser.add_argument('-s', '--retry-syntaxerrors', action='store_true',
@@ -341,7 +342,7 @@ def main():
                 SafeSession(session),
                 status,
                 dispatches,
-                args.notebooks or True,
+                args.python_files or True,
                 0 if args.retry_errors else consts.PF_PROCESS_ERROR,
                 0 if args.retry_syntaxerrors else consts.PF_SYNTAX_ERROR,
                 0 if args.retry_timeout else consts.PF_TIMEOUT,

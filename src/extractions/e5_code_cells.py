@@ -14,7 +14,7 @@ from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_u
 from src.helpers.h1_utils import get_pyexec, invoke, timeout, TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
-from e5_extract_files import process_repository
+from e8_extract_files import process_repository
 from src.helpers.c1_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
 from src.helpers.c2_cell_visitor import  CellVisitor
 
