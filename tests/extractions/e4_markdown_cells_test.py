@@ -6,12 +6,6 @@ from tests.test_helpers.h1_stubs import stub_extract_features
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
-
-
-
-
-
-
 import chardet
 import src.consts as consts
 from src.config import Path
@@ -23,9 +17,9 @@ from src.extractions.e4_markdown_cells import process_markdown_cell
 
 from tests.database_config import connection, session
 from tests.factories.models import RepositoryFactory, NotebookFactory, MarkdownCellFactory, CellMarkdownFeatureFactory
+from nltk.corpus import stopwords
 
-
-class TestE4MarkdownCells:
+class TestE4MarkdownCellsProcessMarkdownCell:
     def test_process_markdown_cell_sucess(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id = repository.id)
@@ -124,3 +118,38 @@ class TestE4MarkdownCells:
         assert cell.processed == consts.C_PROCESS_ERROR
         assert cell_markdown_features is None
 
+class TestE4MarkdownCellsExtractFeatures:
+    def test_process_markdown_extract_features(self, session):
+        repository = RepositoryFactory(session).create()
+        notebook = NotebookFactory(session).create(repository_id=repository.id)
+        cell = MarkdownCellFactory(session).create(repository_id=repository.id,
+                                                   notebook_id=notebook.id,
+                                                   source= 'Este notebook tem o propósito de analisar\n'
+                                                           'o nível de escolaridade brasileiro no ano de 2022\n\n')
+
+        data = e4.extract_features(cell.source)
+
+        assert data["language"] == "portuguese"
+        assert data["lines"] == 4
+        assert data["meaningful_lines"] == 2
+        assert data["words"] == 16
+        assert data['stopwords'] == 7 # este, o, de, o, de, no, de
+
+    def test_process_markdown_extract_features_not_stopwords(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create()
+        notebook = NotebookFactory(session).create(repository_id=repository.id)
+        cell = MarkdownCellFactory(session).create(repository_id=repository.id,
+                                                   notebook_id=notebook.id,
+                                                   source= 'Este notebook tem o propósito de analisar\n'
+                                                           'o nível de escolaridade brasileiro no ano de 2022\n\n')
+
+        def stub_stopwords_error(language):
+            raise LookupError
+        monkeypatch.setattr(stopwords, 'words', stub_stopwords_error)
+        data = e4.extract_features(cell.source)
+
+        assert data["language"] == "portuguese"
+        assert data["lines"] == 4
+        assert data["meaningful_lines"] == 2
+        assert data["words"] == 16
+        assert data['stopwords'] == 0

@@ -5,7 +5,6 @@ import os
 from nbconvert.filters.markdown_mistune import MarkdownWithMath
 from langdetect import detect
 from nltk.corpus import stopwords
-
 import src.config as config
 import src.consts as consts
 
@@ -18,7 +17,6 @@ from src.helpers.h3_script_helpers import filter_markdown_cells
 
 def extract_features(text):
     """ Extract Features from Markdown Cells """
-
     language = 'undetected'
 
     try:
@@ -32,6 +30,7 @@ def extract_features(text):
     renderer = CountRenderer(language, stopwords_set, using_stopwords)
     markdown = MarkdownWithMath(renderer=renderer, escape=False)
     markdown(text)
+
     renderer.counter['len'] = len(text)
     renderer.counter['lines'] = len(text.split('\n'))
     words = text.split()
@@ -42,7 +41,7 @@ def extract_features(text):
         value for key, value in renderer.counter.items()
         if key.endswith('_lines')
     )
-    #renderer.counter['language'] = detect(text)
+
     return renderer.counter
 
 
