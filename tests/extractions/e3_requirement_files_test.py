@@ -162,7 +162,7 @@ class TestE3RequiremtFilesProcessRepository:
 
         assert output == "done"
         assert repository.processed == consts.R_REQUIREMENTS_ERROR
-        assert session.query(Repository).all()[0].python_files_count is None
+        assert session.query(Repository).first().python_files_count is None
 
     def test_process_repository_skip_error(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(processed=consts.R_REQUIREMENTS_ERROR)
@@ -184,7 +184,7 @@ class TestE3RequiremtFiles:
         no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
 
-        requirement_file = session.query(RequirementFile).all()[0]
+        requirement_file = session.query(RequirementFile).first()
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
@@ -202,7 +202,7 @@ class TestE3RequiremtFiles:
         no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
 
-        requirement_file = session.query(RequirementFile).all()[0]
+        requirement_file = session.query(RequirementFile).first()
 
         captured = capsys.readouterr()
 
@@ -259,7 +259,7 @@ class TestE3RequiremtFiles:
         no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
 
-        requirement_file_result = session.query(RequirementFile).all()[0]
+        requirement_file_result = session.query(RequirementFile).first()
 
         assert requirement_file_result.repository_id == repository.id
         assert requirement_file_result.processed == consts.F_OK
@@ -276,7 +276,7 @@ class TestE3RequiremtFiles:
 
         no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
-        requirement_file = session.query(RequirementFile).all()[0]
+        requirement_file = session.query(RequirementFile).first()
         captured = capsys.readouterr()
 
         assert no_errors is True
@@ -294,7 +294,7 @@ class TestE3RequiremtFiles:
 
         no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
-        requirement_file = session.query(RequirementFile).all()[0]
+        requirement_file = session.query(RequirementFile).first()
         captured = capsys.readouterr()
 
         assert no_errors is True
@@ -313,7 +313,7 @@ class TestE3RequiremtFiles:
         no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
 
-        requirement_file = session.query(RequirementFile).all()[0]
+        requirement_file = session.query(RequirementFile).first()
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
@@ -336,7 +336,7 @@ class TestE3RequiremtFiles:
         no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
         captured = capsys.readouterr()
-        requirement_file = session.query(RequirementFile).all()[0]
+        requirement_file = session.query(RequirementFile).first()
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id

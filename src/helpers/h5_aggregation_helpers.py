@@ -1,5 +1,5 @@
 from collections import Counter, OrderedDict
-from src.db.database import  CellModule, MarkdownFeature
+from src.db.database import  CellModule, CellMarkdownFeature
 
 IGNORE_COLUMNS = {
     "id", "repository_id", "notebook_id", "cell_id", "index",
@@ -7,7 +7,7 @@ IGNORE_COLUMNS = {
 }
 
 MARKDOWN_COLUMNS = [
-    col.name for col in MarkdownFeature.__table__.columns
+    col.name for col in CellMarkdownFeature.__table__.columns
     if col.name not in IGNORE_COLUMNS
     if col.name != "language"
 ]
@@ -45,8 +45,8 @@ def calculate_markdown(session, notebook):
     agg_markdown["cell_count"] = 0
     markdown_languages = Counter()
     query = (
-        notebook.markdown_features_objs
-        # .order_by(MarkdownFeature.index.asc())
+        notebook.cell_markdown_features_objs
+        # .order_by(CellMarkdownFeature.index.asc())
     )
     for feature in query:
         agg_markdown["cell_count"] += 1

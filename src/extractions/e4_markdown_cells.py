@@ -9,14 +9,18 @@ from nltk.corpus import stopwords
 import src.config as config
 import src.consts as consts
 
-from src.db.database import Cell, MarkdownFeature, connect
+from src.db.database import Cell, CellMarkdownFeature, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
 
 from src.classes.c1_renderer import CountRenderer, LANG_MAP
+from src.helpers.h3_script_helpers import filter_markdown_cells
+
 
 def extract_features(text):
     """ Extract Features from Markdown Cells """
+
     language = 'undetected'
+
     try:
         language = LANG_MAP[detect(text)]
         stopwords_set = stopwords.words(language)
@@ -46,17 +50,19 @@ def process_markdown_cell(
     session, repository_id, notebook_id, cell,
     skip_if_error=consts.C_PROCESS_ERROR
 ):
-    """Process Markdown Cell to collect features"""
+    """ Processes Markdown Cells to collect features """
     if cell.processed & consts.C_PROCESS_OK:
         return 'already processed'
 
     if not skip_if_error and cell.processed & consts.C_PROCESS_ERROR:
-        markdown_features = session.query(MarkdownFeature).filter(
-            MarkdownFeature.cell_id == cell.id
+        cell_markdown_features = session.query(CellMarkdownFeature).filter(
+            CellMarkdownFeature.cell_id == cell.id
         ).first()
-        if markdown_features:
-            session.delete(markdown_features)
+
+        if cell_markdown_features:
+            session.delete(cell_markdown_features)
             session.commit()
+
         cell.processed -= consts.C_PROCESS_ERROR
         session.add(cell)
 
@@ -66,56 +72,29 @@ def process_markdown_cell(
         data['notebook_id'] = notebook_id
         data['cell_id'] = cell.id
         data['index'] = cell.index
-        session.add(MarkdownFeature(**data))
+        session.add(CellMarkdownFeature(**data))
         cell.processed |= consts.C_PROCESS_OK
         return 'done'
+
     except Exception as err:
         cell.processed |= consts.C_PROCESS_ERROR
-        if config.VERBOSE > 4:
-            import traceback
-            traceback.print_exc()
         return 'Failed to process ({})'.format(err)
+
     finally:
         session.add(cell)
 
 
-def apply(session, status, skip_if_error, count, interval, reverse, check):
+def apply(session, status, skip_if_error,
+          count, interval, reverse, check):
     """Extract markdown features"""
-    filters = [
-        Cell.processed.op('&')(consts.C_PROCESS_OK) == 0,
-        Cell.processed.op('&')(skip_if_error) == 0,
-        Cell.cell_type == 'markdown',
-    ]
 
-    if interval:
-        filters += [
-            Cell.repository_id >= interval[0],
-            Cell.repository_id <= interval[1],
-        ]
-
-    query = (session.query(Cell)
-        .filter(*filters)
-    )
-
-    if count:
-        print(query.count())
-        return
-
-    if reverse:
-        query = query.order_by(
-            Cell.repository_id.desc(),
-            Cell.notebook_id.asc(),
-            Cell.index.asc(),
-        )
-    else:
-        query = query.order_by(
-            Cell.repository_id.asc(),
-            Cell.notebook_id.asc(),
-            Cell.index.asc(),
-        )
+    query = filter_markdown_cells( session=session, skip_if_error=skip_if_error,
+                                   count=count, interval=interval, reverse=reverse,
+                                   skip_already_processed=consts.C_PROCESS_OK,)
 
     repository_id = None
     notebook_id = None
+
     for cell in query:
         if check_exit(check):
             vprint(0, 'Found .exit file. Exiting')

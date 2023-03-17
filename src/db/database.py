@@ -109,7 +109,7 @@ class Repository(Base):
 
     notebooks_objs = one_to_many("Notebook", "repository_obj")
     cell_objs = one_to_many("Cell", "repository_obj")
-    markdown_features_objs = one_to_many("MarkdownFeature", "repository_obj")
+    cell_markdown_features_objs = one_to_many("CellMarkdownFeature", "repository_obj")
     cell_modules_objs = one_to_many("CellModule", "repository_obj")
     cell_data_ios_objs = one_to_many("CellDataIO", "repository_obj")
 
@@ -355,7 +355,7 @@ class Notebook(Base):
 
     repository_obj = many_to_one("Repository", "notebooks_objs")
     cell_objs = one_to_many("Cell", "notebook_obj")
-    markdown_features_objs = one_to_many("MarkdownFeature", "notebook_obj")
+    cell_markdown_features_objs = one_to_many("CellMarkdownFeature", "notebook_obj")
     cell_modules_objs = one_to_many("CellModule", "notebook_obj")
     cell_data_ios_objs = one_to_many("CellDataIO", "notebook_obj")
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "notebook_obj")
@@ -426,7 +426,7 @@ class Cell(Base):
 
     repository_obj = many_to_one("Repository", "cell_objs")
     notebook_obj = many_to_one("Notebook", "cell_objs")
-    markdown_features_objs = one_to_many("MarkdownFeature", "cell_obj")
+    cell_markdown_features_objs = one_to_many("CellMarkdownFeature", "cell_obj")
     cell_modules_objs = one_to_many("CellModule", "cell_obj")
     cell_data_ios_objs = one_to_many("CellDataIO", "cell_obj")
 
@@ -473,10 +473,10 @@ class RequirementFile(Base):
         )
 
 
-class MarkdownFeature(Base):
-    """Markdown Features Table"""
+class CellMarkdownFeature(Base):
+    """Cell Markdown Features Table"""
     # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'markdown_features'
+    __tablename__ = 'cell_markdown_features'
     __table_args__ = (
         ForeignKeyConstraint(
             ['cell_id'],
@@ -645,16 +645,16 @@ class MarkdownFeature(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
-    cell_obj = many_to_one("Cell", "markdown_features_objs")
-    notebook_obj = many_to_one("Notebook", "markdown_features_objs")
-    repository_obj = many_to_one("Repository", "markdown_features_objs")
+    cell_obj = many_to_one("Cell", "cell_markdown_features_objs")
+    notebook_obj = many_to_one("Notebook", "cell_markdown_features_objs")
+    repository_obj = many_to_one("Repository", "cell_markdown_features_objs")
 
     @force_encoded_string_output
     def __repr__(self):
         cell = self.cell_obj
         notebook = cell.notebook_obj
         return (
-            u"<MarkdownFeature({2.repository_id}/{2.id}/{1.id}[{1.index}]/{0.id})>"
+            u"<CellMarkdownFeature({2.repository_id}/{2.id}/{1.id}[{1.index}]/{0.id})>"
             .format(self, cell, notebook)
         )
 

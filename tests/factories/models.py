@@ -1,5 +1,5 @@
 import factory
-from src.db.database import Repository, Notebook, PythonFile, RequirementFile
+from src.db.database import Repository, Notebook, PythonFile, RequirementFile, Cell, CellMarkdownFeature
 
 
 def RepositoryFactory(session):
@@ -56,6 +56,52 @@ def NotebookFactory(session):
 
     return _NotebookFactory
 
+def MarkdownCellFactory(session):
+    class _CellFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = Cell
+            sqlalchemy_session = session
+
+        cell_type = 'code'
+        execution_count = None
+        lines = 2
+        output_formats = None
+        source = "Recall what these components mean: the full data is a 64-dimensional point cloud, and these points are the projection of each data point along the directions with the largest variance.\n" \
+                 "Essentially, we have found the optimal stretch and rotation in 64-dimensional space that allows us to see the layout of the digits in two dimensions, and have done this in an unsupervised manner—that is, without reference to the labels."
+        python = 1
+        processed=0
+
+        @factory.post_generation
+        def commit_to_db(self, create, extracted, **kwargs):
+            if create:
+                session.add(self)
+                session.commit()
+
+    return _CellFactory
+
+def CodeCellFactory(session):
+    class _CellFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = Cell
+            sqlalchemy_session = session
+
+        index = 1
+        cell_type = 'code'
+        execution_count = 4
+        lines = 1
+        output_formats = "image/png;text/plain"
+        source = "plt.contour(X, Y, Z, colors='black');"
+        python = 1
+        processed = 0
+
+        @factory.post_generation
+        def commit_to_db(self, create, extracted, **kwargs):
+            if create:
+                session.add(self)
+                session.commit()
+
+
+    return _CellFactory
 
 def PythonFileFactory(session):
     class _PythonFileFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -95,3 +141,24 @@ def RequirementFileFactory(session):
                 session.commit()
 
     return _RequirementFileFactory
+
+
+def CellMarkdownFeatureFactory(session):
+    class _CellMarkdownFeatureFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = CellMarkdownFeature
+            sqlalchemy_session = session
+
+        language =  'english'
+        using_stopwords =  0
+        len =  420
+        lines =  2
+        index = 0
+
+        @factory.post_generation
+        def commit_to_db(self, create, extracted, **kwargs):
+            if create:
+                session.add(self)
+                session.commit()
+
+    return _CellMarkdownFeatureFactory

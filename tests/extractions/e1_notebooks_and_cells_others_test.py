@@ -49,8 +49,8 @@ class TestE1NotebooksAndCellsProcessNotebook:
         assert  (session.query(Notebook).count()) == 1
         assert  (session.query(Cell).count()) == 1
 
-        notebook = session.query(Notebook).all()[0]
-        cell = session.query(Cell).all()[0]
+        notebook = session.query(Notebook).first()
+        cell = session.query(Cell).first()
 
         assert notebook.repository_id == repository.id
         assert cell.notebook_id == notebook.id
@@ -80,7 +80,7 @@ class TestE1NotebooksAndCellsProcessNotebook:
         e1.process_notebooks(safe_session, repository, [notebook.name])
         safe_session.commit()
 
-        assert created != session.query(Notebook).all()[0].created_at
+        assert created != session.query(Notebook).first().created_at
 
     def test_process_notebooks_no_none_generic_load(self, session, capsys):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
@@ -145,7 +145,7 @@ class Test1NotebooksAndCellsProcessRepository:
         output = e1.process_repository(safe_session, repository)
 
         assert output == "done"
-        assert safe_session.query(Repository).all()[0].notebooks_count == 1
+        assert safe_session.query(Repository).first().notebooks_count == 1
 
     def test_process_repository_error(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
@@ -170,7 +170,7 @@ class Test1NotebooksAndCellsProcessRepository:
         monkeypatch.setattr(safe_session, 'commit', lambda : (None, 'error 1'))
 
         output = e1.process_repository(safe_session, repository, skip_if_error=0)
-        repository = safe_session.query(Repository).all()[0]
+        repository = safe_session.query(Repository).first()
         assert "failed due 'error 1'" in output
         assert repository.processed == consts.R_N_ERROR
 
@@ -192,7 +192,7 @@ class Test1NotebooksAndCellsProcessRepository:
         monkeypatch.setattr(e1, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
         output = e1.process_repository(safe_session, repository, skip_if_error=0)
-        repository = safe_session.query(Repository).all()[0]
+        repository = safe_session.query(Repository).first()
 
         assert repository.processed == consts.R_N_EXTRACTION
         captured = capsys.readouterr()
@@ -207,7 +207,7 @@ class Test1NotebooksAndCellsProcessRepository:
         monkeypatch.setattr(e1, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
         output = e1.process_repository(safe_session, repository, skip_if_error=0)
-        repository = safe_session.query(Repository).all()[0]
+        repository = safe_session.query(Repository).first()
 
         captured = capsys.readouterr()
         assert "retrying to process" in captured.out

@@ -6,16 +6,16 @@ import tarfile
 import src.config as config
 import src.consts as consts
 
-from itertools import groupby
-from src.db.database import Cell, CellModule, connect, CellDataIO
+from src.db.database import CellModule, connect, CellDataIO
 from src.db.database import RepositoryFile
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
-from src.helpers.h1_utils import invoke, TimeoutError, SafeSession
+from src.helpers.h1_utils import TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
 from e8_extract_files import process_repository
 from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
 from src.classes.c3_cell_visitor import  CellVisitor
+from src.helpers.h3_script_helpers import filter_code_cells
 
 
 # @timeout(1 * 60, use_signals=False)
@@ -241,51 +241,15 @@ def apply(
     skip_if_error, skip_if_syntaxerror, skip_if_timeout,
     count, interval, reverse, check
 ):
-    """Extract code cell features"""
+    """ Extracts code cells features """
     while selected_notebooks:
-        filters = [
-            Cell.processed.op('&')(consts.C_PROCESS_OK) == 0,
-            Cell.processed.op('&')(skip_if_error) == 0,
-            Cell.processed.op('&')(skip_if_syntaxerror) == 0,
-            Cell.processed.op('&')(skip_if_timeout) == 0,
-            Cell.processed.op('&')(consts.C_UNKNOWN_VERSION) == 0,  # known version
-            Cell.cell_type == 'code',
-            Cell.python.is_(True),
-        ]
-        if selected_notebooks is not True:
-            filters += [
-                Cell.notebook_id.in_(selected_notebooks[:30])
-            ]
-            selected_notebooks = selected_notebooks[30:]
-        else:
-            selected_notebooks = False
-            if interval:
-                filters += [
-                    Cell.repository_id >= interval[0],
-                    Cell.repository_id <= interval[1],
-                ]
 
-        query = (
-            session.query(Cell)
-            .filter(*filters)
-        )
-
-        if count:
-            print(query.count())
-            return
-
-        if reverse:
-            query = query.order_by(
-                Cell.repository_id.desc(),
-                Cell.notebook_id.asc(),
-                Cell.index.asc(),
-            )
-        else:
-            query = query.order_by(
-                Cell.repository_id.asc(),
-                Cell.notebook_id.asc(),
-                Cell.index.asc(),
-            )
+        selected_notebooks, query = filter_code_cells\
+            (session=session, selected_notebooks=selected_notebooks,
+             skip_if_error=skip_if_error, skip_if_syntaxerror=skip_if_syntaxerror,
+             skip_if_timeout=skip_if_timeout, count=count, interval=interval,
+             reverse=reverse,
+             skip_already_processed=consts.C_PROCESS_OK)
 
         skip_repo = False
         repository_id = None
@@ -297,6 +261,7 @@ def apply(
         checker = None
 
         for cell in query:
+
             if check_exit(check):
                 session.commit()
                 vprint(0, 'Found .exit file. Exiting')
@@ -323,29 +288,9 @@ def apply(
                     skip_if_error, skip_if_syntaxerror, skip_if_timeout,
                 )
                 vprint(2, result)
+
             status.count += 1
         session.commit()
-
-
-def pos_apply(dispatches, retry_errors, retry_timeout, verbose):
-    """Dispatch execution to other python versions"""
-    key = lambda x: x[1]
-    dispatches = sorted(list(dispatches), key=key)
-    for pyexec, disp in groupby(dispatches, key=key):
-        vprint(0, "Dispatching to {}".format(pyexec))
-        extra = []
-        if retry_errors:
-            extra.append("-e")
-        if retry_timeout:
-            extra.append("-t")
-        extra.append("-n")
-
-        notebook_ids = [x[0] for x in disp]
-        while notebook_ids:
-            ids = notebook_ids[:20000]
-            args = extra + ids
-            invoke(pyexec, "-u", __file__, "-v", verbose, *args)
-            notebook_ids = notebook_ids[20000:]
 
 
 def main():
@@ -399,13 +344,6 @@ def main():
                 args.reverse,
                 set(args.check)
             )
-
-        # pos_apply(
-        #     dispatches,
-        #     args.retry_errors,
-        #     args.retry_timeout,
-        #     args.verbose
-        # )
 
 
 if __name__ == '__main__':

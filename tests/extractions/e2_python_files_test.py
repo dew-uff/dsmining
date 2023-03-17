@@ -88,7 +88,7 @@ class TestE2PythonFilesProcessRepository:
 
         assert output == "done"
         assert repository.processed == consts.R_P_EXTRACTION
-        assert session.query(Repository).all()[0].python_files_count == 1
+        assert session.query(Repository).first().python_files_count == 1
 
     def test_process_repository_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
@@ -102,7 +102,7 @@ class TestE2PythonFilesProcessRepository:
 
         assert output == "done"
         assert repository.processed == consts.R_P_ERROR
-        assert session.query(Repository).all()[0].python_files_count is None
+        assert session.query(Repository).first().python_files_count is None
 
     def test_process_repository_already_processed(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(
@@ -139,7 +139,7 @@ class TestE2PythonFilesProcessRepository:
 
         assert output == "done"
         assert repository.processed == consts.R_P_ERROR
-        assert session.query(Repository).all()[0].python_files_count is None
+        assert session.query(Repository).first().python_files_count is None
 
     def test_process_repository_skip_error(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(processed=consts.R_P_ERROR)
@@ -161,7 +161,7 @@ class TestE2PythonFilesProcessPythonFiles:
 
         count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
         session.commit()
-        python_file = session.query(PythonFile).all()[0]
+        python_file = session.query(PythonFile).first()
 
         assert count == 1
         assert no_errors is True
@@ -180,7 +180,7 @@ class TestE2PythonFilesProcessPythonFiles:
 
         count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
         session.commit()
-        python_file = session.query(PythonFile).all()[0]
+        python_file = session.query(PythonFile).first()
 
         assert count == 1
         assert no_errors is True
@@ -200,7 +200,7 @@ class TestE2PythonFilesProcessPythonFiles:
 
         count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
         session.commit()
-        python_file = session.query(PythonFile).all()[0]
+        python_file = session.query(PythonFile).first()
         captured = capsys.readouterr()
 
         assert count == 1
@@ -258,7 +258,7 @@ class TestE2PythonFilesProcessPythonFiles:
         count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
         session.commit()
 
-        python_file_result = session.query(PythonFile).all()[0]
+        python_file_result = session.query(PythonFile).first()
 
         assert initial_created_at != python_file_result.created_at
         assert count == 1
@@ -278,7 +278,7 @@ class TestE2PythonFilesProcessPythonFiles:
 
         count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
         session.commit()
-        python_file = session.query(PythonFile).all()[0]
+        python_file = session.query(PythonFile).first()
 
         assert count == 1
         assert no_errors is True

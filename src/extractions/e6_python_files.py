@@ -15,6 +15,7 @@ from future.utils.surrogateescape import register_surrogateescape
 from e8_extract_files import process_repository
 from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
 from src.classes.c3_cell_visitor import  CellVisitor
+from src.helpers.h3_script_helpers import filter_python_files
 
 
 # @timeout(1 * 60, use_signals=False)
@@ -186,7 +187,7 @@ def load_repository(session, python_file, skip_repo, repository_id, repository, 
 
 
 def load_checker(
-    session, python_file, dispatches, repository,
+    session, python_file, repository,
     skip_repo, skip_python_file, archives, checker
 ):
 
@@ -216,49 +217,18 @@ def load_checker(
 
 
 def apply(
-    session, status, dispatches, selected_python_filess,
+    session, status, selected_python_files,
     skip_if_error, skip_if_syntaxerror, skip_if_timeout,
     count, interval, reverse, check
 ):
-    """Extract python files features"""
-    while selected_python_filess:
-        filters = [
-            PythonFile.processed.op('&')(consts.PF_OK) == 0,
-            PythonFile.processed.op('&')(consts.PF_EMPTY) == 0,
-            PythonFile.processed.op('&')(skip_if_error) == 0,
-            PythonFile.processed.op('&')(skip_if_syntaxerror) == 0,
-            PythonFile.processed.op('&')(skip_if_timeout) == 0,
-        ]
-        if selected_python_filess is not True:
-            filters += [
-                PythonFile.notebook_id.in_(selected_python_filess[:30])
-            ]
-            selected_python_filess = selected_python_filess[30:]
-        else:
-            selected_python_filess = False
-            if interval:
-                filters += [
-                    PythonFile.repository_id >= interval[0],
-                    PythonFile.repository_id <= interval[1],
-                ]
+    """ Extracts python files' features"""
+    while selected_python_files:
 
-        query = (
-            session.query(PythonFile)
-            .filter(*filters)
-        )
-
-        if count:
-            print(query.count())
-            return
-
-        if reverse:
-            query = query.order_by(
-                PythonFile.repository_id.desc(),
-            )
-        else:
-            query = query.order_by(
-                PythonFile.repository_id.asc()
-            )
+        selected_python_files, query = filter_python_files\
+            (session= session, selected_python_files=selected_python_files,
+             skip_if_error=skip_if_error, skip_if_syntaxerror=skip_if_syntaxerror,
+             skip_if_timeout=skip_if_timeout, count=count, interval=interval,
+             reverse=reverse, skip_already_processed=consts.PF_PROCESS_OK)
 
         skip_repo = False
         repository_id = None
@@ -269,6 +239,7 @@ def apply(
         checker = None
 
         for python_file in query:
+
             if check_exit(check):
                 session.commit()
                 vprint(0, 'Found .exit file. Exiting')
@@ -283,7 +254,7 @@ def apply(
                     continue
 
                 skip_repo, skip_python_file, archives, checker = load_checker(
-                    session, python_file, dispatches, repository,
+                    session, python_file, repository,
                     skip_repo, skip_python_file, archives, checker
                 )
                 # if skip_repo or skip_python_file:
@@ -335,13 +306,11 @@ def main():
         status = StatusLogger(script_name)
         status.report()
 
-    dispatches = set()
     with savepid():
         with connect() as session:
             apply(
                 SafeSession(session),
                 status,
-                dispatches,
                 args.python_files or True,
                 0 if args.retry_errors else consts.PF_PROCESS_ERROR,
                 0 if args.retry_syntaxerrors else consts.PF_SYNTAX_ERROR,
