@@ -15,7 +15,7 @@ from future.utils.surrogateescape import register_surrogateescape
 from e8_extract_files import process_repository
 from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
 from src.classes.c3_cell_visitor import  CellVisitor
-from src.helpers.h3_script_helpers import filter_python_files
+from src.helpers.h3_script_helpers import filter_python_files, load_repository, load_files
 
 
 # @timeout(1 * 60, use_signals=False)
@@ -127,95 +127,6 @@ def process_python_file(
         session.add(python_file)
 
 
-def load_archives(session, repository):
-    if not repository.processed & consts.R_EXTRACTED_FILES:
-        if repository.zip_path.exists():
-            vprint(1, 'Extracting files')
-            result = process_repository(session, repository, skip_if_error=0)
-            try:
-                session.commit()
-                if result != "done":
-                    raise Exception("Extraction failure. Fallback")
-                vprint(1, result)
-            except Exception as err:
-                vprint(1, 'Failed: {}'.format(err))
-                try:
-                    tarzip = tarfile.open(str(repository.zip_path))
-                    if repository.processed & consts.R_COMPRESS_ERROR:
-                        repository.processed -= consts.R_COMPRESS_ERROR
-                    session.add(repository)
-                except tarfile.ReadError:
-                    repository.processed |= consts.R_COMPRESS_ERROR
-                    session.add(repository)
-                    return True, None
-                zip_path = to_unicode(repository.hash_dir2)
-                return False, (tarzip, zip_path)
-
-        elif repository.path.exists():
-            repo_path = to_unicode(repository.path)
-            return False, (None, repo_path)
-        else:
-            repository.processed |= consts.R_UNAVAILABLE_FILES
-            session.add(repository)
-            vprint(1, "Failed to load repository. Skipping")
-            return True, None
-
-    tarzip = {
-        fil.path for fil in session.query(RepositoryFile).filter(
-            RepositoryFile.repository_id == repository.id
-        )
-    }
-    zip_path = ""
-    if tarzip:
-        return False, (tarzip, zip_path)
-    return True, None
-
-
-def load_repository(session, python_file, skip_repo, repository_id, repository, archives):
-    if repository_id != python_file.repository_id:
-        repository = python_file.repository_obj
-        success, msg = session.commit()
-        if not success:
-            vprint(0, 'Failed to save python file from repository {} due to {}'.format(
-                repository, msg
-            ))
-
-        vprint(0, 'Processing repository: {}'.format(repository))
-        return False, python_file.repository_id, repository, "todo"
-
-    return skip_repo, repository_id, repository, archives
-
-
-def load_checker(
-    session, python_file, repository,
-    skip_repo, skip_python_file, archives, checker
-):
-
-    if archives == "todo":
-        skip_repo, archives = load_archives(session, repository)
-        if skip_repo:
-            return skip_repo, skip_python_file, archives, None
-    if archives is None:
-         return True, True, archives, None
-
-    tarzip, repo_path = archives
-
-    python_file_path = os.path.join(repo_path, python_file.name)
-    try:
-        if isinstance(tarzip, set):
-            checker = SetLocalChecker(tarzip, python_file_path)
-        elif tarzip:
-            checker = CompressedLocalChecker(tarzip, python_file_path)
-        else:
-            checker = PathLocalChecker(python_file_path)
-        if not checker.exists(python_file_path):
-            raise Exception("Repository content problem. Python file not found")
-        return skip_repo, False, archives, checker
-    except Exception as err:
-        vprint(2, "Failed to load python file {} due to {}".format(python_file, err))
-        return skip_repo, True, archives, checker
-
-
 def apply(
     session, status, selected_python_files,
     skip_if_error, skip_if_syntaxerror, skip_if_timeout,
@@ -247,18 +158,20 @@ def apply(
             status.report()
 
             with mount_basedir():
+
                 skip_repo, repository_id, repository, archives = load_repository(
                     session, python_file, skip_repo, repository_id, repository, archives
                 )
                 if skip_repo:
                     continue
 
-                skip_repo, skip_python_file, archives, checker = load_checker(
+                skip_repo, skip_python_file, archives, checker = load_files(
                     session, python_file, repository,
                     skip_repo, skip_python_file, archives, checker
                 )
-                # if skip_repo or skip_python_file:
-                #     continue
+
+                if skip_repo or skip_python_file:
+                    continue
 
                 vprint(2, 'Processing python file: {}'.format(python_file))
                 result = process_python_file(
