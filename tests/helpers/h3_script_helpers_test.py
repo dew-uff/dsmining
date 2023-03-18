@@ -1,20 +1,21 @@
 import sys
 import os
+import tarfile
 
-
-
+from src.config import  Path
 from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
 
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
 import src.consts as consts
-from src.db.database import Repository
+from src.db.database import Repository, RepositoryFile
 from src.helpers.h1_utils import SafeSession, to_unicode
 from tests.database_config import connection, session
 from tests.factories.models import RepositoryFactory, CodeCellFactory, NotebookFactory, PythonFileFactory
 from src.helpers.h3_script_helpers import filter_repositories, load_repository, load_notebook, load_files
 import src.helpers.h3_script_helpers as h3
+import src.extractions.e8_extract_files as e8
 
 class TestH3ScripHelpersFilterRepositories:
 
@@ -539,3 +540,120 @@ class TestH3ScriptHelpersLoadFile:
         assert archives == (None, repo_path)
         assert isinstance(checker, PathLocalChecker)
         assert checker.base == repo_path
+
+
+class TestH3ScriptHelpersLoadArchives:
+    def test_load_archives_path_success(self, session, monkeypatch):
+        safe_session = SafeSession(session)
+        repository = RepositoryFactory(safe_session).create()
+
+        def mock_exists(path):
+            return not str(path) == str(repository.zip_path)
+
+        monkeypatch.setattr(Path, 'exists', mock_exists)
+
+        skip_repo, archives  = h3.load_archives(session, repository)
+        tarzip, repo_path = archives
+
+        assert skip_repo is False
+        assert tarzip is None
+        assert repo_path == to_unicode(repository.path)
+
+    def test_load_archives_set_zip_success(self, session, monkeypatch):
+        safe_session = SafeSession(session)
+        repository = RepositoryFactory(safe_session).create()
+        def mock_exists(path):
+            return str(path) == str(repository.zip_path)
+
+        def mock_process(session_, repository_, skip_if_error=0):
+            rf = RepositoryFile(repository_id=repository.id,
+                                path=str(repository.path))
+            safe_session.add(rf)
+            safe_session.commit()
+            return "done"
+
+
+        monkeypatch.setattr(Path, 'exists', mock_exists)
+        monkeypatch.setattr(e8, 'process_repository', mock_process)
+
+        skip_repo, archives  = h3.load_archives(session, repository)
+        tarzip, zip_path = archives
+
+        assert skip_repo is False
+        assert str(repository.path) in tarzip
+        assert zip_path == ""
+
+
+    def test_load_archives_set_zip_error(self, session, monkeypatch):
+        safe_session = SafeSession(session)
+        repository = RepositoryFactory(safe_session).create()
+        def mock_exists(path):
+            return str(path) == str(repository.zip_path)
+
+        def mock_process(session_, repository_, skip_if_error=0):
+            return "done"
+
+
+        monkeypatch.setattr(Path, 'exists', mock_exists)
+        monkeypatch.setattr(e8, 'process_repository', mock_process)
+
+        skip_repo, archives  = h3.load_archives(session, repository)
+
+        assert skip_repo is True
+        assert archives is None
+
+    def test_load_archives_zip_success(self, session, monkeypatch):
+        safe_session = SafeSession(session)
+        repository = RepositoryFactory(safe_session).create(processed=consts.R_COMPRESS_ERROR)
+        def mock_exists(path):
+            return str(path) == str(repository.zip_path)
+
+        def mock_process(session_, repository_, skip_if_error=0):
+            return "error"
+
+        monkeypatch.setattr(Path, 'exists', mock_exists)
+        monkeypatch.setattr(e8, 'process_repository', mock_process)
+        monkeypatch.setattr(tarfile, 'open', lambda path: "Ok")
+
+        skip_repo, archives  = h3.load_archives(session, repository)
+        tarzip, zip_path = archives
+
+        assert skip_repo is False
+        assert tarzip == 'Ok'
+        assert zip_path == to_unicode(repository.hash_dir2)
+
+    def test_load_archives_zip_error(self, session, monkeypatch):
+        safe_session = SafeSession(session)
+        repository = RepositoryFactory(safe_session).create(processed=consts.R_COMPRESS_ERROR)
+        def mock_exists(path):
+            return str(path) == str(repository.zip_path)
+
+        def mock_process(session_, repository_, skip_if_error=0):
+            return "error"
+
+        def mock_open(path):
+            raise tarfile.ReadError()
+
+        monkeypatch.setattr(Path, 'exists', mock_exists)
+        monkeypatch.setattr(e8, 'process_repository', mock_process)
+        monkeypatch.setattr(tarfile, 'open', mock_open)
+
+        skip_repo, archives  = h3.load_archives(session, repository)
+
+        assert skip_repo is True
+        assert archives is None
+        assert repository.processed == consts.R_COMPRESS_ERROR
+
+    def test_load_archives_path_error(self, session, monkeypatch):
+        safe_session = SafeSession(session)
+        repository = RepositoryFactory(safe_session).create()
+
+        def mock_exists(path):
+            return False
+
+        monkeypatch.setattr(Path, 'exists', mock_exists)
+
+        skip_repo, archives  = h3.load_archives(session, repository)
+        assert skip_repo is True
+        assert archives is None
+        assert repository.processed == consts.R_UNAVAILABLE_FILES

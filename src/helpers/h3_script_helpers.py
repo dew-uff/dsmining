@@ -9,8 +9,7 @@ from src.helpers.h1_utils import vprint, to_unicode
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 from src.db.database import Repository, Cell, PythonFile, RepositoryFile
-from src.extractions.e8_extract_files import process_repository
-
+import src.extractions.e8_extract_files as e8
 
 def filter_repositories(session, selected_repositories,
                         skip_if_error, count, interval, reverse, skip_already_processed):
@@ -214,12 +213,14 @@ def cell_output_formats(cell):
             yield "error"
 
 
+
+
 def load_archives(session, repository):
     if not repository.processed & consts.R_EXTRACTED_FILES:
 
         if repository.zip_path.exists():
             vprint(1, 'Extracting files')
-            result = process_repository(session, repository, skip_if_error=0)
+            result = e8.process_repository(session, repository, skip_if_error=0)
 
             try:
                 session.commit()
@@ -258,6 +259,7 @@ def load_archives(session, repository):
     zip_path = ""
     if tarzip:
         return False, (tarzip, zip_path)
+
     return True, None
 
 
