@@ -1,6 +1,9 @@
+import ast
 import sys
 import os
 import tarfile
+
+import pytest
 
 from src.config import  Path
 from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
@@ -657,3 +660,25 @@ class TestH3ScriptHelpersLoadArchives:
         assert skip_repo is True
         assert archives is None
         assert repository.processed == consts.R_UNAVAILABLE_FILES
+
+
+class TestH3ScriptHelpersExtractFeatures:
+    def test_extract_features(self, session):
+
+        text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"
+        checker = PathLocalChecker("")
+        modules, data_ios = h3.extract_features(text, checker)
+
+        assert modules[0] == (1,"import", "pandas", False)
+        assert data_ios[0] == (2,'input','pd','read_excel','Attribute',"'data.xlsx'", 'Constant')
+
+    def test_extract_features_error(self, session, monkeypatch):
+
+        text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"
+        checker = PathLocalChecker("")
+        def mock_parse(text_): raise ValueError;
+        monkeypatch.setattr(ast, 'parse', mock_parse)
+
+        with pytest.raises(SyntaxError):
+            h3.extract_features(text, checker)
+

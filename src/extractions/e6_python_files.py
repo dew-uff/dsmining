@@ -18,21 +18,6 @@ from src.classes.c3_cell_visitor import  CellVisitor
 from src.helpers.h3_script_helpers import filter_python_files, load_repository, load_files
 
 
-# @timeout(1 * 60, use_signals=False)
-def extract_features(text, checker):
-    """Use cell visitor to extract features from cell text"""
-    visitor = CellVisitor(checker)
-    try:
-        parsed = ast.parse(text)
-    except ValueError:
-        raise SyntaxError("Invalid escape")
-    visitor.visit(parsed)
-    return (
-        visitor.modules,
-        visitor.data_ios
-    )
-
-
 def process_python_file(
     session, repository_id, python_file, checker,
     skip_if_error=consts.PF_PROCESS_ERROR,

@@ -1,33 +1,16 @@
-"""Load markdown features"""
+""" Load markdown features """
 import argparse
 import os
-import ast
-import tarfile
 import src.config as config
 import src.consts as consts
 
-from src.db.database import CellModule, connect, CellDataIO
-from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-from src.helpers.h1_utils import TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
+from src.helpers.h1_utils import TimeoutError, SafeSession
+from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
+from src.db.database import CellModule, connect, CellDataIO
+from src.helpers.h3_script_helpers import filter_code_cells, load_repository
+from src.helpers.h3_script_helpers import load_notebook, extract_features
 from future.utils.surrogateescape import register_surrogateescape
-from src.classes.c3_cell_visitor import  CellVisitor
-from src.helpers.h3_script_helpers import filter_code_cells, load_repository, load_notebook
-
-
-# @timeout(1 * 60, use_signals=False)
-def extract_features(text, checker):
-    """Use cell visitor to extract features from cell text"""
-    visitor = CellVisitor(checker)
-    try:
-        parsed = ast.parse(text)
-    except ValueError:
-        raise SyntaxError("Invalid escape")
-    visitor.visit(parsed)
-    return (
-        visitor.modules,
-        visitor.data_ios
-    )
 
 
 def process_code_cell(
@@ -36,7 +19,7 @@ def process_code_cell(
     skip_if_syntaxerror=consts.C_SYNTAX_ERROR,
     skip_if_timeout=consts.C_TIMEOUT,
 ):
-    """Process Markdown Cell to collect features"""
+    """ Processes Code Cells to collect features"""
     if cell.processed & consts.C_PROCESS_OK:
         return 'already processed'
 
@@ -50,9 +33,9 @@ def process_code_cell(
             session.query(CellModule).filter(
                 CellModule.cell_id == cell.id
             ).delete()
-            # + session.query(CodeAnalysis).filter(
-            #     CodeAnalysis.cell_id == cell.id
-            # ).delete()
+            + session.query(CellDataIO).filter(
+                CellDataIO.cell_id == cell.id
+            ).delete()
         )
         if deleted:
             vprint(2, "Deleted {} rows".format(deleted))

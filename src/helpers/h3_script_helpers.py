@@ -1,15 +1,18 @@
 import sys
 import os
 import tarfile
+import ast
 
 from src import consts
 from src.classes.c2_local_checkers import SetLocalChecker, CompressedLocalChecker, PathLocalChecker
+from src.classes.c3_cell_visitor import CellVisitor
 from src.helpers.h1_utils import vprint, to_unicode
 
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 from src.db.database import Repository, Cell, PythonFile, RepositoryFile
 import src.extractions.e8_extract_files as e8
+from src.helpers.h1_utils import timeout
 
 def filter_repositories(session, selected_repositories,
                         skip_if_error, count, interval, reverse, skip_already_processed):
@@ -326,3 +329,17 @@ def load_repository(session, file, skip_repo, repository_id,
         return False, file.repository_id, repository, "todo"
 
     return skip_repo, repository_id, repository, archives
+
+
+@timeout(1 * 60, use_signals=False)
+def extract_features(text, checker):
+    """Use cell visitor to extract features from cell text"""
+    visitor = CellVisitor(checker)
+    try:
+        parsed = ast.parse(text)
+    except ValueError:
+        raise SyntaxError("Invalid escape")
+    visitor.visit(parsed)
+
+    return visitor.modules, visitor.data_ios
+
