@@ -1,18 +1,20 @@
-import sys
 import os
-import tarfile
+import sys
+src = os.path.dirname(os.path.abspath(''))
+if src not in sys.path:
+    sys.path.append(src)
+
 import ast
+import tarfile
+import src.extras.e8_extract_files as e8
 
 from src import consts
 from src.classes.c2_local_checkers import SetLocalChecker, CompressedLocalChecker, PathLocalChecker
 from src.classes.c3_cell_visitor import CellVisitor
 from src.helpers.h1_utils import vprint, to_unicode
-
-src = os.path.dirname(os.path.abspath(''))
-if src not in sys.path: sys.path.append(src)
-from src.db.database import Repository, Cell, PythonFile, RepositoryFile
-import src.extras.e8_extract_files as e8
 from src.helpers.h1_utils import timeout
+from src.db.database import Repository, Cell, PythonFile, RepositoryFile
+
 
 def filter_repositories(session, selected_repositories,
                         skip_if_error, count, interval, reverse, skip_already_processed):
@@ -43,8 +45,9 @@ def filter_repositories(session, selected_repositories,
         query = query.order_by(Repository.id.asc())
     return selected_repositories, query
 
+
 def filter_markdown_cells(session, skip_if_error, count, interval,
-                 reverse, skip_already_processed):
+                          reverse, skip_already_processed):
     filters = [
         Cell.processed.op('&')(skip_already_processed) == 0,
         Cell.processed.op('&')(skip_if_error) == 0,
@@ -130,8 +133,8 @@ def filter_code_cells(session, selected_notebooks,
 
 
 def filter_python_files(session, selected_python_files,
-                     skip_if_error, skip_if_syntaxerror, skip_if_timeout,
-                     count, interval, reverse, skip_already_processed):
+                        skip_if_error, skip_if_syntaxerror, skip_if_timeout,
+                        count, interval, reverse, skip_already_processed):
     filters = [
         PythonFile.processed.op('&')(skip_already_processed) == 0,
         PythonFile.processed.op('&')(skip_if_error) == 0,
@@ -172,6 +175,7 @@ def filter_python_files(session, selected_python_files,
         )
 
     return selected_python_files, query
+
 
 def broken_link(notebook_file, repository_id):
     import textwrap
@@ -214,8 +218,6 @@ def cell_output_formats(cell):
                 yield data_type
         elif output.get("output_type") == "error":
             yield "error"
-
-
 
 
 def load_archives(session, repository):
@@ -302,6 +304,7 @@ def load_files(
         vprint(2, "Failed to load file {} due to {}".format(file, err))
         return skip_repo, True, file.id, archives, checker
 
+
 def load_notebook(
     session, cell, repository,
     skip_repo, skip_notebook, notebook_id, archives, checker
@@ -313,6 +316,7 @@ def load_notebook(
             load_files(session, notebook, repository, skip_repo, skip_notebook, archives, checker)
 
     return skip_repo, skip_notebook, notebook_id, archives, checker
+
 
 def load_repository(session, file, skip_repo, repository_id,
                     repository, archives):
@@ -342,4 +346,3 @@ def extract_features(text, checker):
     visitor.visit(parsed)
 
     return visitor.modules, visitor.data_ios
-

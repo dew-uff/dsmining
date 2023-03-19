@@ -6,10 +6,9 @@ import src.config as config
 import src.consts as consts
 
 from src.db.database import RequirementFile, connect
-from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
+from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, unzip_repository
 from src.helpers.h1_utils import find_files_in_path, mount_basedir
 from src.helpers.h3_script_helpers import filter_repositories
-from src.helpers.h4_unzip_repositories import unzip_repository
 
 
 def find_requirements(session, repository):

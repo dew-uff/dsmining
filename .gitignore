@@ -47,7 +47,7 @@ venv.bak/
 # User-specific stuff
 src/jupyter
 src/mnt
-src/logs
+src/logs/*
 
 ## Temp excel files
 ~$*.xlsx

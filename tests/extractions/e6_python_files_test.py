@@ -1,8 +1,9 @@
-import sys
 import os
+import sys
 
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
-if src not in sys.path: sys.path.append(src)
+if src not in sys.path:
+    sys.path.append(src)
 
 import src.consts as consts
 import src.extractions.e6_python_features as e6
@@ -11,16 +12,15 @@ from src.helpers.h1_utils import TimeoutError
 from src.classes.c2_local_checkers import PathLocalChecker
 from src.extractions.e6_python_features import process_python_file
 from src.db.database import PythonFileModule, PythonFileDataIO
+from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, PythonFileFactory
 from tests.factories.models import PythonFileModuleFactory, PythonFileDataIOFactory
-from tests.database_config import connection, session
-
 
 
 class TestE6PythonFilesExtract:
     def test_process_python_file(self, session):
         module_name = 'pandas'
-        caller, function_name, source  = 'pd', 'read_csv', "'data.csv'"
+        caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
 
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
@@ -47,7 +47,6 @@ class TestE6PythonFilesExtract:
         assert data_io.function_name == function_name
         assert data_io.source == source
 
-
     def test_process_python_file_already_processed(self, session):
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
@@ -62,7 +61,6 @@ class TestE6PythonFilesExtract:
         assert result == 'already processed'
         assert python_file.processed == consts.PF_PROCESS_OK
 
-
     def test_process_python_file_time_out(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
@@ -72,6 +70,7 @@ class TestE6PythonFilesExtract:
 
         def mock_extract(_source, _checker):
             raise TimeoutError
+
         monkeypatch.setattr(e6, 'extract_features', mock_extract)
 
         result = process_python_file(session=session, repository_id=repository.id,
@@ -80,7 +79,6 @@ class TestE6PythonFilesExtract:
 
         assert result == 'Failed due to  Time Out Error.'
         assert python_file.processed == consts.PF_TIMEOUT
-
 
     def test_process_python_file_syntax_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
@@ -91,6 +89,7 @@ class TestE6PythonFilesExtract:
 
         def mock_extract(_source, _checker):
             raise SyntaxError
+
         monkeypatch.setattr(e6, 'extract_features', mock_extract)
 
         result = process_python_file(session=session, repository_id=repository.id,
@@ -99,7 +98,6 @@ class TestE6PythonFilesExtract:
 
         assert result == 'Failed due to Syntax Error.'
         assert python_file.processed == consts.PF_SYNTAX_ERROR
-
 
     def test_process_python_file_other_errors(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
@@ -110,6 +108,7 @@ class TestE6PythonFilesExtract:
 
         def mock_extract(_source, _checker):
             raise ValueError
+
         monkeypatch.setattr(e6, 'extract_features', mock_extract)
 
         result = process_python_file(session=session, repository_id=repository.id,
@@ -119,7 +118,7 @@ class TestE6PythonFilesExtract:
         assert 'Failed to process' in result
         assert python_file.processed == consts.PF_PROCESS_ERROR
 
-    def test_process_python_file_retry_process_error(self,session):
+    def test_process_python_file_retry_process_error(self, session):
         module_name = 'pandas'
         caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
 
@@ -138,8 +137,8 @@ class TestE6PythonFilesExtract:
         pd_created_at = python_file_data_io.created_at
 
         result = process_python_file(session=session, repository_id=repository.id,
-                                   python_file=python_file, checker=checker,
-                                   skip_if_error=0)
+                                     python_file=python_file, checker=checker,
+                                     skip_if_error=0)
         session.commit()
         module = session.query(PythonFileModule).first()
         data_io = session.query(PythonFileDataIO).first()
@@ -153,7 +152,7 @@ class TestE6PythonFilesExtract:
         assert data_io.python_file_id == python_file.id
         assert pd_created_at != data_io.created_at
 
-    def test_process_python_file_retry_process_syntax(self,session):
+    def test_process_python_file_retry_process_syntax(self, session):
         module_name = 'pandas'
         caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
 
@@ -172,8 +171,8 @@ class TestE6PythonFilesExtract:
         pd_created_at = python_file_data_io.created_at
 
         result = process_python_file(session=session, repository_id=repository.id,
-                                   python_file=python_file, checker=checker,
-                                   skip_if_syntaxerror=0)
+                                     python_file=python_file, checker=checker,
+                                     skip_if_syntaxerror=0)
         session.commit()
         module = session.query(PythonFileModule).first()
         data_io = session.query(PythonFileDataIO).first()
@@ -187,7 +186,7 @@ class TestE6PythonFilesExtract:
         assert data_io.python_file_id == python_file.id
         assert pd_created_at != data_io.created_at
 
-    def test_process_python_file_retry_process_timeout(self,session):
+    def test_process_python_file_retry_process_timeout(self, session):
         module_name = 'pandas'
         caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
 

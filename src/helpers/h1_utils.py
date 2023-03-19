@@ -1,19 +1,18 @@
-# coding: utf-8
-"""Util functions to select the proper python version"""
+""" Util functions """
 from __future__ import print_function
-import bisect
-import re
+from contextlib import contextmanager
+from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
+
+from src import consts as consts
+from src.config import Path
+
 import subprocess
 import os
 import fnmatch
 import sys
 import time
 import csv
-from contextlib import contextmanager
-from timeout_decorator import timeout, TimeoutError, timeout_decorator
-from pytz import unicode
 import src.config as config
-from src.config import Path
 
 
 def ignore_surrogates(original):
@@ -21,53 +20,7 @@ def ignore_surrogates(original):
     return new, new != original
 
 
-class SafeSession(object):
-
-    def __init__(self, session, interrupted=536870912):
-        self.session = session
-        self.future = []
-        self.interrupted = interrupted
-
-    def add(self, element):
-        self.session.add(element)
-
-    def dependent_add(self, parent, children, on):
-        parent.processed |= self.interrupted
-        self.session.add(parent)
-        self.future.append([
-            parent, children, on
-        ])
-
-    def commit(self):
-        try:
-            self.session.commit()
-            if self.future:
-                for parent, children, on in self.future:
-                    if parent.processed & self.interrupted:
-                        parent.processed -= self.interrupted
-                    self.session.add(parent)
-                    for child in children:
-                        setattr(child, on, parent.id)
-                        self.session.add(child)
-                self.session.commit()
-            return True, ""
-        except Exception as err:
-            if config.VERBOSE > 4:
-                import traceback
-                traceback.print_exc()
-            return False, err
-        finally:
-            self.future = []
-
-    def __getattr__(self, attr):
-        return getattr(self.session, attr)
-
-
 def to_unicode(text):
-    if sys.version_info < (3, 0):
-        if isinstance(text, unicode):
-            return text
-        return str(text).decode("utf-8")
     if isinstance(text, str):
         return text
     return bytes(text).decode("utf-8")
@@ -94,6 +47,7 @@ def vprint(verbose, *args):
 
 @contextmanager
 def savepid():
+    pid = None
     try:
         pid = os.getpid()
         with open("../.pid", "a") as fil:
@@ -150,49 +104,6 @@ def mount_basedir(out=None, err=None):
     yield
 
 
-def version_string_to_list(version):
-    """Split version"""
-    return [
-        int(x) for x in re.findall(r"(\d+)\.?(\d*)\.?(\d*)", version)[0]
-        if x
-    ]
-
-
-def specific_match(versions, position=0):
-    """Matches a specific position in a trie dict ordered by its keys
-    Recurse on the trie until it finds an end node (i.e. a non dict node)
-    Position = 0 indicates it will follow the first element
-    Position = -1 indicates it will follow the last element
-    """
-    if not isinstance(versions, dict):
-        return versions
-    keys = sorted(list(versions.keys()))
-    return specific_match(versions[keys[position]], position)
-
-
-def best_match(version, versions):
-    """Get the closest version in a versions trie that matches the version
-    in a list format"""
-
-    if not isinstance(versions, dict):
-        return versions
-    if not version:
-        return specific_match(versions, -1)
-    if version[0] in versions:
-        return best_match(version[1:], versions[version[0]])
-    keys = sorted(list(versions.keys()))
-    index = bisect.bisect_right(keys, version[0])
-    position = 0
-    if index == len(keys):
-        index -= 1
-        position = -1
-    return specific_match(versions[keys[index]], position)
-
-
-def get_pyexec(version, versions):
-    return f"{config.PYTHON_PATH}/bin/python{best_match(version, versions)}"
-
-
 def invoke(program, *args):
     """Invoke program"""
     return subprocess.check_call([program] + list(map(str, args)))
@@ -214,11 +125,6 @@ def find_names(names, pattern, fn=Path):
         yield fn(name)
 
 
-def join_paths(elements):
-    """Join paths by ;"""
-    return ";".join(map(str, elements))
-
-
 def find_files_in_path(full_dir, patterns):
     """Find files in a path using patterns"""
     full_dir = str(full_dir)
@@ -231,24 +137,12 @@ def find_files_in_path(full_dir, patterns):
     ]
 
 
-def find_files_in_zip(tarzip, full_dir, patterns):
-    names = tarzip.getnames()
-    full_dir = str(full_dir)
-    return [
-        [
-            file.relative_to(full_dir)
-            for file in find_names(names, "*" + pattern)
-            if file.name == pattern
-        ] for pattern in patterns
-    ]
-
-
 def _target(queue, function, *args, **kwargs):
     """Run a function with arguments and return output via a queue.
     This is a helper function for the Process created in _Timeout. It runs
     the function with positional arguments and keyword arguments and then
     returns the function's output by way of a queue. If an exception gets
-    raised, it is returned to _Timeout to be raised by the value property.
+    raised, it is returned to _Timeout that raises it by the value property.
     """
     try:
         queue.put((True, function(*args, **kwargs)))
@@ -269,6 +163,48 @@ def check_exit(matches):
 
 
 timeout_decorator._target = _target
+
+
+class SafeSession(object):
+
+    def __init__(self, session, interrupted=536870912):
+        self.session = session
+        self.future = []
+        self.interrupted = interrupted
+
+    def add(self, element):
+        self.session.add(element)
+
+    def dependent_add(self, parent, children, on):
+        parent.processed |= self.interrupted
+        self.session.add(parent)
+        self.future.append([
+            parent, children, on
+        ])
+
+    def commit(self):
+        try:
+            self.session.commit()
+            if self.future:
+                for parent, children, on in self.future:
+                    if parent.processed & self.interrupted:
+                        parent.processed -= self.interrupted
+                    self.session.add(parent)
+                    for child in children:
+                        setattr(child, on, parent.id)
+                        self.session.add(child)
+                self.session.commit()
+            return True, ""
+        except Exception as err:
+            if config.VERBOSE > 4:
+                import traceback
+                traceback.print_exc()
+            return False, err
+        finally:
+            self.future = []
+
+    def __getattr__(self, attr):
+        return getattr(self.session, attr)
 
 
 class StatusLogger(object):
@@ -316,3 +252,23 @@ class StatusLogger(object):
                     self.total, self.count, self.skipped,
                     self.time, now, now - self.time, self.pid
                 ])
+
+
+def unzip_repository(session, repository):
+    """Process repository"""
+    if not repository.path.exists():
+        if not repository.zip_path.exists():
+            repository.processed |= consts.R_UNAVAILABLE_FILES
+            session.add(repository)
+            return "Failed to load due <repository not found>"
+        uncompressed = subprocess.call([
+            "tar", "-xjf", str(repository.zip_path),
+            "-C", str(repository.zip_path.parent)
+        ])
+        if uncompressed != 0:
+            return "Extraction failed with code {}".format(uncompressed)
+    if repository.processed & consts.R_COMPRESS_OK:
+        repository.processed -= consts.R_COMPRESS_OK
+        session.add(repository)
+
+    return "done"

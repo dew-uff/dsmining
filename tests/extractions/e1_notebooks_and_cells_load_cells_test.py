@@ -1,18 +1,18 @@
 import sys
 import os
-
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
-if src not in sys.path: sys.path.append(src)
+if src not in sys.path:
+    sys.path.append(src)
 
 import src.extractions.e1_notebooks_and_cells as e1
-from src.consts import N_OK, N_LOAD_ERROR, N_LOAD_FORMAT_ERROR, C_OK, C_UNKNOWN_VERSION, C_SYNTAX_ERROR, \
-    N_LOAD_SYNTAX_ERROR
-from tests.database_config import connection, session
+
+from IPython.core.inputtransformer2 import TransformerManager
+from src.consts import N_LOAD_FORMAT_ERROR, N_LOAD_SYNTAX_ERROR
+from src.consts import C_OK, C_UNKNOWN_VERSION, C_SYNTAX_ERROR
+from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.test_helpers.h1_stubs import get_notebook_nbrow, stub_KeyError
 from tests.test_helpers.h1_stubs import stub_IndentationError, get_notebook_node
-from tests.test_helpers.h1_stubs import stub_load_no_cells
-from IPython.core.inputtransformer2 import TransformerManager
 
 
 class TestE1NotebooksAndCellsLoadNotebooks:
@@ -25,7 +25,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         status = 0
 
         nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
-        assert len(cells_info) ==28
+        assert len(cells_info) == 28
         assert status == 0
 
         markdown_cell = cells_info[0]
@@ -189,4 +189,3 @@ class TestE1NotebooksAndCellsLoadNotebooks:
 
         assert status == N_LOAD_FORMAT_ERROR
         assert "Error on cell extraction" in captured.out
-

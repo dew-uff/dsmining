@@ -7,7 +7,7 @@ import src.consts as consts
 from src.db.database import PythonFile, connect
 from src.db.database import Module
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-from src.helpers.h5_aggregation_helpers import  calculate_modules
+from src.helpers.h4_aggregation_helpers import  calculate_modules
 
 TYPE = "python_file"
 
@@ -32,7 +32,7 @@ def process_python_file(session, python_file, skip_if_error):
         session.add(python_file)
         return "ok - syntax error"
 
-    agg_modules = calculate_modules(session, python_file, TYPE)
+    agg_modules = calculate_modules(python_file, TYPE)
 
     session.add(Module(**agg_modules))
     python_file.processed |= consts.PF_AGGREGATE_OK

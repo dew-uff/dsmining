@@ -1,25 +1,24 @@
-import ast
-import sys
 import os
-import tarfile
-
-import pytest
-
-from src.config import Path
-from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
-
+import sys
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
+
+import ast
+import pytest
+import tarfile
 import src.consts as consts
+import src.extras.e8_extract_files as e8
+import src.helpers.h3_script_helpers as h3
+
+from src.config import Path
+from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
 from src.db.database import Repository, RepositoryFile
 from src.helpers.h1_utils import SafeSession, to_unicode
-from tests.database_config import connection, session
+from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, CodeCellFactory, NotebookFactory, PythonFileFactory
 from src.helpers.h3_script_helpers import filter_repositories, load_repository, load_notebook, load_files
-import src.helpers.h3_script_helpers as h3
-import src.extras.e8_extract_files as e8
 
 
 class TestH3ScripHelpersFilterRepositories:
@@ -561,7 +560,7 @@ class TestH3ScriptHelpersLoadArchives:
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
-        def mock_process(session_, repository_, skip_if_error=0):
+        def mock_process(session_, repository_, skip_if_error=0):   # noqa: F841
             rf = RepositoryFile(repository_id=repository.id,
                                 path=str(repository.path))
             safe_session.add(rf)
@@ -585,7 +584,7 @@ class TestH3ScriptHelpersLoadArchives:
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
-        def mock_process(session_, repository_, skip_if_error=0):
+        def mock_process(session_, repository_, skip_if_error=0):  # noqa: F841
             return "done"
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
@@ -603,7 +602,7 @@ class TestH3ScriptHelpersLoadArchives:
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
-        def mock_process(session_, repository_, skip_if_error=0):
+        def mock_process(session_, repository_, skip_if_error=0):  # noqa: F841
             return "error"
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
@@ -624,10 +623,10 @@ class TestH3ScriptHelpersLoadArchives:
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
-        def mock_process(session_, repository_, skip_if_error=0):
+        def mock_process(session_, repository_, skip_if_error=0):  # noqa: F841
             return "error"
 
-        def mock_open(path):
+        def mock_open(path):  # noqa: F841
             raise tarfile.ReadError()
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
@@ -644,7 +643,7 @@ class TestH3ScriptHelpersLoadArchives:
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
 
-        def mock_exists(path):
+        def mock_exists(path):  # noqa: F841
             return False
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
@@ -668,7 +667,7 @@ class TestH3ScriptHelpersExtractFeatures:
         text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"
         checker = PathLocalChecker("")
 
-        def mock_parse(text_): raise ValueError
+        def mock_parse(text_): raise ValueError  # noqa: F841
 
         monkeypatch.setattr(ast, 'parse', mock_parse)
 

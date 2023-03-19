@@ -1,28 +1,27 @@
-"""Load Repository"""
-import sys
+""" Load Repository from GitHub"""
+
 import os
+import sys
+src = os.path.dirname(os.path.abspath(''))
+if src not in sys.path:
+    sys.path.append(src)
 
 import pytz
-
-src = os.path.dirname(os.path.abspath(''))
-if src not in sys.path: sys.path.append(src)
-
-import src.consts as consts
-import src.config as config
 import argparse
 import hashlib
 import subprocess
 import shutil
-from datetime import datetime
-from dateutil import parser
+import src.consts as consts
+import src.config as config
 
+from datetime import datetime
 from future.moves.urllib.parse import urlparse
 from src.db.database import Repository, Commit, connect
 from src.helpers.h1_utils import mount_basedir, savepid, vprint
 
 
 def extract_domain_repository(url):
-    """Extract domain and repository from repository url"""
+    """Extract domain and repository from a repository url"""
     parse = urlparse(url)
     domain = "github.com"
     if parse.netloc == "github.com":
@@ -43,7 +42,7 @@ def extract_hash_parts(repo):
 
 
 def get_remote(domain, repo):
-    """Get git remote from domain and repo"""
+    """Get git remote from a domain and a repo"""
     remote = repo
     if domain == "github.com":
         remote = "https://github.com/{}.git".format(repo)
@@ -58,7 +57,7 @@ def git(*args):
 
 
 def git_output(*args, cwd=None):
-    """Invoke git and return output"""
+    """Invoke git command and return output"""
     return subprocess.check_output(["git"] + list(args), cwd=cwd)
 
 
@@ -106,9 +105,10 @@ def load_repository_from_url(session, url, branch=None,
         branch=branch, commit=commit, clone_existing=clone_existing)
 
 
-def load_repository_and_commits(session, domain, repository, check_repo_only=True, branch=None,
-                    commit=None, clone_existing=False):
-    """Clone repository and extract its information"""
+def load_repository_and_commits(session, domain, repository,
+                                check_repo_only=True, branch=None,
+                                commit=None, clone_existing=False):
+    """ Clones repository and extracts its information"""
     repo = f'{repository.owner}/{repository.name}'
     is_mirror = repository.isMirror
     disk_usage = repository.diskUsage
@@ -185,21 +185,23 @@ def load_repository_and_commits(session, domain, repository, check_repo_only=Tru
 
     return repository
 
-def format_commit(line, commit_type ):
+
+def format_commit(line, commit_type):
     commit_datetime, commit_hash, author, message = line.split(',', 3)
     commit_datetime = datetime.strptime(commit_datetime, "%Y-%m-%d %H:%M:%S %z")
     commit_datetime = commit_datetime.astimezone(pytz.timezone('GMT'))
     commit_row = {
         "repository_id": None,
-        "type":commit_type,
+        "type": commit_type,
         "hash": commit_hash,
         "date": commit_datetime,
         "author": author,
         "message": message
     }
     return commit_row
-def load_commits(full_dir):
 
+
+def load_commits(full_dir):
     git_log_commits = subprocess.check_output(
         ['git', "--git-dir", str(full_dir / ".git"),
          'log', '--no-merges', '--pretty=format:%ci,%h,%an,%s'], stderr=subprocess.STDOUT
@@ -225,7 +227,6 @@ def load_commits(full_dir):
             commits_info.append(commit_row)
 
     return commits_info
-
 
 
 def main():

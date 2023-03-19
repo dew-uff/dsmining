@@ -1,8 +1,10 @@
-import ast
-import sys
 import os
+import sys
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
-if src not in sys.path: sys.path.append(src)
+if src not in sys.path:
+    sys.path.append(src)
+
+import ast
 from src.classes.c3_cell_visitor import CellVisitor
 from src.classes.c2_local_checkers import PathLocalChecker
 

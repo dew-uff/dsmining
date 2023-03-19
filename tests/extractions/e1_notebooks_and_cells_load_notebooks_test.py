@@ -1,15 +1,16 @@
-import sys
 import os
-import nbformat as nbf
-from unittest.mock import mock_open
-
+import sys
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
-if src not in sys.path: sys.path.append(src)
+if src not in sys.path:
+    sys.path.append(src)
 
-import src.extractions.e1_notebooks_and_cells as e1
+import nbformat as nbf
 import src.helpers.h3_script_helpers as h2
+import src.extractions.e1_notebooks_and_cells as e1
+
+from unittest.mock import mock_open
 from src.consts import N_OK, N_LOAD_ERROR, N_LOAD_FORMAT_ERROR
-from tests.database_config import connection, session
+from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.test_helpers.h1_stubs import stub_nbf_read, get_empty_nbrow
 from tests.test_helpers.h1_stubs import stub_load_cells, stub_nbf_readOSError, stub_nbf_readException
@@ -27,12 +28,10 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         monkeypatch.setattr(nbf, 'read', stub_nbf_read)
         monkeypatch.setattr(e1, 'load_cells', stub_load_cells)
 
-
         nbrow, cells_info = e1.load_notebook(repository.id, repository.path, name, nbrow)
         assert len(cells_info) == 28
         assert nbrow["language"] == 'python'
         assert nbrow["processed"] == N_OK
-
 
     def test_load_notebooksOSError(self, session, monkeypatch, capsys):
 
@@ -65,7 +64,6 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         monkeypatch.setattr('os.path.islink', lambda path: True)
         monkeypatch.setattr(h2, 'broken_link',
                             lambda path: "Notebook is broken link. Use the following SQL to fix:")
-
 
         nbrow, cells_info = e1.load_notebook(repository.id, repository.path, name, nbrow)
 

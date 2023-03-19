@@ -30,6 +30,7 @@ nltk = "*"
 mistune ="==0.8.4"
 astunparse = "*"
 nbconvert = "*"
+pytz="*"
 
 # Test related modules
 pytest = "*"

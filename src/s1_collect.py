@@ -81,7 +81,8 @@ def main():
     token = os.getenv('GITHUB_TOKEN')
     if not token:
         print(
-            'Please, set the GITHUB_TOKEN environment variable with your OAuth token (https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line)')
+            'Please, set the GITHUB_TOKEN environment variable with your OAuth token'
+            '(https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line)')
         exit(1)
     headers = {
         'Authorization': f'bearer {token}'
@@ -108,7 +109,8 @@ def main():
         has_next_page = True
         toprocess_repositories = -1
         while has_next_page and toprocess_repositories != 0:
-            print(f'Trying to retrieve the next {variables["repositoriesPerPage"]} repositories (pushedAt >= {min_pushed})...')
+            print(f'Trying to retrieve the next {variables["repositoriesPerPage"]}'
+                  f'repositories (pushedAt >= {min_pushed})...')
             try:
                 response = requests.post(url="https://api.github.com/graphql", json=request, headers=headers)
                 result = response.json()
@@ -120,7 +122,8 @@ def main():
                 if 'errors' in result:
                     if 'timeout' in result['errors'][0]['message']:  # reached timeout
                         print(f'Timeout!', end=' ')
-                        variables['repositoriesPerPage'] = int(max(1, variables['repositoriesPerPage'] * md))  # using AIMD
+                        variables['repositoriesPerPage'] = int(max(1, variables['repositoriesPerPage'] * md))
+                        # using AIMD
                         ai = 1  # resetting slow start
                     else:  # some unexpected error.
                         pprint(result['errors'])
@@ -138,11 +141,12 @@ def main():
                     toprocess_repositories = repository_count - len(all_repositories)
 
                     print(
-                        f'Processed {len(all_repositories)} of {repository_count} repositories at {datetime.datetime.now():%H:%M:%S}.',
+                        f'Processed {len(all_repositories)} of {repository_count} repositories '
+                        f'at {datetime.datetime.now():%H:%M:%S}.',
                         end=' ')
 
                     # Keeps the number of stars already processed to restart the process
-                    # when reaching 1,000 repositories limit
+                    # when reaching 1,000 repositories limit.
                     if some_repositories:
                         min_pushed = datetime.datetime.strptime(some_repositories[-1]['pushedAt'], "%Y-%m-%dT%H:%M:%SZ")
 
@@ -151,7 +155,8 @@ def main():
                     variables['repositoriesPerPage'] = min(100, variables['repositoriesPerPage'] + ai)  # using AIMD
                     ai = min(8, ai * 2)  # slow start
 
-                    if not page_info['hasNextPage']:  # We may have finished all repositories or reached the 1,000 limit
+                    if not page_info['hasNextPage']:
+                        # We may have finished all repositories or reached the 1,000 limit.
                         if result["data"]["search"]["repositoryCount"] > 1000:
                             # We reached the 1,000 repositories limit
                             print(f'We reached the limit of 1,000 repositories.', end=' ')
@@ -162,7 +167,7 @@ def main():
                         else:  # We have finished all repositories
                             print(f'Finished.')
                             has_next_page = False
-            except:
+            except Exception:
                 print('Possibly Incomplete read, trying again.')
                 traceback.print_exc()
 

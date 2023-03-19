@@ -137,7 +137,7 @@ def apply(
                 if skip_repo:
                     continue
 
-                skip_repo, skip_python_file, archives, checker = load_files(
+                skip_repo, skip_python_file, python_file_id, archives, checker = load_files(
                     session, python_file, repository,
                     skip_repo, skip_python_file, archives, checker
                 )

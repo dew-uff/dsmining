@@ -1,3 +1,4 @@
+# noqa: E501
 from src import consts
 import nbformat
 
@@ -8,7 +9,7 @@ nbrow = {'repository_id': 1, 'name': 'file.ipynb', 'nbformat': '4.0', 'kernel': 
 cells = [
     {'repository_id': 1, 'notebook_id': None, 'index': 0, 'cell_type': 'markdown', 'execution_count': None,
      'lines': 6, 'output_formats': '',
-     'source': '<!--BOOK_INFORMATION-->\n<img align="left" style="padding-right:10px;" src="figures/PDSH-cover-small.png">\n\n*This notebook contains an excerpt from the [Python Data Science Handbook](http://shop.oreilly.com/product/0636920034919.do) by Jake VanderPlas; the content is available [on GitHub](https://github.com/jakevdp/PythonDataScienceHandbook).*\n\n*The text is released under the [CC-BY-NC-ND license](https://creativecommons.org/licenses/by-nc-nd/3.0/us/legalcode), and code is released under the [MIT license](https://opensource.org/licenses/MIT). If you find this content useful, please consider supporting the work by [buying the book](http://shop.oreilly.com/product/0636920034919.do)!*',
+     'source': '<!--BOOK_INFORMATION-->\n<img align="left"style="padding-right:10px;" src="figures/PDSH-cover-small.png">\n\n*This notebook contains an excerpt from the [Python Data Science Handbook](http://shop.oreilly.com/product/0636920034919.do) by Jake VanderPlas; the content is available [on GitHub](https://github.com/jakevdp/PythonDataScienceHandbook).*\n\n*The text is released under the [CC-BY-NC-ND license](https://creativecommons.org/licenses/by-nc-nd/3.0/us/legalcode), and code is released under the [MIT license](https://opensource.org/licenses/MIT). If you find this content useful, please consider supporting the work by [buying the book](http://shop.oreilly.com/product/0636920034919.do)!*',
      'python': True, 'processed': 0}]
 
 REQUIREMENTS_TXT = b"# local package\n-e .\n\n# external requirements\nclick\nSphinx\ncoverage\nawscli\nflake8\npython-dotenv>=0.5.1\n{% if cookiecutter.python_interpreter != 'python3' %}\n\n# backwards compatibility\npathlib2\n{% endif %}"
@@ -202,7 +203,7 @@ notebook_dict  = \
         }
 
 
-notebook_dict_code_cell  = \
+notebook_dict_code_cell = \
         {
             "cells": [
                 {
@@ -235,7 +236,7 @@ notebook_dict_code_cell  = \
             "nbformat_minor": 0,
         }
 
-notebook_dict_display_data  = \
+notebook_dict_display_data = \
         {
             "cells": [
                 {
@@ -275,11 +276,13 @@ notebook_dict_display_data  = \
             "nbformat_minor": 0,
         }
 
-def stub_load_notebook(repository_id, path, notebook_file, _nbrow):
+
+def stub_load_notebook(repository_id, path, notebook_file, _nbrow):  # noqa: F841
     return nbrow, cells
 
+
 def stub_load_notebook_error(_repository_id, _path, _notebook_file, _nbrow):
-        raise AttributeError()
+    raise AttributeError()
 
 
 def get_empty_nbrow(repository, name):
@@ -302,6 +305,7 @@ def get_empty_nbrow(repository, name):
             }
     return empty_nbrow
 
+
 def get_notebook_node(type_='normal'):
     if type_ == 'code_cell':
         notebook = nbformat.from_dict(notebook_dict_code_cell)
@@ -311,22 +315,28 @@ def get_notebook_node(type_='normal'):
         notebook = nbformat.from_dict(notebook_dict)
     return notebook
 
-def stub_nbf_read(ofile, nbf):
+
+def stub_nbf_read(ofile, nbf):  # noqa: F841
     return get_notebook_node()
 
-def stub_nbf_readOSError(ofile, nbf):
+
+def stub_nbf_readOSError(ofile, nbf):  # noqa: F841
     raise OSError()
 
-def stub_nbf_readException(ofile, nbf):
+
+def stub_nbf_readException(ofile, nbf):  # noqa: F841
     raise ValueError()
 
-def stub_IndentationError(arg1, arg2):
+
+def stub_IndentationError(arg1, arg2):  # noqa: F841
     raise IndentationError()
 
-def stub_KeyError(arg1, arg2):
+
+def stub_KeyError(arg1, arg2):  # noqa: F841
     raise KeyError()
 
-def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):
+
+def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noqa: F841
     _nbrow = {
                 "repository_id": 1,
                 "name": "test.ipynb",
@@ -686,7 +696,8 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):
     _status = 0
     return _nbrow, _cells_info, _exec_count, _status
 
-def stub_load_no_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):
+
+def stub_load_no_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):  # noqa: F841
     _nbrow = {
                 "repository_id": 1,
                 "name": "test.ipynb",
@@ -709,7 +720,8 @@ def stub_load_no_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):
     _status = 0
     return _nbrow, _cells_info, _exec_count, _status
 
-def get_notebook_nbrow(repository_id, name):
+
+def get_notebook_nbrow(repository_id, name):  # noqa: F841
     __nbrow = {
         "repository_id": repository_id,
         "name": name,
@@ -730,13 +742,15 @@ def get_notebook_nbrow(repository_id, name):
     return __nbrow
 
 
-def stub_unzip(session_, repository_):
+def stub_unzip(session_, repository_):  # noqa: F841
     return "done"
 
-def stub_unzip_failed(session_, repository_):
+
+def stub_unzip_failed(session_, repository_):  # noqa: F841
     return "failed"
 
-def stub_extract_features(cell_source):
+
+def stub_extract_features(cell_source):  # noqa: F841
     result = {
         "language": "english",
         "using_stopwords": False,

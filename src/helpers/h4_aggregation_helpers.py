@@ -1,5 +1,5 @@
 from collections import Counter, OrderedDict
-from src.db.database import  CellModule, CellMarkdownFeature
+from src.db.database import CellModule, CellMarkdownFeature
 
 IGNORE_COLUMNS = {
     "id", "repository_id", "notebook_id", "cell_id", "index",
@@ -22,25 +22,8 @@ MODULE_TYPES = {
     "any", "import_from", "import", "load_ext"
 }
 
-FEATURES = {
-    "IPython/shadown_ref": "shadown_ref",
-    "IPython/output_ref": "output_ref",
-    "IPython/system": "system",
-    "IPython/set_next_input": "set_next_input",
-    "IPython/input_ref": "input_ref",
-    "IPython/magic": "magic",
-    "IPython/run_line_magic": "run_line_magic",
-    "IPython/run_cell_magic": "run_cell_magic",
-    "IPython/getoutput": "getoutput",
-    "IPython/set_hook": "set_hook",
-    "any": "any",
-}
 
-NAME_SCOPES = ["any", "nonlocal", "local", "class", "global", "main"]
-NAME_CONTEXTS = ["any", "class", "import", "importfrom", "function", "param", "del", "load", "store"]
-
-
-def calculate_markdown(session, notebook):
+def calculate_markdown(notebook):
     agg_markdown = {col: 0 for col in MARKDOWN_COLUMNS}
     agg_markdown["cell_count"] = 0
     markdown_languages = Counter()
@@ -63,7 +46,7 @@ def calculate_markdown(session, notebook):
     return agg_markdown
 
 
-def calculate_modules(session, file, file_type):
+def calculate_modules(file, file_type):
     temp_agg = {
         (local + "_" + type_): OrderedDict()
         for _, local in MODULE_LOCAL.items()
@@ -72,12 +55,11 @@ def calculate_modules(session, file, file_type):
     temp_agg["index"] = OrderedDict()
     others = []
 
-    def add_key(key, module):
-        if key in temp_agg:
-            temp_agg[key][module.module_name] = 1
+    def add_key(key_, module_):
+        if key_ in temp_agg:
+            temp_agg[key_][module_.module_name] = 1
         else:
-            others.append("{}:{}".format(key, module.module_name))
-
+            others.append("{}:{}".format(key_, module_.module_name))
 
     if file_type == 'notebook':
         query = (

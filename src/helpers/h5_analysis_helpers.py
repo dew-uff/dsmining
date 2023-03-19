@@ -28,7 +28,7 @@ Distribution = namedtuple("Distribution", "min q1 median q3 max")
 def tex_escape(text):
     """
         :param text: a plain text message
-        :return: the message escaped to appear correctly in LaTeX
+        :return: the message escaped to appear correctly in LaTeX.
     """
     conv = {
         '&': r'\&',
@@ -44,7 +44,8 @@ def tex_escape(text):
         '<': r'\textless{}',
         '>': r'\textgreater{}',
     }
-    regex = re.compile('|'.join(re.escape(key) for key in sorted(conv.keys(), key = lambda item: - len(item))))
+    regex = re.compile('|'.join(re.escape(key) for key in sorted(conv.keys(),
+                                                                 key=lambda item: - len(item))))
     return regex.sub(lambda match: conv[match.group()], text)
 
 
@@ -75,7 +76,7 @@ def var(key, value, template="{}"):
             
 
 def fetchgenerator(cursor, arraysize=1000):
-    'An iterator that uses fetchmany to keep memory usage down'
+    """An iterator that uses fetchmany to keep memory usage down"""
     while True:
         results = cursor.fetchmany(arraysize)
         if not results:
@@ -198,12 +199,14 @@ def describe_processed(series, statuses, show_undefined=False):
     return pd.Series(result)
 
 
-def distribution_with_boxplot(column, first, last, step, ylabel, xlabel, draw_values=True, bins=None, template_x="{:g}"):
+def distribution_with_boxplot(column, first, last, step,
+                              ylabel, xlabel, draw_values=True,
+                              bins=None, template_x="{:g}"):
     bins = bins if bins else last - first
     computed = column.compute() if isinstance(column, DaskSeries) else column
     distribution = numpy_distribution(computed)
 
-    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, sharex=True, gridspec_kw = {'height_ratios':[3, 1]})
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, sharex=True, gridspec_kw={'height_ratios': [3, 1]})
     dask_histogram(column.values, bins, step, (first, last), ax=ax1)
     ax1.xaxis.tick_bottom()
     ax1.set_ylabel(ylabel)
@@ -307,6 +310,7 @@ def get_python_version(python_notebooks):
 
     return pv2
 
+
 def get_toplevel_modules(modules):
     columns = [
         "any_any", "local_any", "external_any",
@@ -346,7 +350,8 @@ def calculate_nested_frequencies(repositories_with_commits, commits):
         frequency_days.append(mean.days)
     repositories_with_commits['frequency_timedelta'] = frequency
     repositories_with_commits['frequency_days'] = frequency_days
-    return  repositories_with_commits
+    return repositories_with_commits
+
 
 def create_repositories_piechart(repository_attribute, attribute_name,
                                  bins=None, labels=None):
@@ -354,7 +359,6 @@ def create_repositories_piechart(repository_attribute, attribute_name,
         bins = [0, 1, 2, 5, 10, 20, 50, 100, 50000]
     if labels is None:
         labels = ["1", "2", "3-5", "6-10", "11-20", "21-50", "51-100", "> 100"]
-
 
     attribute = pd.cut(repository_attribute[f"{attribute_name}"], bins=bins).value_counts() \
         .rename_axis('repositories').to_frame(attribute_name).reset_index(level=0).sort_values(by='repositories')

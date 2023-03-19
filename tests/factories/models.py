@@ -10,22 +10,23 @@ def RepositoryFactory(session):
             sqlalchemy_session = session
 
         domain = "github.com"
-        repository = factory.Sequence(lambda n: 'person{}/respository{}'.format(n+1, n+1))
+        repository = factory.Sequence(lambda n: 'person{}/respository{}'.format(n + 1, n + 1))
         hash_dir1 = "test"
-        hash_dir2 = factory.Sequence(lambda n: "test_directory{}".format(n+1))
+        hash_dir2 = factory.Sequence(lambda n: "test_directory{}".format(n + 1))
         commit = "8a34a4f653bdbdc01415a94dc20d4e9b97438965"
         is_mirror = 0
         disk_usage = 34707
         primary_language = "Jupyter Notebook"
-        processed =  0
+        processed = 0
 
         @factory.post_generation
-        def commit_to_db(self, create, extracted, **kwargs):
+        def commit_to_db(self, create, extracted, **kwargs):  # noqa: F841
             if create:
                 session.add(self)
                 session.commit()
 
     return _RepositoryFactory
+
 
 def NotebookFactory(session):
     class _NotebookFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -48,7 +49,6 @@ def NotebookFactory(session):
         empty_cells = 0
         processed = 0
 
-
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):
             if create:
@@ -56,6 +56,7 @@ def NotebookFactory(session):
                 session.commit()
 
     return _NotebookFactory
+
 
 def MarkdownCellFactory(session):
     class _CellFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -70,7 +71,7 @@ def MarkdownCellFactory(session):
         source = "Recall what these components mean: the full data is a 64-dimensional point cloud, and these points are the projection of each data point along the directions with the largest variance.\n" \
                  "Essentially, we have found the optimal stretch and rotation in 64-dimensional space that allows us to see the layout of the digits in two dimensions, and have done this in an unsupervised manner—that is, without reference to the labels."
         python = 1
-        processed=0
+        processed = 0
 
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):
@@ -79,6 +80,7 @@ def MarkdownCellFactory(session):
                 session.commit()
 
     return _CellFactory
+
 
 def CodeCellFactory(session):
     class _CellFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -101,8 +103,8 @@ def CodeCellFactory(session):
                 session.add(self)
                 session.commit()
 
-
     return _CellFactory
+
 
 def PythonFileFactory(session):
     class _PythonFileFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -123,8 +125,8 @@ def PythonFileFactory(session):
 
     return _PythonFileFactory
 
-def RequirementFileFactory(session):
 
+def RequirementFileFactory(session):
     class _RequirementFileFactory(factory.alchemy.SQLAlchemyModelFactory):
         class Meta:
             model = RequirementFile
@@ -150,10 +152,10 @@ def CellMarkdownFeatureFactory(session):
             model = CellMarkdownFeature
             sqlalchemy_session = session
 
-        language =  'english'
-        using_stopwords =  0
-        len =  420
-        lines =  2
+        language = 'english'
+        using_stopwords = 0
+        len = 420
+        lines = 2
         index = 0
 
         @factory.post_generation
@@ -163,6 +165,7 @@ def CellMarkdownFeatureFactory(session):
                 session.commit()
 
     return _CellMarkdownFeatureFactory
+
 
 def CellModuleFactory(session):
     class _CellModuleFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -224,6 +227,7 @@ def PythonFileModuleFactory(session):
                 session.commit()
 
     return _PythonFileModuleFactory
+
 
 def PythonFileDataIOFactory(session):
     class _PythonFileDataIOFactory(factory.alchemy.SQLAlchemyModelFactory):

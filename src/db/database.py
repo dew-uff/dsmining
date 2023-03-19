@@ -1,4 +1,4 @@
-"""Handles database model and connection"""
+"""H andles database model and connection """
 import sys
 from datetime import datetime
 
@@ -12,24 +12,23 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Interval
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from sqlalchemy import ForeignKeyConstraint
-from src.helpers.h1_utils import version_string_to_list
 
 BigInt = Integer
 Base = declarative_base()  # pylint: disable=invalid-name
 
 
 def one_to_many(table, backref):
-    """ Create one-to-many relationship """
+    """ Creates a one-to-many relationship """
     return relationship(table, back_populates=backref, lazy="dynamic", viewonly=True, sync_backref=False)
 
 
 def many_to_one(table, backref):
-    """Create many-to-one relationship"""
+    """ Creates a many-to-one relationship """
     return relationship(table, back_populates=backref, viewonly=True, sync_backref=False)
 
 
 def force_encoded_string_output(func):
-    """encode __repr__"""
+    """ encode __repr__ """
     if sys.version_info.major < 3:
         def _func(*args, **kwargs):
             """encode __repr__"""
@@ -103,8 +102,6 @@ class Repository(Base):
     python_files_objs = one_to_many("PythonFile", "repository_obj")
     python_file_modules_objs = one_to_many("PythonFileModule", "repository_obj")
     python_file_data_ios_objs = one_to_many("PythonFileDataIO", "repository_obj")
-
-
     requirement_files_objs = one_to_many("RequirementFile", "repository_obj")
 
     notebooks_objs = one_to_many("Notebook", "repository_obj")
@@ -112,8 +109,6 @@ class Repository(Base):
     cell_markdown_features_objs = one_to_many("CellMarkdownFeature", "repository_obj")
     cell_modules_objs = one_to_many("CellModule", "repository_obj")
     cell_data_ios_objs = one_to_many("CellDataIO", "repository_obj")
-
-
     files_objs = one_to_many("RepositoryFile", "repository_obj")
 
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "repository_obj")
@@ -231,7 +226,6 @@ class PythonFile(Base):
     python_file_modules_objs = one_to_many("PythonFileModule", "python_file_obj")
     python_file_data_ios_objs = one_to_many("PythonFileDataIO", "python_file_obj")
 
-
     modules_objs = one_to_many("Module", "python_file_obj")
 
     @property
@@ -244,6 +238,7 @@ class PythonFile(Base):
         return u"<PythonFile({0.repository_id}/{0.id}:{0.name})>".format(
             self
         )
+
 
 class PythonFileModule(Base):
     """Python Modules Table"""
@@ -282,6 +277,7 @@ class PythonFileModule(Base):
             u"<Module({0.repository_id}/{0.python_file_id}/"
             u"{0.id}:{0.import_type})>"
         ).format(self)
+
 
 class PythonFileDataIO(Base):
     """Python Data Table"""
@@ -323,6 +319,7 @@ class PythonFileDataIO(Base):
             u"<Data({0.repository_id}/{0.python_file_id}/"
             u"{0.id}:{0.function_name})>"
         ).format(self)
+
 
 class Notebook(Base):
     """Notebook Table"""
@@ -369,32 +366,13 @@ class Notebook(Base):
         """Return notebook path"""
         return self.repository_obj.path / self.name
 
-    @property
-    def py_version(self):
-        """Return python version of notebook"""
-        note_version = self.language_version or "0"
-        if note_version == "unknown":
-            note_version = ".".join(map(str, sys.version_info[:3]))
-        return version_string_to_list(note_version)
-
-    @property
-    def compatible_version(self):
-        """ Checks if python version is compatible to the notebook. """
-        note_version = self.py_version
-        py_version = sys.version_info
-        if note_version[0] != py_version[0]:
-            return False
-        if len(note_version) > 1 and note_version[1] > py_version[1]:
-            return False
-        return True
-
     @force_encoded_string_output
     def __repr__(self):
         return u"<Notebook({0.repository_id}/{0.id})>".format(self)
 
 
 class Cell(Base):
-    """Cell Table"""
+    """ Cell Table """
     # pylint: disable=too-few-public-methods, invalid-name
     __tablename__ = 'cells'
     __table_args__ = (
@@ -402,7 +380,7 @@ class Cell(Base):
             ['notebook_id'],
             ['notebooks.id']
         ),
-         ForeignKeyConstraint(
+        ForeignKeyConstraint(
             ['repository_id'],
             ['repositories.id']
         ),
@@ -451,7 +429,7 @@ class RequirementFile(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
     name = Column(String)
-    reqformat = Column(String) # setup.py, requirements.py, Pipfile, Pipfile.lock
+    reqformat = Column(String)  # setup.py, requirements.py, Pipfile, Pipfile.lock
     content = Column(String)
     processed = Column(Integer, default=0)
     skip = Column(Integer, default=0)
@@ -752,6 +730,7 @@ class CellDataIO(Base):
             u"<Module({0.repository_id}/{0.notebook_id}/"
             u"{0.cell_id}[{0.index}]/{0.id}:{0.function_name})>"
         ).format(self)
+
 
 class RepositoryFile(Base):
     """Repository Files Table"""

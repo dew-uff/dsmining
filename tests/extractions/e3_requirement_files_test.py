@@ -1,22 +1,21 @@
-import sys
 import os
-
-from unittest.mock import mock_open
-
-import chardet
-
-from tests.factories.models import PythonFileFactory, RequirementFileFactory
-from tests.test_helpers.h1_stubs import stub_unzip, stub_unzip_failed, REQUIREMENTS_TXT
+import sys
 
 src = os.path.dirname(os.path.abspath(''))
-if src not in sys.path: sys.path.append(src)
+if src not in sys.path:
+    sys.path.append(src)
 
+import chardet
 import src.consts as consts
 import src.extractions.e3_requirement_files as e3
+
+from unittest.mock import mock_open
 from src.db.database import Repository, PythonFile, RequirementFile
 from src.config import Path
-from tests.database_config import connection, session
+from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
+from tests.factories.models import RequirementFileFactory
+from tests.test_helpers.h1_stubs import stub_unzip, stub_unzip_failed, REQUIREMENTS_TXT
 
 
 class TestE3RequiremtFilesFindRequirements:
@@ -27,11 +26,13 @@ class TestE3RequiremtFilesFindRequirements:
         file2_relative_path = 'requirements.txt'
         file3_relative_path = 'Pipfile'
         file4_relative_path = 'Pipfile.lock'
-        def mock_find_requirement_files(path, pattern):
+
+        def mock_find_requirement_files(path, pattern):  # noqa: F841
             return [[Path(f'{file1_relative_path}')],
                     [Path(f'{file2_relative_path}')],
                     [Path(f'{file3_relative_path}')],
                     [Path(f'{file4_relative_path}')]]
+
         monkeypatch.setattr(e3, 'find_files_in_path', mock_find_requirement_files)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
@@ -54,11 +55,13 @@ class TestE3RequiremtFilesFindRequirements:
         file2_relative_path = 'requirements.txt'
         file3_relative_path = 'Pipfile'
         file4_relative_path = 'Pipfile.lock'
-        def mock_find_requirement_files(path, pattern):
+
+        def mock_find_requirement_files(path, pattern):  # noqa: F841
             return [[Path(f'{file1_relative_path}')],
                     [Path(f'{file2_relative_path}')],
                     [Path(f'{file3_relative_path}')],
                     [Path(f'{file4_relative_path}')]]
+
         monkeypatch.setattr(Path, 'exists', lambda path: False)
         monkeypatch.setattr(e3, 'unzip_repository', stub_unzip)
         monkeypatch.setattr(e3, 'find_files_in_path', mock_find_requirement_files)
@@ -78,7 +81,6 @@ class TestE3RequiremtFilesFindRequirements:
     def test_find_requirements_zip_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
 
-
         monkeypatch.setattr(Path, 'exists', lambda path: False)
         monkeypatch.setattr(e3, 'unzip_repository', stub_unzip_failed)
 
@@ -89,6 +91,7 @@ class TestE3RequiremtFilesFindRequirements:
         assert pipfile_locks == []
         assert repository.processed == consts.R_UNAVAILABLE_FILES
 
+
 class TestE3RequiremtFilesProcessRepository:
     def test_process_repository_success(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
@@ -98,8 +101,7 @@ class TestE3RequiremtFilesProcessRepository:
         monkeypatch.setattr(e3, 'find_requirements',
                             lambda _session, _repository: [[file], [], [], []])
         monkeypatch.setattr(e3, 'process_requirement_files',
-                            lambda _session, _repository,
-                                   _python_files_names, count: True)
+                            lambda _session, _repository, _python_files_names, count: True)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         output = e3.process_repository(session, repository)
 
@@ -113,8 +115,7 @@ class TestE3RequiremtFilesProcessRepository:
         monkeypatch.setattr(e3, 'find_requirements',
                             lambda _session, _repository: [[file], [], [], []])
         monkeypatch.setattr(e3, 'process_requirement_files',
-                            lambda _session, _repository,
-                                   _python_files_names, count: False)
+                            lambda _session, _repository, _python_files_names, count: False)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         output = e3.process_repository(session, repository)
 
@@ -136,8 +137,7 @@ class TestE3RequiremtFilesProcessRepository:
         monkeypatch.setattr(e3, 'find_requirements',
                             lambda _session, _repository: [[file], [], [], []])
         monkeypatch.setattr(e3, 'process_requirement_files',
-                            lambda _session, _repository,
-                                   _python_files_names, count: True)
+                            lambda _session, _repository, _python_files_names, count: True)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
         output = e3.process_repository(session, repository, skip_if_error=0)
@@ -148,15 +148,14 @@ class TestE3RequiremtFilesProcessRepository:
         assert output == "done"
 
     def test_process_repository_retry_error(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(processed = consts.R_REQUIREMENTS_ERROR)
+        repository = RepositoryFactory(session).create(processed=consts.R_REQUIREMENTS_ERROR)
         assert repository.python_files_count is None
 
         file = [Path('setup.py')]
         monkeypatch.setattr(e3, 'find_requirements',
                             lambda _session, _repository: [[file], [], [], []])
         monkeypatch.setattr(e3, 'process_requirement_files',
-                            lambda _session, _repository,
-                                   _python_files_names, count: False)
+                            lambda _session, _repository, _python_files_names, count: False)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         output = e3.process_repository(session, repository, skip_if_error=0)
 
@@ -178,7 +177,7 @@ class TestE3RequiremtFiles:
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
-        reqformat  = 'requirements.txt'
+        reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
 
         no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
@@ -242,16 +241,14 @@ class TestE3RequiremtFiles:
         assert no_errors is True
 
     def test_process_python_files_already_exists(self, session, monkeypatch, capsys):
-
         name = 'requirements.txt'
         repository = RepositoryFactory(session).create()
         reqformat = 'requirements.txt'
         req_names = [Path(name)]
         python_file = RequirementFileFactory(session).create(repository_id=repository.id,
-                                                        name= name,
-                                                        processed= consts.R_REQUIREMENTS_ERROR)
+                                                             name=name,
+                                                             processed=consts.R_REQUIREMENTS_ERROR)
         initial_created_at = python_file.created_at
-
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
@@ -290,7 +287,8 @@ class TestE3RequiremtFiles:
         req_names = [Path('requirements.txt')]
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
-        monkeypatch.setattr(chardet, 'detect', lambda content: {'encoding': 'error', 'confidence': 0.0, 'language': None})
+        monkeypatch.setattr(chardet, 'detect',
+                            lambda content: {'encoding': 'error', 'confidence': 0.0, 'language': None})
 
         no_errors = e3.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
@@ -306,7 +304,7 @@ class TestE3RequiremtFiles:
         repository = RepositoryFactory(session).create()
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
-        monkeypatch.setattr('builtins.open', mock_open(read_data= b"test\0test\n"))
+        monkeypatch.setattr('builtins.open', mock_open(read_data=b"test\0test\n"))
         reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
 
@@ -325,10 +323,11 @@ class TestE3RequiremtFiles:
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
-        reqformat  = 'requirements.txt'
+        reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
 
-        def raise_error(text,error): raise FileNotFoundError
+        def raise_error(text, error): raise FileNotFoundError  # noqa: F841
+
         m = mock_open()
         m.side_effect = raise_error
         monkeypatch.setattr('builtins.open', m)
@@ -342,5 +341,3 @@ class TestE3RequiremtFiles:
         assert requirement_file.repository_id == repository.id
         assert requirement_file.processed == consts.F_ERROR
         assert 'Failed to load' in captured.out
-
-

@@ -7,7 +7,7 @@ import src.consts as consts
 from src.db.database import Notebook, connect, NotebookMarkdown, Cell
 from src.db.database import Module
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-from src.helpers.h5_aggregation_helpers import calculate_markdown, calculate_modules
+from src.helpers.h4_aggregation_helpers import calculate_markdown, calculate_modules
 
 
 TYPE = "notebook"
@@ -24,7 +24,7 @@ def process_notebook(session, notebook, skip_if_error):
         session.add(notebook)
         return "invalid notebook format. Do not aggregate it"
 
-    agg_markdown = calculate_markdown(session, notebook)
+    agg_markdown = calculate_markdown(notebook)
 
     if notebook.markdown_cells != agg_markdown["cell_count"]:
         notebook.processed |= consts.N_AGGREGATE_ERROR
@@ -48,7 +48,7 @@ def process_notebook(session, notebook, skip_if_error):
         session.add(notebook)
         return "ok - syntax error"
 
-    agg_modules = calculate_modules(session, notebook, TYPE)
+    agg_modules = calculate_modules(notebook, TYPE)
 
     session.add(NotebookMarkdown(**agg_markdown))
     session.add(Module(**agg_modules))

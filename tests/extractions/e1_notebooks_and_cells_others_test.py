@@ -7,10 +7,10 @@ if src not in sys.path:
 import src.consts as consts
 import src.extractions.e1_notebooks_and_cells as e1
 from src.db.database import Repository, Notebook, Cell
+
 from src.config import LOGS_DIR, Path
 from src.helpers.h1_utils import SafeSession
-
-from tests.database_config import connection, session
+from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, NotebookFactory
 from tests.test_helpers.h1_stubs import stub_load_notebook, stub_load_notebook_error, stub_unzip
 
@@ -24,7 +24,7 @@ class TestE1NotebooksAndCellsFindNotebooks:
         file2_relative_path = 'to/file.ipynb'
         file3_relative_path = 'file.ipynb_checkpoints'
 
-        def mock_find_files(path, pattern):
+        def mock_find_files(path, pattern):  # noqa: F841
             return [Path(f'{repository.path}/{file1_relative_path}'),
                     Path(f'{repository.path}/{file2_relative_path}'),
                     Path(f'{repository.path}/{file3_relative_path}')]

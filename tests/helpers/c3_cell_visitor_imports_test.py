@@ -1,9 +1,11 @@
-import ast
 import sys
 import os
-src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
-if src not in sys.path: sys.path.append(src)
 
+src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
+if src not in sys.path:
+    sys.path.append(src)
+
+import ast
 from src.classes.c3_cell_visitor import CellVisitor
 from src.classes.c2_local_checkers import PathLocalChecker
 
@@ -26,7 +28,6 @@ class TestCellVisitorNewModule:
         result_line, result_type, result_name, result_local = self.cell_visitor.modules[0]
         assert (result_line, result_type, result_name, result_local) == (line, type_, name, True)
 
-
     def test_new_module_external(self, monkeypatch):
         assert len(self.cell_visitor.modules) == 0
 
@@ -40,14 +41,16 @@ class TestCellVisitorNewModule:
         result_line, result_type, result_name, result_local = self.cell_visitor.modules[0]
         assert (result_line, result_type, result_name, result_local) == (line, type_, name, False)
 
+
 class TestCellVisitorVisitImport:
     def setup_method(self):
         self.checker = PathLocalChecker("")
         self.cell_visitor = CellVisitor(self.checker)
+
     def test_visit_import_local(self, monkeypatch):
         name = "src.utils"
         text = f"import {name}"
-        node =  ast.parse(text)
+        node = ast.parse(text)
         monkeypatch.setattr(self.cell_visitor.local_checker, 'is_local', lambda *args, **kwargs: True)
 
         assert len(self.cell_visitor.modules) == 0
@@ -59,7 +62,7 @@ class TestCellVisitorVisitImport:
     def test_visit_import_external(self, monkeypatch):
         name = "matplotlib"
         text = f"import {name}"
-        node =  ast.parse(text)
+        node = ast.parse(text)
         monkeypatch.setattr(self.cell_visitor.local_checker, 'is_local', lambda *args, **kwargs: False)
 
         assert len(self.cell_visitor.modules) == 0
@@ -72,7 +75,7 @@ class TestCellVisitorVisitImport:
     def test_visit_import_two_lines(self, monkeypatch):
         name1, name2 = "src.utils", "matplotlib"
         text = f"import {name1}\nimport {name2}"
-        node =  ast.parse(text)
+        node = ast.parse(text)
         monkeypatch.setattr(self.cell_visitor.local_checker, 'is_local', lambda *args, **kwargs: True)
 
         assert len(self.cell_visitor.modules) == 0
@@ -87,7 +90,7 @@ class TestCellVisitorVisitImport:
     def test_visit_import_two_imports(self, monkeypatch):
         name1, name2 = "sys", "os"
         text = f"import {name1}, {name2}"
-        node =  ast.parse(text)
+        node = ast.parse(text)
         monkeypatch.setattr(self.cell_visitor.local_checker, 'is_local', lambda *args, **kwargs: True)
 
         assert len(self.cell_visitor.modules) == 0
@@ -99,6 +102,7 @@ class TestCellVisitorVisitImport:
         result_line2, result_type2, result_name2, result_local2 = self.cell_visitor.modules[1]
         assert (result_line2, result_type2, result_name2, result_local2) == (1, 'import', name2, True)
 
+
 class TestCellVisitorImportFrom:
     def setup_method(self):
         self.checker = PathLocalChecker("")
@@ -107,7 +111,7 @@ class TestCellVisitorImportFrom:
     def test_visit_import_from_local(self, monkeypatch):
         module, name = "matplotlib", "pyplot"
         text = f"from {module} import {name}"
-        node =  ast.parse(text)
+        node = ast.parse(text)
         monkeypatch.setattr(self.cell_visitor.local_checker, 'is_local', lambda *args, **kwargs: True)
 
         assert len(self.cell_visitor.modules) == 0
@@ -132,13 +136,13 @@ class TestCellVisitorImportFrom:
         levels = 2
         module, name = "helpers", "get_python_version"
         text = f"from {'.' * levels}{module} import {name}"
-        node =  ast.parse(text)
+        node = ast.parse(text)
         monkeypatch.setattr(self.cell_visitor.local_checker,
                             'is_local', lambda *args, **kwargs: True)
 
         assert len(self.cell_visitor.modules) == 0
         self.cell_visitor.visit(node)
         assert len(self.cell_visitor.modules) == 1
-        result_line, result_type,result_name, result_local = self.cell_visitor.modules[0]
+        result_line, result_type, result_name, result_local = self.cell_visitor.modules[0]
         assert (result_line, result_type, result_name, result_local
                 ) == (1, 'import_from', ('.' * levels) + module, True)
