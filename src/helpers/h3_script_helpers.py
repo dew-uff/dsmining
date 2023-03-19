@@ -11,7 +11,7 @@ from src.helpers.h1_utils import vprint, to_unicode
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 from src.db.database import Repository, Cell, PythonFile, RepositoryFile
-import src.extractions.e8_extract_files as e8
+import src.extras.e8_extract_files as e8
 from src.helpers.h1_utils import timeout
 
 def filter_repositories(session, selected_repositories,

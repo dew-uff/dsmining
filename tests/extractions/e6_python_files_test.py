@@ -1,15 +1,15 @@
 import sys
 import os
 
-src = os.path.dirname(os.path.abspath(''))
+src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path: sys.path.append(src)
 
 import src.consts as consts
-import src.extractions.e6_python_files as e6
+import src.extractions.e6_python_features as e6
 
 from src.helpers.h1_utils import TimeoutError
 from src.classes.c2_local_checkers import PathLocalChecker
-from src.extractions.e6_python_files import process_python_file
+from src.extractions.e6_python_features import process_python_file
 from src.db.database import PythonFileModule, PythonFileDataIO
 from tests.factories.models import RepositoryFactory, PythonFileFactory
 from tests.factories.models import PythonFileModuleFactory, PythonFileDataIOFactory

@@ -1,7 +1,7 @@
 import sys
 import os
 
-src = os.path.dirname(os.path.abspath(''))
+src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path: sys.path.append(src)
 
 import src.extractions.e1_notebooks_and_cells as e1
@@ -13,6 +13,8 @@ from tests.test_helpers.h1_stubs import get_notebook_nbrow, stub_KeyError
 from tests.test_helpers.h1_stubs import stub_IndentationError, get_notebook_node
 from tests.test_helpers.h1_stubs import stub_load_no_cells
 from IPython.core.inputtransformer2 import TransformerManager
+
+
 class TestE1NotebooksAndCellsLoadNotebooks:
 
     def test_load_notebooks(self, session):

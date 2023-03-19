@@ -1,6 +1,6 @@
 import sys
 import os
-src = os.path.dirname(os.path.abspath(''))
+src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path: sys.path.append(src)
 
 import src.consts as consts

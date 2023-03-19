@@ -1,7 +1,8 @@
 import sys
 import os
-src = os.path.dirname(os.path.abspath(''))
-if src not in sys.path: sys.path.append(src)
+src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
+if src not in sys.path:
+    sys.path.append(src)
 
 import src.consts as consts
 import src.extractions.e1_notebooks_and_cells as e1
@@ -22,6 +23,7 @@ class TestE1NotebooksAndCellsFindNotebooks:
         file1_relative_path = 'file.ipynb'
         file2_relative_path = 'to/file.ipynb'
         file3_relative_path = 'file.ipynb_checkpoints'
+
         def mock_find_files(path, pattern):
             return [Path(f'{repository.path}/{file1_relative_path}'),
                     Path(f'{repository.path}/{file2_relative_path}'),
@@ -34,9 +36,10 @@ class TestE1NotebooksAndCellsFindNotebooks:
         assert file3_relative_path not in notebooks
         assert repository.notebooks_count == 2
 
+
 class TestE1NotebooksAndCellsProcessNotebook:
     def test_process_notebooks(self, session, monkeypatch):
-        safe_session =  SafeSession(session, interrupted=consts.N_STOPPED)
+        safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(session).create(notebooks_count=2)
         repository_notebooks_names = ['file.ipynb']
 
@@ -46,15 +49,14 @@ class TestE1NotebooksAndCellsProcessNotebook:
         count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
         safe_session.commit()
         assert count == 1
-        assert  (session.query(Notebook).count()) == 1
-        assert  (session.query(Cell).count()) == 1
+        assert (session.query(Notebook).count()) == 1
+        assert (session.query(Cell).count()) == 1
 
         notebook = session.query(Notebook).first()
         cell = session.query(Cell).first()
 
         assert notebook.repository_id == repository.id
         assert cell.notebook_id == notebook.id
-
 
     def test_process_notebooks_no_name(self, session):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
@@ -64,18 +66,16 @@ class TestE1NotebooksAndCellsProcessNotebook:
         count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
 
         assert count == 0
-        assert  (session.query(Notebook).count()) == 0
-        assert  (session.query(Cell).count()) == 0
-
+        assert (session.query(Notebook).count()) == 0
+        assert (session.query(Cell).count()) == 0
 
     def test_process_notebooks_no_none_stoped(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id,
-                                                   processed = consts.N_STOPPED)
+                                                   processed=consts.N_STOPPED)
         created = notebook.created_at
         monkeypatch.setattr(Path, 'exists', lambda path: True)
-
 
         e1.process_notebooks(safe_session, repository, [notebook.name])
         safe_session.commit()
@@ -132,13 +132,14 @@ class TestE1NotebooksAndCellsProcessNotebook:
         assert "Failed to load notebook" in captured.out
         assert repository.processed == consts.R_N_ERROR
 
+
 class Test1NotebooksAndCellsProcessRepository:
     def test_process_repository_success(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(safe_session).create()
-        assert  repository.notebooks_count is None
+        assert repository.notebooks_count is None
 
-        repository.notebooks_count=1
+        repository.notebooks_count = 1
         monkeypatch.setattr(e1, 'find_notebooks', lambda _session, _repository: [])
         monkeypatch.setattr(e1, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
@@ -167,7 +168,7 @@ class Test1NotebooksAndCellsProcessRepository:
         monkeypatch.setattr(e1, 'find_notebooks', lambda _session, _repository: [])
         monkeypatch.setattr(e1, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
-        monkeypatch.setattr(safe_session, 'commit', lambda : (None, 'error 1'))
+        monkeypatch.setattr(safe_session, 'commit', lambda: (None, 'error 1'))
 
         output = e1.process_repository(safe_session, repository, skip_if_error=0)
         repository = safe_session.query(Repository).first()

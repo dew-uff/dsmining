@@ -6,7 +6,7 @@ from unittest.mock import mock_open
 from tests.factories.models import PythonFileFactory
 from tests.test_helpers.h1_stubs import stub_unzip, stub_unzip_failed
 
-src = os.path.dirname(os.path.abspath(''))
+src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path: sys.path.append(src)
 
 import src.consts as consts

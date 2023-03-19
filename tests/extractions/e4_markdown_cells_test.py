@@ -3,7 +3,7 @@ import os
 
 from tests.test_helpers.h1_stubs import stub_extract_features
 
-src = os.path.dirname(os.path.abspath(''))
+src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path: sys.path.append(src)
 
 import chardet

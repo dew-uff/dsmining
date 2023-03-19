@@ -1,16 +1,15 @@
-""" Loads features from markdown cells """
-import argparse
-import os
+""" Extracts features from markdown cells """
 
-from nbconvert.filters.markdown_mistune import MarkdownWithMath
-from langdetect import detect
-from nltk.corpus import stopwords
+import os
+import argparse
 import src.config as config
 import src.consts as consts
 
-from src.db.database import Cell, CellMarkdownFeature, connect
+from langdetect import detect
+from nltk.corpus import stopwords
+from nbconvert.filters.markdown_mistune import MarkdownWithMath
+from src.db.database import CellMarkdownFeature, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-
 from src.classes.c1_renderer import CountRenderer, LANG_MAP
 from src.helpers.h3_script_helpers import filter_markdown_cells
 
@@ -87,9 +86,10 @@ def apply(session, status, skip_if_error,
           count, interval, reverse, check):
     """Extract markdown features"""
 
-    query = filter_markdown_cells( session=session, skip_if_error=skip_if_error,
-                                   count=count, interval=interval, reverse=reverse,
-                                   skip_already_processed=consts.C_PROCESS_OK,)
+    query = filter_markdown_cells(
+        session=session, skip_if_error=skip_if_error,
+        count=count, interval=interval, reverse=reverse,
+        skip_already_processed=consts.C_PROCESS_OK,)
 
     repository_id = None
     notebook_id = None
@@ -152,6 +152,7 @@ def main():
             args.reverse,
             set(args.check)
         )
+
 
 if __name__ == '__main__':
     main()

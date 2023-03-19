@@ -1,4 +1,5 @@
-""" Load markdown features """
+""" Extracts code features from code cells """
+
 import argparse
 import os
 import src.config as config
@@ -111,12 +112,11 @@ def apply(
     """ Extracts code cells features """
     while selected_notebooks:
 
-        selected_notebooks, query = filter_code_cells\
-            (session=session, selected_notebooks=selected_notebooks,
-             skip_if_error=skip_if_error, skip_if_syntaxerror=skip_if_syntaxerror,
-             skip_if_timeout=skip_if_timeout, count=count, interval=interval,
-             reverse=reverse,
-             skip_already_processed=consts.C_PROCESS_OK)
+        selected_notebooks, query = filter_code_cells(
+            session=session, selected_notebooks=selected_notebooks,
+            skip_if_error=skip_if_error, skip_if_syntaxerror=skip_if_syntaxerror,
+            skip_if_timeout=skip_if_timeout, count=count, interval=interval,
+            reverse=reverse, skip_already_processed=consts.C_PROCESS_OK)
 
         skip_repo = False
         repository_id = None

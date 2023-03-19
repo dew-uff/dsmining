@@ -1,15 +1,16 @@
-"""Load Pyhton features"""
-import argparse
+""" Extracts features from Python Files"""
+
 import os
+import argparse
 import src.config as config
 import src.consts as consts
 
+from future.utils.surrogateescape import register_surrogateescape
 from src.db.database import PythonFileModule, connect, PythonFileDataIO
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-from src.helpers.h1_utils import TimeoutError, SafeSession
-from src.helpers.h1_utils import mount_basedir
-from future.utils.surrogateescape import register_surrogateescape
-from src.helpers.h3_script_helpers import filter_python_files, load_repository, load_files, extract_features
+from src.helpers.h1_utils import TimeoutError, SafeSession, mount_basedir
+from src.helpers.h3_script_helpers import filter_python_files, load_repository
+from src.helpers.h3_script_helpers import load_files, extract_features
 
 
 def process_python_file(
@@ -106,11 +107,11 @@ def apply(
     """ Extracts python files' features"""
     while selected_python_files:
 
-        selected_python_files, query = filter_python_files\
-            (session= session, selected_python_files=selected_python_files,
-             skip_if_error=skip_if_error, skip_if_syntaxerror=skip_if_syntaxerror,
-             skip_if_timeout=skip_if_timeout, count=count, interval=interval,
-             reverse=reverse, skip_already_processed=consts.PF_PROCESS_OK)
+        selected_python_files, query = filter_python_files(
+            session=session, selected_python_files=selected_python_files,
+            skip_if_error=skip_if_error, skip_if_syntaxerror=skip_if_syntaxerror,
+            skip_if_timeout=skip_if_timeout, count=count, interval=interval,
+            reverse=reverse, skip_already_processed=consts.PF_PROCESS_OK)
 
         skip_repo = False
         repository_id = None
@@ -152,7 +153,6 @@ def apply(
                 vprint(2, result)
             status.count += 1
         session.commit()
-
 
 
 def main():
@@ -204,7 +204,6 @@ def main():
                 args.reverse,
                 set(args.check)
             )
-
 
 
 if __name__ == '__main__':

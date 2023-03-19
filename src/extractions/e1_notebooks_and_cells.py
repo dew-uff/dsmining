@@ -1,15 +1,15 @@
 """ Extracts notebooks and their cells from repositories"""
 
-import argparse
 import os
+import argparse
 import nbformat as nbf
 import src.config as config
 import src.consts as consts
 
 from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect
-from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger
 from src.helpers.h1_utils import check_exit, savepid, SafeSession, mount_basedir
+from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger
 from src.helpers.h3_script_helpers import filter_repositories, broken_link, cell_output_formats
 from src.helpers.h4_unzip_repositories import unzip_repository
 
@@ -227,7 +227,6 @@ def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
     if repository.processed & (consts.R_N_EXTRACTION + skip_if_error):
         return "already processed"
 
-
     if repository.processed & consts.R_N_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
@@ -259,11 +258,11 @@ def apply(
         count, interval, reverse, check):
     while selected_repositories:
 
-        selected_repositories, query = filter_repositories\
-            (session = session, selected_repositories = selected_repositories,
-             skip_if_error = skip_if_error, count = count,
-             interval = interval,reverse = reverse,
-             skip_already_processed = consts.R_N_EXTRACTION)
+        selected_repositories, query = filter_repositories(session=session,
+                                                           selected_repositories=selected_repositories,
+                                                           skip_if_error=skip_if_error, count=count,
+                                                           interval=interval, reverse=reverse,
+                                                           skip_already_processed=consts.R_N_EXTRACTION)
 
         for repository in query:
             if check_exit(check):

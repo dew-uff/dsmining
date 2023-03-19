@@ -1,14 +1,13 @@
-"""Load notebook and cells"""
-import argparse
-import tarfile
+""" Extracts Requirement Files from repositories """
 import os
+import argparse
 import chardet
 import src.config as config
 import src.consts as consts
 
-from src.db.database import RequirementFile, Repository, connect
+from src.db.database import RequirementFile, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-from src.helpers.h1_utils import find_files_in_path, find_files_in_zip, mount_basedir
+from src.helpers.h1_utils import find_files_in_path, mount_basedir
 from src.helpers.h3_script_helpers import filter_repositories
 from src.helpers.h4_unzip_repositories import unzip_repository
 
@@ -28,7 +27,6 @@ def find_requirements(session, repository):
     setups, requirements, pipfiles, pipfile_locks = find_files_in_path(
         repository.path, ["setup.py", "requirements.txt", "Pipfile", "Pipfile.lock"])
 
-
     repository.setups_count = len(setups)
     repository.requirements_count = len(requirements)
     repository.pipfiles_count = len(pipfiles)
@@ -37,6 +35,7 @@ def find_requirements(session, repository):
     session.add(repository)
     session.commit()
     return setups, requirements, pipfiles, pipfile_locks
+
 
 def process_requirement_files(session, repository, req_names, reqformat,
                               skip_if_error=consts.R_REQUIREMENTS_ERROR):
@@ -50,7 +49,6 @@ def process_requirement_files(session, repository, req_names, reqformat,
             vprint(2, msg)
             no_errors = False
             return no_errors
-
 
     for item in req_names:
         name = str(item)
@@ -144,11 +142,11 @@ def apply(
 ):
     while selected_repositories:
 
-        selected_repositories, query = filter_repositories \
-            (session=session, selected_repositories=selected_repositories,
-             skip_if_error=skip_if_error, count=count,
-             interval=interval, reverse=reverse,
-             skip_already_processed=consts.R_REQUIREMENTS_OK)
+        selected_repositories, query = filter_repositories(
+            session=session, selected_repositories=selected_repositories,
+            skip_if_error=skip_if_error, count=count,
+            interval=interval, reverse=reverse,
+            skip_already_processed=consts.R_REQUIREMENTS_OK)
 
         for repository in query:
             if check_exit(check):

@@ -5,11 +5,12 @@ import tarfile
 
 import pytest
 
-from src.config import  Path
+from src.config import Path
 from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
 
-src = os.path.dirname(os.path.abspath(''))
-if src not in sys.path: sys.path.append(src)
+src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
+if src not in sys.path:
+    sys.path.append(src)
 
 import src.consts as consts
 from src.db.database import Repository, RepositoryFile
@@ -18,7 +19,8 @@ from tests.database_config import connection, session
 from tests.factories.models import RepositoryFactory, CodeCellFactory, NotebookFactory, PythonFileFactory
 from src.helpers.h3_script_helpers import filter_repositories, load_repository, load_notebook, load_files
 import src.helpers.h3_script_helpers as h3
-import src.extractions.e8_extract_files as e8
+import src.extras.e8_extract_files as e8
+
 
 class TestH3ScripHelpersFilterRepositories:
 
@@ -28,13 +30,13 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 2
 
         selected_repositories, query = filter_repositories(
-            session = SafeSession(session, interrupted=consts.N_STOPPED),
-            selected_repositories = True,
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            selected_repositories=True,
             skip_if_error=consts.R_N_ERROR,
-            count = False,
-            interval = None,
+            count=False,
+            interval=None,
             reverse=False,
-            skip_already_processed = consts.R_N_EXTRACTION
+            skip_already_processed=consts.R_N_EXTRACTION
         )
 
         assert query.count() == 2
@@ -53,7 +55,7 @@ class TestH3ScripHelpersFilterRepositories:
             count=True,
             interval=None,
             reverse=False,
-            skip_already_processed = consts.R_N_EXTRACTION
+            skip_already_processed=consts.R_N_EXTRACTION
         )
 
         captured = capsys.readouterr()
@@ -71,7 +73,7 @@ class TestH3ScripHelpersFilterRepositories:
             count=False,
             interval=None,
             reverse=True,
-            skip_already_processed = consts.R_N_EXTRACTION
+            skip_already_processed=consts.R_N_EXTRACTION
         )
 
         assert query.count() == 2
@@ -88,7 +90,7 @@ class TestH3ScripHelpersFilterRepositories:
             selected_repositories=True,
             skip_if_error=consts.R_N_ERROR,
             count=False,
-            interval=[3,6],
+            interval=[3, 6],
             reverse=False,
             skip_already_processed=consts.R_N_EXTRACTION
         )
@@ -106,16 +108,16 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 40
 
         selected_repositories, query = filter_repositories(
-            session = SafeSession(session, interrupted=consts.N_STOPPED),
-            selected_repositories = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                                     11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                                     21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-                                     31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            selected_repositories=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                                   11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                                   21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                                   31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
             skip_if_error=consts.R_N_ERROR,
-            count = False,
-            interval = None,
+            count=False,
+            interval=None,
             reverse=False,
-            skip_already_processed = consts.R_N_EXTRACTION
+            skip_already_processed=consts.R_N_EXTRACTION
         )
 
         assert selected_repositories == [31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
@@ -131,10 +133,10 @@ class TestH3ScripHelpersFilterRepositories:
             skip_already_processed=consts.R_N_EXTRACTION
         )
 
-        assert new_selected_repositories ==[]
+        assert new_selected_repositories == []
         assert new_query.count() == 10
 
-    def test_filter_filters_skip_if_error(self,session):
+    def test_filter_filters_skip_if_error(self, session):
         rep = RepositoryFactory(session).create()
         rep_erro = RepositoryFactory(session).create(processed=consts.R_N_ERROR)
 
@@ -154,7 +156,7 @@ class TestH3ScripHelpersFilterRepositories:
         assert rep_erro not in query
         assert rep in query
 
-    def test_filter_filters_skip_already_processed(self,session):
+    def test_filter_filters_skip_already_processed(self, session):
         rep = RepositoryFactory(session).create()
         rep_processed = RepositoryFactory(session).create(processed=consts.R_N_EXTRACTION)
 
@@ -180,7 +182,7 @@ class TestH3ScriptHelpersLoadRepository:
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
         notebook = NotebookFactory(safe_session).create(repository_id=repository.id)
-        cell = CodeCellFactory(safe_session).create(repository_id=repository.id, notebook_id = notebook.id)
+        cell = CodeCellFactory(safe_session).create(repository_id=repository.id, notebook_id=notebook.id)
         initial_repo = repository
 
         skip_repo = False
@@ -193,7 +195,7 @@ class TestH3ScriptHelpersLoadRepository:
         )
         captured = capsys.readouterr()
 
-        assert skip_repo == False
+        assert skip_repo is False
         assert repository_id == cell.repository_id == repository.id
         assert initial_repo == repository
         assert archives == 'todo'
@@ -203,7 +205,7 @@ class TestH3ScriptHelpersLoadRepository:
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
         notebook = NotebookFactory(safe_session).create(repository_id=repository.id)
-        cell = CodeCellFactory(safe_session).create(repository_id=repository.id, notebook_id = notebook.id)
+        cell = CodeCellFactory(safe_session).create(repository_id=repository.id, notebook_id=notebook.id)
         initial_repo = repository
 
         skip_repo = False
@@ -216,8 +218,7 @@ class TestH3ScriptHelpersLoadRepository:
         )
         captured = capsys.readouterr()
 
-
-        assert skip_repo == False
+        assert skip_repo is False
         assert repository_id == cell.repository_id == repository.id
         assert initial_repo == repository
         assert archives == (None, path)
@@ -242,7 +243,7 @@ class TestH3ScriptHelpersLoadRepository:
         )
         captured = capsys.readouterr()
 
-        assert skip_repo == False
+        assert skip_repo is False
         assert repository_id == cell.repository_id == repository.id
         assert initial_repo == repository
         assert archives == 'todo'
@@ -264,7 +265,7 @@ class TestH3ScriptHelpersLoadRepository:
         )
         captured = capsys.readouterr()
 
-        assert skip_repo == False
+        assert skip_repo is False
         assert repository_id == python_file.repository_id == repository.id
         assert initial_repo == repository
         assert archives == 'todo'
@@ -286,7 +287,7 @@ class TestH3ScriptHelpersLoadRepository:
         )
         captured = capsys.readouterr()
 
-        assert skip_repo == False
+        assert skip_repo is False
         assert repository_id == python_file.repository_id == repository.id
         assert initial_repo == repository
         assert archives == (None, path)
@@ -312,19 +313,18 @@ class TestH3ScriptHelpersLoadNotebook:
                             _skip_repo, _skip_notebook, _archives, _checker):
             return False, False, notebook.id, archives, checker
 
-
         monkeypatch.setattr(h3, 'load_files', mock_load_files)
 
         result_skip_repo, result_skip_notebook, \
-            result_notebook_id, result_archives, result_checker = load_notebook(
-            safe_session, cell, repository, skip_repo, skip_notebook,
-            notebook_id, archives, checker
-        )
+            result_notebook_id, result_archives, result_checker = \
+            load_notebook(
+                safe_session, cell, repository, skip_repo, skip_notebook,
+                notebook_id, archives, checker)
 
-        assert result_skip_repo == False
-        assert result_skip_notebook == False
+        assert result_skip_repo is False
+        assert result_skip_notebook is False
         assert result_notebook_id == initial_notebook_id
-        assert result_archives ==  archives
+        assert result_archives == archives
         assert result_checker == checker
 
     def test_load_notebook_success(self, session, monkeypatch):
@@ -344,19 +344,18 @@ class TestH3ScriptHelpersLoadNotebook:
                             _skip_repo, _skip_notebook, _archives, _checker):
             return False, False, notebook.id, archives, checker
 
-
         monkeypatch.setattr(h3, 'load_files', mock_load_files)
 
         result_skip_repo, result_skip_notebook, \
             result_notebook_id, result_archives, result_checker = load_notebook(
-            safe_session, cell, repository, skip_repo, skip_notebook,
-            notebook_id, archives, checker
-        )
+                safe_session, cell, repository, skip_repo, skip_notebook,
+                notebook_id, archives, checker
+            )
 
-        assert result_skip_repo == False
-        assert result_skip_notebook == False
+        assert result_skip_repo is False
+        assert result_skip_notebook is False
         assert result_notebook_id == notebook_id
-        assert result_archives ==  archives
+        assert result_archives == archives
         assert result_checker == checker
 
 
@@ -380,13 +379,12 @@ class TestH3ScriptHelpersLoadFile:
         skip_repo, skip_notebook, notebook_id, archives, checker = \
             load_files(session, notebook, repository, skip_repo, skip_notebook, archives, checker)
 
-        assert skip_repo == False
-        assert skip_notebook == False
+        assert skip_repo is False
+        assert skip_notebook is False
         assert notebook_id == notebook.id
         assert archives == (None, repo_path)
         assert isinstance(checker, PathLocalChecker)
         assert checker.base == repo_path
-
 
     def test_load_file_notebook_skip_repo(self, session, monkeypatch):
         safe_session = SafeSession(session)
@@ -404,11 +402,10 @@ class TestH3ScriptHelpersLoadFile:
         skip_repo, skip_notebook, notebook_id, archives, checker = \
             load_files(session, notebook, repository, skip_repo, skip_notebook, archives, checker)
 
-        assert skip_repo == True
-        assert skip_notebook == False
+        assert skip_repo is True
+        assert skip_notebook is False
         assert archives is None
         assert checker is None
-
 
     def test_load_file_notebook_no_archives(self, session, monkeypatch):
         safe_session = SafeSession(session)
@@ -423,16 +420,14 @@ class TestH3ScriptHelpersLoadFile:
         monkeypatch.setattr(h3, 'load_archives',
                             lambda _session, _repository: (False, None))
 
-
         skip_repo, skip_notebook, notebook_id, archives, checker = \
             load_files(session, notebook, repository, skip_repo, skip_notebook, archives, checker)
 
-        assert skip_repo == True
-        assert skip_notebook == True
+        assert skip_repo is True
+        assert skip_notebook is True
         assert notebook_id == notebook.id
         assert archives is None
         assert checker is None
-
 
     def test_load_file_notebook_set_tarzip_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
@@ -454,13 +449,12 @@ class TestH3ScriptHelpersLoadFile:
         skip_repo, skip_notebook, notebook_id, archives, checker = \
             load_files(session, notebook, repository, skip_repo, skip_notebook, archives, checker)
 
-        assert skip_repo == False
-        assert skip_notebook == False
+        assert skip_repo is False
+        assert skip_notebook is False
         assert notebook_id == notebook.id
         assert archives == (set(tarzip), repo_path)
         assert isinstance(checker, SetLocalChecker)
         assert checker.base == repo_path
-
 
     def test_load_file_notebook_tarzip_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
@@ -481,13 +475,12 @@ class TestH3ScriptHelpersLoadFile:
         skip_repo, skip_notebook, notebook_id, archives, checker = \
             load_files(session, notebook, repository, skip_repo, skip_notebook, archives, checker)
 
-        assert skip_repo == False
-        assert skip_notebook == False
+        assert skip_repo is False
+        assert skip_notebook is False
         assert notebook_id == notebook.id
         assert archives == ('test.tar.gz', repo_path)
         assert isinstance(checker, CompressedLocalChecker)
         assert checker.base == repo_path
-
 
     def test_load_file_notebook_not_exist_error(self, session, monkeypatch, capsys):
         safe_session = SafeSession(session)
@@ -510,13 +503,12 @@ class TestH3ScriptHelpersLoadFile:
         captured = capsys.readouterr()
 
         assert "Repository content problem. File not found" in captured.out
-        assert skip_repo == False
-        assert skip_notebook == True
+        assert skip_repo is False
+        assert skip_notebook is True
         assert notebook_id == notebook.id
         assert archives == (None, repo_path)
         assert isinstance(checker, PathLocalChecker)
         assert checker.base == repo_path
-
 
     def test_load_file_python_file_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
@@ -537,8 +529,8 @@ class TestH3ScriptHelpersLoadFile:
         skip_repo, skip_python_file, python_file_id, archives, checker = \
             load_files(session, python_file, repository, skip_repo, skip_python_file, archives, checker)
 
-        assert skip_repo == False
-        assert skip_python_file == False
+        assert skip_repo is False
+        assert skip_python_file is False
         assert python_file_id == python_file.id
         assert archives == (None, repo_path)
         assert isinstance(checker, PathLocalChecker)
@@ -555,7 +547,7 @@ class TestH3ScriptHelpersLoadArchives:
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
 
-        skip_repo, archives  = h3.load_archives(session, repository)
+        skip_repo, archives = h3.load_archives(session, repository)
         tarzip, repo_path = archives
 
         assert skip_repo is False
@@ -565,6 +557,7 @@ class TestH3ScriptHelpersLoadArchives:
     def test_load_archives_set_zip_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
+
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
@@ -575,32 +568,30 @@ class TestH3ScriptHelpersLoadArchives:
             safe_session.commit()
             return "done"
 
-
         monkeypatch.setattr(Path, 'exists', mock_exists)
         monkeypatch.setattr(e8, 'process_repository', mock_process)
 
-        skip_repo, archives  = h3.load_archives(session, repository)
+        skip_repo, archives = h3.load_archives(session, repository)
         tarzip, zip_path = archives
 
         assert skip_repo is False
         assert str(repository.path) in tarzip
         assert zip_path == ""
 
-
     def test_load_archives_set_zip_error(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
+
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
         def mock_process(session_, repository_, skip_if_error=0):
             return "done"
 
-
         monkeypatch.setattr(Path, 'exists', mock_exists)
         monkeypatch.setattr(e8, 'process_repository', mock_process)
 
-        skip_repo, archives  = h3.load_archives(session, repository)
+        skip_repo, archives = h3.load_archives(session, repository)
 
         assert skip_repo is True
         assert archives is None
@@ -608,6 +599,7 @@ class TestH3ScriptHelpersLoadArchives:
     def test_load_archives_zip_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create(processed=consts.R_COMPRESS_ERROR)
+
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
@@ -618,7 +610,7 @@ class TestH3ScriptHelpersLoadArchives:
         monkeypatch.setattr(e8, 'process_repository', mock_process)
         monkeypatch.setattr(tarfile, 'open', lambda path: "Ok")
 
-        skip_repo, archives  = h3.load_archives(session, repository)
+        skip_repo, archives = h3.load_archives(session, repository)
         tarzip, zip_path = archives
 
         assert skip_repo is False
@@ -628,6 +620,7 @@ class TestH3ScriptHelpersLoadArchives:
     def test_load_archives_zip_error(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create(processed=consts.R_COMPRESS_ERROR)
+
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
@@ -641,7 +634,7 @@ class TestH3ScriptHelpersLoadArchives:
         monkeypatch.setattr(e8, 'process_repository', mock_process)
         monkeypatch.setattr(tarfile, 'open', mock_open)
 
-        skip_repo, archives  = h3.load_archives(session, repository)
+        skip_repo, archives = h3.load_archives(session, repository)
 
         assert skip_repo is True
         assert archives is None
@@ -656,7 +649,7 @@ class TestH3ScriptHelpersLoadArchives:
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
 
-        skip_repo, archives  = h3.load_archives(session, repository)
+        skip_repo, archives = h3.load_archives(session, repository)
         assert skip_repo is True
         assert archives is None
         assert repository.processed == consts.R_UNAVAILABLE_FILES
@@ -664,21 +657,20 @@ class TestH3ScriptHelpersLoadArchives:
 
 class TestH3ScriptHelpersExtractFeatures:
     def test_extract_features(self, session):
-
         text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"
         checker = PathLocalChecker("")
         modules, data_ios = h3.extract_features(text, checker)
 
-        assert modules[0] == (1,"import", "pandas", False)
-        assert data_ios[0] == (2,'input','pd','read_excel','Attribute',"'data.xlsx'", 'Constant')
+        assert modules[0] == (1, "import", "pandas", False)
+        assert data_ios[0] == (2, 'input', 'pd', 'read_excel', 'Attribute', "'data.xlsx'", 'Constant')
 
     def test_extract_features_error(self, session, monkeypatch):
-
         text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"
         checker = PathLocalChecker("")
-        def mock_parse(text_): raise ValueError;
+
+        def mock_parse(text_): raise ValueError
+
         monkeypatch.setattr(ast, 'parse', mock_parse)
 
         with pytest.raises(SyntaxError):
             h3.extract_features(text, checker)
-

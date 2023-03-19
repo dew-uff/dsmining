@@ -3,7 +3,7 @@ import os
 import nbformat as nbf
 from unittest.mock import mock_open
 
-src = os.path.dirname(os.path.abspath(''))
+src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path: sys.path.append(src)
 
 import src.extractions.e1_notebooks_and_cells as e1
@@ -14,6 +14,7 @@ from tests.factories.models import RepositoryFactory
 from tests.test_helpers.h1_stubs import stub_nbf_read, get_empty_nbrow
 from tests.test_helpers.h1_stubs import stub_load_cells, stub_nbf_readOSError, stub_nbf_readException
 from tests.test_helpers.h1_stubs import stub_load_no_cells
+
 
 class TestE1NotebooksAndCellsLoadNotebooks:
 

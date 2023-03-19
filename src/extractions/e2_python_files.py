@@ -1,7 +1,7 @@
 """ Extracts python files from repositories"""
 
-import argparse
 import os
+import argparse
 import src.config as config
 import src.consts as consts
 
@@ -43,7 +43,6 @@ def process_python_files(session, repository, python_files_names, count):
             no_errors = False
             return count, no_errors
 
-
     for name in python_files_names:
         if not name:
             continue
@@ -76,13 +75,12 @@ def process_python_files(session, repository, python_files_names, count):
             else:
                 pf_processed = consts.PF_OK
 
-
             python_file = PythonFile(
                 repository_id=repository.id,
                 name=name,
                 source=source,
                 total_lines=total,
-                processed= pf_processed
+                processed=pf_processed
             )
 
             session.add(python_file)
@@ -97,7 +95,6 @@ def process_python_files(session, repository, python_files_names, count):
                 processed=consts.PF_ERROR
             )
             session.add(python_file)
-
 
     return count, no_errors
 
@@ -132,11 +129,12 @@ def apply(
         count, interval, reverse, check
 ):
     while selected_repositories:
-        selected_repositories, query = filter_repositories \
-            (session=session, selected_repositories=selected_repositories,
-             skip_if_error=skip_if_error, count=count,
-             interval=interval, reverse=reverse,
-             skip_already_processed=consts.R_P_EXTRACTION)
+        selected_repositories, query = filter_repositories(
+            session=session,
+            selected_repositories=selected_repositories,
+            skip_if_error=skip_if_error, count=count,
+            interval=interval, reverse=reverse,
+            skip_already_processed=consts.R_P_EXTRACTION)
 
         for repository in query:
             if check_exit(check):
