@@ -1,13 +1,11 @@
 """Load Pyhton features"""
 import argparse
 import os
-import ast
-import tarfile
 import src.config as config
 import src.consts as consts
 
 from src.db.database import PythonFileModule, connect, PythonFileDataIO
-from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
+from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
 from src.helpers.h1_utils import TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
@@ -31,10 +29,14 @@ def process_python_file(
 
     if retry:
         deleted = (
-            + session.query(PythonFileModule).filter(
+            session.query(PythonFileModule).filter(
                 PythonFileModule.python_file_id == python_file.id
             ).delete()
+            + session.query(PythonFileDataIO).filter(
+                PythonFileDataIO.python_file_id == python_file.id
+            ).delete()
         )
+
         if deleted:
             vprint(2, "Deleted {} rows".format(deleted))
         if python_file.processed & consts.PF_PROCESS_ERROR:

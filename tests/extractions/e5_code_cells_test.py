@@ -1,30 +1,24 @@
 import sys
 import os
-
-
-from src.helpers.h1_utils import TimeoutError
-
-import chardet
-
-from src.classes.c2_local_checkers import PathLocalChecker
-from src.extractions.e5_code_cells import process_code_cell
-from tests.factories.models import PythonFileFactory, RequirementFileFactory, NotebookFactory, CodeCellFactory, \
-    CellModuleFactory, CellDataIOFactory
-from tests.test_helpers.h1_stubs import stub_unzip, stub_unzip_failed, REQUIREMENTS_TXT
-
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
 import src.consts as consts
-import src.helpers.h3_script_helpers as h3
-from src.db.database import Repository, PythonFile, RequirementFile, CellModule, CellDataIO
-from src.config import Path
-from tests.database_config import connection, session
-from tests.factories.models import RepositoryFactory
 import src.extractions.e5_code_cells as e5
 
+from src.helpers.h1_utils import TimeoutError
+from src.classes.c2_local_checkers import PathLocalChecker
+from src.extractions.e5_code_cells import process_code_cell
 
-class TestE5CodeCellsExtract:
+from src.db.database import CellModule, CellDataIO
+from tests.factories.models import RepositoryFactory
+from tests.factories.models import NotebookFactory, CodeCellFactory
+from tests.factories.models import CellModuleFactory, CellDataIOFactory
+from tests.database_config import connection, session
+
+
+
+class TestE5CodeCellsProcessCodeCell:
     def test_process_code_cell(self, session):
         module_name = 'pandas'
         caller, function_name, source  = 'pd', 'read_csv', "'data.csv'"
