@@ -187,7 +187,7 @@ class TestE3RequiremtFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.processed == consts.F_OK
+        assert requirement_file.processed == consts.REQ_FILE_OK
         assert requirement_file.content == REQUIREMENTS_TXT.decode('ascii')
 
     def test_process_requirement_files_path_zip(self, session, monkeypatch, capsys):
@@ -207,7 +207,7 @@ class TestE3RequiremtFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.processed == consts.F_OK
+        assert requirement_file.processed == consts.REQ_FILE_OK
         assert requirement_file.content == REQUIREMENTS_TXT.decode('ascii')
         assert 'Unzipping repository' in captured.out
 
@@ -259,7 +259,7 @@ class TestE3RequiremtFiles:
         requirement_file_result = session.query(RequirementFile).first()
 
         assert requirement_file_result.repository_id == repository.id
-        assert requirement_file_result.processed == consts.F_OK
+        assert requirement_file_result.processed == consts.REQ_FILE_OK
         assert initial_created_at != requirement_file_result.created_at
         assert no_errors is True
 
@@ -278,7 +278,7 @@ class TestE3RequiremtFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.processed == consts.F_ERROR
+        assert requirement_file.processed == consts.REQ_FILE_ERROR
         assert 'Codec not detected' in captured.out
 
     def test_process_requirement_files_invalid_codec(self, session, monkeypatch, capsys):
@@ -297,7 +297,7 @@ class TestE3RequiremtFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.processed == consts.F_ERROR
+        assert requirement_file.processed == consts.REQ_FILE_ERROR
         assert 'Invalid codec' in captured.out
 
     def test_process_requirement_files_null_byte(self, session, monkeypatch, capsys):
@@ -315,7 +315,7 @@ class TestE3RequiremtFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.processed == consts.F_OK
+        assert requirement_file.processed == consts.REQ_FILE_OK
         assert requirement_file.content == "test\ntest\n"
 
     def test_process_requirement_files_IOError(self, session, monkeypatch, capsys):
@@ -339,5 +339,5 @@ class TestE3RequiremtFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.processed == consts.F_ERROR
+        assert requirement_file.processed == consts.REQ_FILE_ERROR
         assert 'Failed to load' in captured.out

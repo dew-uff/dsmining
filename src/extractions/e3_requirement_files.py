@@ -88,7 +88,7 @@ def process_requirement_files(session, repository, req_names, reqformat,
                 name=name,
                 reqformat=reqformat,
                 content=content,
-                processed=consts.F_OK,
+                processed=consts.REQ_FILE_OK,
             )
             session.add(requirement_file)
 
@@ -99,7 +99,7 @@ def process_requirement_files(session, repository, req_names, reqformat,
                 repository_id=repository.id,
                 name=name,
                 reqformat=reqformat,
-                processed=consts.F_ERROR,
+                processed=consts.REQ_FILE_ERROR,
             )
             session.add(requirement_file)
 
