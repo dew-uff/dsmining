@@ -14,14 +14,16 @@ from src.classes.c3_cell_visitor import CellVisitor
 from src.helpers.h1_utils import vprint, to_unicode
 from src.helpers.h1_utils import timeout
 from src.db.database import Repository, Cell, PythonFile, RepositoryFile
-
+from src.states import *
 
 def filter_repositories(session, selected_repositories,
                         skip_if_error, count, interval, reverse, skip_already_processed):
     filters = [
-        Repository.processed.op("&")(skip_already_processed) == 0,
-        Repository.processed.op("&")(skip_if_error) == 0,
+        Repository.state != skip_already_processed,
     ]
+
+    for error in skip_if_error:
+        filters += [Repository.state != error]
 
     if selected_repositories is not True:
         filters += [Repository.id.in_(selected_repositories[:30])]
