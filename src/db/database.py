@@ -7,11 +7,13 @@ import subprocess
 
 from src.config import DB_CONNECTION
 from contextlib import contextmanager
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Interval
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from sqlalchemy import ForeignKeyConstraint
+
+from src.states import *
 
 BigInt = Integer
 Base = declarative_base()  # pylint: disable=invalid-name
@@ -65,6 +67,19 @@ class Repository(Base):
     __tablename__ = 'repositories'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    state = Column(Enum(REP_FILTERED,
+                        REP_LOADED,
+                        REP_FAILED_TO_CLONE,
+                        REP_N_EXTRACTION,
+                        REP_N_ERROR,
+                        REP_P_EXTRACTION,
+                        REP_P_ERROR,
+                        REP_REQUIREMENTS_OK,
+                        REP_REQUIREMENTS_ERROR,
+                        REP_UNAVAILABLE_FILES,
+                        STOPPED,
+                        name='requirement_file_states',
+                        validate_strings=True), default=REP_LOADED)
     domain = Column(String)
     repository = Column(String)
     hash_dir1 = Column(String)

@@ -1,5 +1,8 @@
 import os
 import sys
+
+
+
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
@@ -19,6 +22,7 @@ from src.helpers.h1_utils import SafeSession, to_unicode
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, CodeCellFactory, NotebookFactory, PythonFileFactory
 from src.helpers.h3_script_helpers import filter_repositories, load_repository, load_notebook, load_files
+from src.states import *
 
 
 class TestH3ScripHelpersFilterRepositories:
@@ -29,13 +33,13 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 2
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            session=SafeSession(session, interrupted=STOPPED),
             selected_repositories=True,
-            skip_if_error=consts.R_N_ERROR,
+            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
             reverse=False,
-            skip_already_processed=consts.R_N_EXTRACTION
+            skip_already_processed=REP_N_EXTRACTION
         )
 
         assert query.count() == 2
@@ -48,13 +52,13 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 3
 
         filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            session=SafeSession(session, interrupted=STOPPED),
             selected_repositories=True,
-            skip_if_error=consts.R_N_ERROR,
+            skip_if_error=REP_ERRORS,
             count=True,
             interval=None,
             reverse=False,
-            skip_already_processed=consts.R_N_EXTRACTION
+            skip_already_processed=REP_N_EXTRACTION
         )
 
         captured = capsys.readouterr()
@@ -66,32 +70,32 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 2
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            session=SafeSession(session, interrupted=STOPPED),
             selected_repositories=True,
-            skip_if_error=consts.R_N_ERROR,
+            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
             reverse=True,
-            skip_already_processed=consts.R_N_EXTRACTION
+            skip_already_processed=REP_N_EXTRACTION
         )
 
         assert query.count() == 2
         assert rep1 is query[1]
         assert rep2 is query[0]
 
-    def test_filter_inteval(self, session):
+    def test_filter_interval(self, session):
         reps = RepositoryFactory(session).create_batch(10)
 
         assert len(session.query(Repository).all()) == 10
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            session=SafeSession(session, interrupted=STOPPED),
             selected_repositories=True,
-            skip_if_error=consts.R_N_ERROR,
+            skip_if_error=REP_ERRORS,
             count=False,
             interval=[3, 6],
             reverse=False,
-            skip_already_processed=consts.R_N_EXTRACTION
+            skip_already_processed=REP_N_EXTRACTION
         )
 
         assert query.count() == 4
@@ -107,29 +111,29 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 40
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            session=SafeSession(session, interrupted=STOPPED),
             selected_repositories=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
                                    21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
                                    31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
-            skip_if_error=consts.R_N_ERROR,
+            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
             reverse=False,
-            skip_already_processed=consts.R_N_EXTRACTION
+            skip_already_processed=REP_N_EXTRACTION
         )
 
         assert selected_repositories == [31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
         assert query.count() == 30
 
         new_selected_repositories, new_query = filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            session=SafeSession(session, interrupted=STOPPED),
             selected_repositories=selected_repositories,
-            skip_if_error=consts.R_N_ERROR,
+            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
             reverse=False,
-            skip_already_processed=consts.R_N_EXTRACTION
+            skip_already_processed=REP_N_EXTRACTION
         )
 
         assert new_selected_repositories == []
@@ -137,18 +141,18 @@ class TestH3ScripHelpersFilterRepositories:
 
     def test_filter_filters_skip_if_error(self, session):
         rep = RepositoryFactory(session).create()
-        rep_erro = RepositoryFactory(session).create(processed=consts.R_N_ERROR)
+        rep_erro = RepositoryFactory(session).create(state=REP_N_ERROR)
 
         assert len(session.query(Repository).all()) == 2
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            session=SafeSession(session, interrupted=STOPPED),
             selected_repositories=True,
-            skip_if_error=consts.R_N_ERROR,
+            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
             reverse=False,
-            skip_already_processed=consts.R_N_EXTRACTION
+            skip_already_processed=REP_N_EXTRACTION
         )
 
         assert query.count() == 1
@@ -157,18 +161,18 @@ class TestH3ScripHelpersFilterRepositories:
 
     def test_filter_filters_skip_already_processed(self, session):
         rep = RepositoryFactory(session).create()
-        rep_processed = RepositoryFactory(session).create(processed=consts.R_N_EXTRACTION)
+        rep_processed = RepositoryFactory(session).create(state=REP_N_EXTRACTION)
 
         assert len(session.query(Repository).all()) == 2
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            session=SafeSession(session, interrupted=STOPPED),
             selected_repositories=True,
-            skip_if_error=consts.R_N_ERROR,
+            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
             reverse=False,
-            skip_already_processed=consts.R_N_EXTRACTION
+            skip_already_processed=REP_N_EXTRACTION
         )
 
         assert query.count() == 1

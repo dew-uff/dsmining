@@ -1,6 +1,7 @@
 """ This file contains processed constants for models"""
 
 # Repositories
+
 R_LOADED = 0
 R_N_EXTRACTION = 1                   # 2 ** 0
 R_N_ERROR = 2                        # 2 ** 1
@@ -9,14 +10,14 @@ R_P_ERROR = 8                        # 2 ** 3
 R_REQUIREMENTS_OK = 16               # 2 ** 4
 R_REQUIREMENTS_ERROR = 32            # 2 ** 5
 
-R_UNAVAILABLE_FILES = 16             # 2 ** 6
-R_COMMIT_MISMATCH = 32               # 2 ** 7
-R_FAILED_TO_CLONE = 1024             # 2 ** 8
-R_TROUBLESOME = 4096                 # 2 ** 9
+R_UNAVAILABLE_FILES = 64             # 2 ** 6
+R_COMMIT_MISMATCH = 128              # 2 ** 7
+R_FAILED_TO_CLONE = 256              # 2 ** 8
+R_TROUBLESOME = 512                  # 2 ** 9
 
-R_COMPRESS_ERROR = 4                 # 2 ** 10
-R_COMPRESS_OK = 8                    # 2 ** 11
-R_EXTRACTED_FILES = 8192             # 2 ** 12
+R_COMPRESS_ERROR = 1024              # 2 ** 10
+R_COMPRESS_OK = 2048                 # 2 ** 11
+R_EXTRACTED_FILES = 4096             # 2 ** 12
 
 # Notebooks
 N_OK = 0

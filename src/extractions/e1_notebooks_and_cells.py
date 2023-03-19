@@ -11,7 +11,7 @@ from src.db.database import Cell, Notebook, connect
 from src.helpers.h1_utils import check_exit, savepid, SafeSession, mount_basedir, unzip_repository
 from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger
 from src.helpers.h3_script_helpers import filter_repositories, broken_link, cell_output_formats
-
+from src.states import *
 
 def load_cells(repository_id, nbrow, notebook, status):
     shell = InteractiveShell.instance()
@@ -220,31 +220,30 @@ def find_notebooks(session, repository):
     return notebooks
 
 
-def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
+def process_repository(session, repository, retry=False):
     """ Processes repository """
 
-    if repository.processed & (consts.R_N_EXTRACTION + skip_if_error):
-        return "already processed"
-
-    if repository.processed & consts.R_N_ERROR:
+    if retry and repository.state == REP_N_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
-        repository.processed -= consts.R_N_ERROR
+        repository.state = REP_LOADED
+
+    if repository.state == REP_N_EXTRACTION or repository.state in REP_ERRORS:
+        return "already processed"
 
     repository_notebooks_names = find_notebooks(session, repository)
     count, repository = process_notebooks(session, repository, repository_notebooks_names)
 
-    if not (repository.processed & consts.R_N_ERROR) and (count == repository.notebooks_count):
-        repository.processed |= consts.R_N_EXTRACTION
-        session.add(repository)
+    if repository.state != REP_N_ERROR and count == repository.notebooks_count:
+        repository.state = REP_N_EXTRACTION
+    else:
+        repository.state = REP_N_ERROR
+    session.add(repository)
 
     status, err = session.commit()
     if not status:
-        if repository.processed & consts.R_N_EXTRACTION:
-            repository.processed -= consts.R_N_EXTRACTION
-
-        if not repository.processed & consts.R_N_ERROR:
-            repository.processed += consts.R_N_ERROR
+        if repository.state != REP_N_ERROR:
+            repository.state = REP_N_ERROR
         session.add(repository)
         session.commit()
         return "failed due {!r}".format(err)
@@ -253,15 +252,15 @@ def process_repository(session, repository, skip_if_error=consts.R_N_ERROR):
 
 
 def apply(
-        session, status, selected_repositories, skip_if_error,
+        session, status, selected_repositories, retry,
         count, interval, reverse, check):
     while selected_repositories:
 
         selected_repositories, query = filter_repositories(session=session,
                                                            selected_repositories=selected_repositories,
-                                                           skip_if_error=skip_if_error, count=count,
+                                                           skip_if_error=REP_ERRORS, count=count,
                                                            interval=interval, reverse=reverse,
-                                                           skip_already_processed=consts.R_N_EXTRACTION)
+                                                           skip_already_processed=REP_N_EXTRACTION)
 
         for repository in query:
             if check_exit(check):
@@ -270,7 +269,7 @@ def apply(
             status.report()
             vprint(0, "Extracting notebooks/cells from {}".format(repository))
             with mount_basedir():
-                result = process_repository(session, repository, skip_if_error)
+                result = process_repository(session, repository, retry)
                 vprint(0, result)
             status.count += 1
             session.commit()
@@ -306,10 +305,10 @@ def main():
         status.report()
     with connect() as session, savepid():
         apply(
-            SafeSession(session, interrupted=consts.N_STOPPED),
+            SafeSession(session, interrupted=STOPPED),
             status,
             args.repositories or True,
-            0 if args.retry_errors else consts.R_N_ERROR,
+            True if args.retry_errors else False,
             args.count,
             args.interval,
             args.reverse,
