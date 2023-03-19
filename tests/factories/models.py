@@ -1,5 +1,6 @@
 import factory
-from src.db.database import Repository, Notebook, PythonFile, RequirementFile, Cell, CellMarkdownFeature
+from src.db.database import Repository, Notebook, PythonFile, RequirementFile, Cell, CellMarkdownFeature, CellModule, \
+    CellDataIO
 
 
 def RepositoryFactory(session):
@@ -162,3 +163,44 @@ def CellMarkdownFeatureFactory(session):
                 session.commit()
 
     return _CellMarkdownFeatureFactory
+
+def CellModuleFactory(session):
+    class _CellModuleFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = CellModule
+            sqlalchemy_session = session
+
+        line = 1
+        import_type = 'import'
+        module_name = 'matplotlib'
+        local = 0
+
+        @factory.post_generation
+        def commit_to_db(self, create, extracted, **kwargs):
+            if create:
+                session.add(self)
+                session.commit()
+
+    return _CellModuleFactory
+
+
+def CellDataIOFactory(session):
+    class _CellDataIOFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = CellDataIO
+            sqlalchemy_session = session
+
+        line = 1
+        caller = 'pd'
+        function_name = 'read_excel'
+        function_type = 'Attribute'
+        source = 'data.xlsx'
+        source_type = 'Constant'
+
+        @factory.post_generation
+        def commit_to_db(self, create, extracted, **kwargs):
+            if create:
+                session.add(self)
+                session.commit()
+
+    return _CellDataIOFactory

@@ -24,9 +24,9 @@ def process_code_cell(
         return 'already processed'
 
     retry = False
-    retry |= not skip_if_error and cell.processed & consts.C_PROCESS_ERROR
-    retry |= not skip_if_syntaxerror and cell.processed & consts.C_SYNTAX_ERROR
-    retry |= not skip_if_timeout and cell.processed & consts.C_TIMEOUT
+    retry |= (not skip_if_error) and cell.processed & consts.C_PROCESS_ERROR
+    retry |= (not skip_if_syntaxerror) and cell.processed & consts.C_SYNTAX_ERROR
+    retry |= (not skip_if_timeout) and cell.processed & consts.C_TIMEOUT
 
     if retry:
         deleted = (
@@ -48,27 +48,15 @@ def process_code_cell(
         session.add(cell)
 
     try:
-        error = False
-        modules = None
-        data_ios = None
+        vprint(2, "Extracting features")
         try:
-            vprint(2, "Extracting features")
             modules, data_ios = extract_features(cell.source, checker)
-            processed = consts.A_OK
         except TimeoutError:
-            processed = consts.A_TIMEOUT
             cell.processed |= consts.C_TIMEOUT
-            error = True
+            return 'Failed due to  Time Out Error.'
         except SyntaxError:
-            processed = consts.A_SYNTAX_ERROR
             cell.processed |= consts.C_SYNTAX_ERROR
-            error = True
-        if error:
-            vprint(3, "Failed: {}".format(processed))
-            modules = []
-            data_ios = []
-        else:
-            vprint(3, "Ok")
+            return 'Failed due to Syntax Error.'
 
         vprint(2, "Adding session objects")
         for line, import_type, module_name, local in modules:
@@ -104,6 +92,7 @@ def process_code_cell(
 
         cell.processed |= consts.C_PROCESS_OK
         return "done"
+
     except Exception as err:
         cell.processed |= consts.C_PROCESS_ERROR
         if config.VERBOSE > 4:
@@ -112,7 +101,6 @@ def process_code_cell(
         return 'Failed to process ({})'.format(err)
     finally:
         session.add(cell)
-
 
 
 def apply(

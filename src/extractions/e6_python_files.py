@@ -6,16 +6,12 @@ import tarfile
 import src.config as config
 import src.consts as consts
 
-from src.db.database import PythonFile, PythonFileModule, connect, PythonFileDataIO
-from src.db.database import RepositoryFile
+from src.db.database import PythonFileModule, connect, PythonFileDataIO
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, to_unicode
 from src.helpers.h1_utils import TimeoutError, SafeSession
 from src.helpers.h1_utils import mount_basedir
 from future.utils.surrogateescape import register_surrogateescape
-from e8_extract_files import process_repository
-from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
-from src.classes.c3_cell_visitor import  CellVisitor
-from src.helpers.h3_script_helpers import filter_python_files, load_repository, load_files
+from src.helpers.h3_script_helpers import filter_python_files, load_repository, load_files, extract_features
 
 
 def process_python_file(
@@ -24,7 +20,7 @@ def process_python_file(
     skip_if_syntaxerror=consts.PF_SYNTAX_ERROR,
     skip_if_timeout=consts.PF_TIMEOUT,
 ):
-    """Process Python File to collect features"""
+    """ Processes Python File to collect features """
     if python_file.processed & consts.PF_PROCESS_OK:
         return 'already processed'
 
@@ -50,27 +46,15 @@ def process_python_file(
         session.add(python_file)
 
     try:
-        error = False
-        modules = None
-        data_ios = None
+        vprint(2, "Extracting features")
         try:
-            vprint(2, "Extracting features")
             modules, data_ios = extract_features(python_file.source, checker)
-            processed = consts.PF_OK
         except TimeoutError:
-            processed = consts.PF_TIMEOUT
             python_file.processed |= consts.PF_TIMEOUT
-            error = True
+            return 'Failed due to  Time Out Error.'
         except SyntaxError:
-            processed = consts.PF_SYNTAX_ERROR
             python_file.processed |= consts.PF_SYNTAX_ERROR
-            error = True
-        if error:
-            vprint(3, "Failed: {}".format(processed))
-            modules = []
-            data_ios = []
-        else:
-            vprint(3, "Ok")
+            return 'Failed due to Syntax Error.'
 
         vprint(2, "Adding session objects")
         for line, import_type, module_name, local in modules:
