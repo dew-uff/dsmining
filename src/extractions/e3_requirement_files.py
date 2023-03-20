@@ -9,6 +9,7 @@ from src.db.database import RequirementFile, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, unzip_repository
 from src.helpers.h1_utils import find_files_in_path, mount_basedir
 from src.helpers.h3_script_helpers import filter_repositories
+from src.states import *
 
 
 def find_requirements(session, repository):
@@ -18,7 +19,7 @@ def find_requirements(session, repository):
         msg = unzip_repository(session, repository)
         if msg != "done":
             vprint(2, "repository not found")
-            repository.processed |= consts.R_UNAVAILABLE_FILES
+            repository.state = REP_UNAVAILABLE_FILES
             session.add(repository)
             session.commit()
             return setups, requirements, pipfiles, pipfile_locks
@@ -36,8 +37,7 @@ def find_requirements(session, repository):
     return setups, requirements, pipfiles, pipfile_locks
 
 
-def process_requirement_files(session, repository, req_names, reqformat,
-                              skip_if_error=consts.R_REQUIREMENTS_ERROR):
+def process_requirement_files(session, repository, req_names, reqformat):
     """ Processes a requirement file """
     no_errors = True
 
@@ -106,15 +106,17 @@ def process_requirement_files(session, repository, req_names, reqformat,
     return no_errors
 
 
-def process_repository(session, repository, skip_if_error=consts.R_REQUIREMENTS_ERROR):
+def process_repository(session, repository, retry=False):
     """ Processes repository """
-    if repository.processed & (consts.R_REQUIREMENTS_OK + skip_if_error):
-        return "already processed"
-
-    if repository.processed & consts.R_REQUIREMENTS_ERROR:
+    # TODO - Maybe I could have a array of possible errors for each file
+    if retry and repository.state == REP_REQUIREMENTS_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
-        repository.processed -= consts.R_REQUIREMENTS_ERROR
+        repository.state = REP_LOADED
+
+    # TODO - This should be the opposite, if state not in allow states
+    if repository.state == REP_REQUIREMENTS_OK or repository.state in REP_ERRORS:
+        return "already processed"
 
     no_error = True
 
@@ -126,9 +128,9 @@ def process_repository(session, repository, skip_if_error=consts.R_REQUIREMENTS_
     no_error &= process_requirement_files(session, repository, pipfile_locks, "Pipfile.lock")
 
     if no_error:
-        repository.processed |= consts.R_REQUIREMENTS_OK
+        repository.state = REP_REQUIREMENTS_OK
     else:
-        repository.processed |= consts.R_REQUIREMENTS_ERROR
+        repository.state = REP_REQUIREMENTS_ERROR
 
     session.add(repository)
     session.commit()
@@ -136,14 +138,14 @@ def process_repository(session, repository, skip_if_error=consts.R_REQUIREMENTS_
 
 
 def apply(
-        session, status, selected_repositories, skip_if_error,
+        session, status, selected_repositories, retry,
         count, interval, reverse, check
 ):
     while selected_repositories:
 
         selected_repositories, query = filter_repositories(
             session=session, selected_repositories=selected_repositories,
-            skip_if_error=skip_if_error, count=count,
+            skip_if_error=REP_ERRORS, count=count,
             interval=interval, reverse=reverse,
             skip_already_processed=consts.R_REQUIREMENTS_OK)
 
@@ -154,7 +156,7 @@ def apply(
             status.report()
             vprint(0, "Extracting requirement files from {}".format(repository))
             with mount_basedir():
-                result = process_repository(session, repository, skip_if_error)
+                result = process_repository(session, repository, retry)
                 vprint(1, result)
             status.count += 1
             session.commit()
@@ -195,7 +197,7 @@ def main():
             session,
             status,
             args.repositories or True,
-            0 if args.retry_errors else consts.R_REQUIREMENTS_ERROR,
+            True if args.retry_errors else False,
             args.count,
             args.interval,
             args.reverse,

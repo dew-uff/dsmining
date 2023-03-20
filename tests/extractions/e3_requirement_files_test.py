@@ -16,6 +16,7 @@ from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.factories.models import RequirementFileFactory
 from tests.test_helpers.h1_stubs import stub_unzip, stub_unzip_failed, REQUIREMENTS_TXT
+from src.states import *
 
 
 class TestE3RequiremtFilesFindRequirements:
@@ -89,7 +90,7 @@ class TestE3RequiremtFilesFindRequirements:
         assert requirements == []
         assert pipfiles == []
         assert pipfile_locks == []
-        assert repository.processed == consts.R_UNAVAILABLE_FILES
+        assert repository.state == REP_UNAVAILABLE_FILES
 
 
 class TestE3RequiremtFilesProcessRepository:
@@ -106,7 +107,7 @@ class TestE3RequiremtFilesProcessRepository:
         output = e3.process_repository(session, repository)
 
         assert output == "done"
-        assert repository.processed == consts.R_REQUIREMENTS_OK
+        assert repository.state == REP_REQUIREMENTS_OK
 
     def test_process_repository_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
@@ -120,18 +121,18 @@ class TestE3RequiremtFilesProcessRepository:
         output = e3.process_repository(session, repository)
 
         assert output == "done"
-        assert repository.processed == consts.R_REQUIREMENTS_ERROR
+        assert repository.state == REP_REQUIREMENTS_ERROR
 
     def test_process_repository_already_processed(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(
-            processed=consts.R_REQUIREMENTS_OK)
+            state=REP_REQUIREMENTS_OK)
 
         output = e3.process_repository(session, repository)
 
         assert output == "already processed"
 
     def test_process_repository_retry_error_success(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(processed=consts.R_REQUIREMENTS_ERROR)
+        repository = RepositoryFactory(session).create(state=REP_REQUIREMENTS_ERROR)
 
         file = [Path('setup.py')]
         monkeypatch.setattr(e3, 'find_requirements',
@@ -140,15 +141,15 @@ class TestE3RequiremtFilesProcessRepository:
                             lambda _session, _repository, _python_files_names, count: True)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
-        output = e3.process_repository(session, repository, skip_if_error=0)
+        output = e3.process_repository(session, repository, retry=True)
 
-        assert repository.processed == consts.R_REQUIREMENTS_OK
+        assert repository.state == REP_REQUIREMENTS_OK
         captured = capsys.readouterr()
         assert "retrying to process" in captured.out
         assert output == "done"
 
     def test_process_repository_retry_error(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(processed=consts.R_REQUIREMENTS_ERROR)
+        repository = RepositoryFactory(session).create(state=REP_REQUIREMENTS_ERROR)
         assert repository.python_files_count is None
 
         file = [Path('setup.py')]
@@ -157,21 +158,21 @@ class TestE3RequiremtFilesProcessRepository:
         monkeypatch.setattr(e3, 'process_requirement_files',
                             lambda _session, _repository, _python_files_names, count: False)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
-        output = e3.process_repository(session, repository, skip_if_error=0)
+        output = e3.process_repository(session, repository, retry=True)
 
         assert output == "done"
-        assert repository.processed == consts.R_REQUIREMENTS_ERROR
+        assert repository.state == REP_REQUIREMENTS_ERROR
         assert session.query(Repository).first().python_files_count is None
 
     def test_process_repository_skip_error(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(processed=consts.R_REQUIREMENTS_ERROR)
+        repository = RepositoryFactory(session).create(state=REP_REQUIREMENTS_ERROR)
 
         output = e3.process_repository(session, repository)
 
         assert output == "already processed"
 
 
-class TestE3RequiremtFiles:
+class TestE3RequiremtFilesProcessRequirementFiles:
     def test_process_requirement_files_sucess(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
 

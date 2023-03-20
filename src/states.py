@@ -1,4 +1,3 @@
-STOPPED = "stopped_processing"
 
 
 # Repositories
@@ -12,7 +11,7 @@ REP_P_ERROR = "error_extracting_python_files"
 REP_REQUIREMENTS_OK = "extracted_requirements"
 REP_REQUIREMENTS_ERROR = "error_extracting_requirements"
 REP_UNAVAILABLE_FILES = "error_unavailable_files"
-REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR, REP_P_ERROR, REP_REQUIREMENTS_ERROR, REP_UNAVAILABLE_FILES, STOPPED]
+REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR, REP_P_ERROR, REP_REQUIREMENTS_ERROR, REP_UNAVAILABLE_FILES]
 
 
 R_COMMIT_MISMATCH = 128              # 2 ** 7

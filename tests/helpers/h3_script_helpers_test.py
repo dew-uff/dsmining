@@ -1,12 +1,9 @@
 import os
 import sys
 
-
-
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
-
 
 import ast
 import pytest
@@ -33,7 +30,7 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 2
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=STOPPED),
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
             skip_if_error=REP_ERRORS,
             count=False,
@@ -52,7 +49,7 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 3
 
         filter_repositories(
-            session=SafeSession(session, interrupted=STOPPED),
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
             skip_if_error=REP_ERRORS,
             count=True,
@@ -70,7 +67,7 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 2
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=STOPPED),
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
             skip_if_error=REP_ERRORS,
             count=False,
@@ -89,7 +86,7 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 10
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=STOPPED),
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
             skip_if_error=REP_ERRORS,
             count=False,
@@ -111,7 +108,7 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 40
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=STOPPED),
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
                                    21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
@@ -127,7 +124,7 @@ class TestH3ScripHelpersFilterRepositories:
         assert query.count() == 30
 
         new_selected_repositories, new_query = filter_repositories(
-            session=SafeSession(session, interrupted=STOPPED),
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=selected_repositories,
             skip_if_error=REP_ERRORS,
             count=False,
@@ -146,7 +143,7 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 2
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=STOPPED),
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
             skip_if_error=REP_ERRORS,
             count=False,
@@ -166,7 +163,7 @@ class TestH3ScripHelpersFilterRepositories:
         assert len(session.query(Repository).all()) == 2
 
         selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=STOPPED),
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
             skip_if_error=REP_ERRORS,
             count=False,
