@@ -158,7 +158,8 @@ def process_notebooks(session, repository, repository_notebooks_names):
                     vprint(2, "Notebook already exists. Delete from DB: {}".format(notebook))
                     with open(str(config.LOGS_DIR / "todo_delete"), "a") as f:
                         f.write("{},".format(notebook.id))
-
+                else:
+                    vprint(2, "Notebook already processed")
                 continue  # Skip working notebook
 
         if not repository.path.exists():
@@ -228,9 +229,12 @@ def process_repository(session, repository, retry=False):
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
         repository.state = REP_LOADED
-
-    if repository.state == REP_N_EXTRACTION or repository.state in REP_ERRORS:
+    elif repository.state == REP_N_EXTRACTION \
+            or repository.state in REP_ERRORS\
+            or repository.state in states_after(REP_N_EXTRACTION, REP_ORDER):
         return "already processed"
+    elif repository.state in states_before(REP_LOADED, REP_ORDER):
+        return f'wrong script order, before you must run {states_before(REP_LOADED, REP_ORDER)}'
 
     repository_notebooks_names = find_notebooks(session, repository)
     count, repository = process_notebooks(session, repository, repository_notebooks_names)
@@ -257,11 +261,12 @@ def apply(
         count, interval, reverse, check):
     while selected_repositories:
 
-        selected_repositories, query = filter_repositories(session=session,
-                                                           selected_repositories=selected_repositories,
-                                                           skip_if_error=REP_ERRORS, count=count,
-                                                           interval=interval, reverse=reverse,
-                                                           skip_already_processed=REP_N_EXTRACTION)
+        selected_repositories, query = filter_repositories(
+            session=session,
+            selected_repositories=selected_repositories,
+            count=count,
+            interval=interval, reverse=reverse
+        )
 
         for repository in query:
             if check_exit(check):

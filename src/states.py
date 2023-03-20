@@ -11,7 +11,19 @@ REP_P_ERROR = "error_extracting_python_files"
 REP_REQUIREMENTS_OK = "extracted_requirements"
 REP_REQUIREMENTS_ERROR = "error_extracting_requirements"
 REP_UNAVAILABLE_FILES = "error_unavailable_files"
+
+REP_ORDER = [REP_FILTERED, REP_LOADED, REP_N_EXTRACTION, REP_P_EXTRACTION, REP_REQUIREMENTS_OK]
 REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR, REP_P_ERROR, REP_REQUIREMENTS_ERROR, REP_UNAVAILABLE_FILES]
+
+
+def states_before(state, order):
+    index = order.index(state)
+    return order[:index]
+
+
+def states_after(state, order):
+    index = order.index(state)
+    return order[index+1:]
 
 
 R_COMMIT_MISMATCH = 128              # 2 ** 7

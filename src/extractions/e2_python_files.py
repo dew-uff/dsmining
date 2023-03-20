@@ -58,6 +58,9 @@ def process_python_files(session, repository, python_files_names, count):
             if python_file.processed & consts.PF_ERROR:
                 session.delete(python_file)
                 session.commit()
+            else:
+                vprint(2, "Python File already processed")
+                continue
 
         try:
             vprint(3, "Loading python file {}".format(name))
@@ -101,13 +104,17 @@ def process_python_files(session, repository, python_files_names, count):
 
 def process_repository(session, repository, retry=False):
     """ Processes repository """
+
     if retry and repository.state == REP_P_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
         repository.state = REP_LOADED
-
-    if repository.state == REP_P_EXTRACTION or repository.state in REP_ERRORS:
+    elif repository.state == REP_P_EXTRACTION \
+            or repository.state in REP_ERRORS\
+            or repository.state in states_after(REP_P_EXTRACTION, REP_ORDER):
         return "already processed"
+    elif repository.state in states_before(REP_N_EXTRACTION, REP_ORDER):
+        return f'wrong script order, before you must run {states_before(REP_N_EXTRACTION, REP_ORDER)}'
 
     count = 0
     repository_python_files_names = find_python_files(session, repository)
@@ -126,15 +133,16 @@ def process_repository(session, repository, retry=False):
 
 def apply(
         session, status, selected_repositories, retry,
-        count, interval, reverse, check
-):
+        count, interval, reverse, check):
     while selected_repositories:
+
         selected_repositories, query = filter_repositories(
             session=session,
             selected_repositories=selected_repositories,
-            skip_if_error=REP_ERRORS, count=count,
-            interval=interval, reverse=reverse,
-            skip_already_processed=REP_P_EXTRACTION)
+            count=count,
+            interval=interval,
+            reverse=reverse
+        )
 
         for repository in query:
             if check_exit(check):
@@ -143,11 +151,7 @@ def apply(
             status.report()
             vprint(0, "Extracting python files from {}".format(repository))
             with mount_basedir():
-                result = process_repository(
-                    session,
-                    repository,
-                    retry
-                )
+                result = process_repository(session, repository, retry)
                 vprint(1, result)
             status.count += 1
             session.commit()
