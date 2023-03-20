@@ -8,6 +8,7 @@ import src.consts as consts
 from src.db.database import PythonFile, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, find_files, mount_basedir, unzip_repository
 from src.helpers.h3_script_helpers import filter_repositories
+from src.states import *
 
 
 def find_python_files(session, repository):
@@ -18,7 +19,7 @@ def find_python_files(session, repository):
         msg = unzip_repository(session, repository)
         if msg != "done":
             vprint(2, "repository not found")
-            repository.processed |= consts.R_UNAVAILABLE_FILES
+            repository.state = REP_UNAVAILABLE_FILES
             session.add(repository)
             session.commit()
             return python_files
@@ -98,25 +99,25 @@ def process_python_files(session, repository, python_files_names, count):
     return count, no_errors
 
 
-def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
+def process_repository(session, repository, retry=False):
     """ Processes repository """
-    if repository.processed & (consts.R_P_EXTRACTION + skip_if_error):
-        return "already processed"
-
-    if repository.processed & consts.R_P_ERROR:
+    if retry and repository.state == REP_P_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
-        repository.processed -= consts.R_P_ERROR
+        repository.state = REP_LOADED
+
+    if repository.state == REP_P_EXTRACTION or repository.state in REP_ERRORS:
+        return "already processed"
 
     count = 0
     repository_python_files_names = find_python_files(session, repository)
-
     count, no_errors = process_python_files(session, repository, repository_python_files_names, count)
+
     if no_errors:
-        repository.processed |= consts.R_P_EXTRACTION
+        repository.state = REP_P_EXTRACTION
         repository.python_files_count = count
     else:
-        repository.processed |= consts.R_P_ERROR
+        repository.state = REP_P_ERROR
 
     session.add(repository)
     session.commit()
@@ -124,16 +125,16 @@ def process_repository(session, repository, skip_if_error=consts.R_P_ERROR):
 
 
 def apply(
-        session, status, selected_repositories, skip_if_error,
+        session, status, selected_repositories, retry,
         count, interval, reverse, check
 ):
     while selected_repositories:
         selected_repositories, query = filter_repositories(
             session=session,
             selected_repositories=selected_repositories,
-            skip_if_error=skip_if_error, count=count,
+            skip_if_error=REP_ERRORS, count=count,
             interval=interval, reverse=reverse,
-            skip_already_processed=consts.R_P_EXTRACTION)
+            skip_already_processed=REP_P_EXTRACTION)
 
         for repository in query:
             if check_exit(check):
@@ -145,7 +146,7 @@ def apply(
                 result = process_repository(
                     session,
                     repository,
-                    skip_if_error
+                    retry
                 )
                 vprint(1, result)
             status.count += 1
@@ -187,7 +188,7 @@ def main():
             session,
             status,
             args.repositories or True,
-            0 if args.retry_errors else consts.R_P_ERROR,
+            True if args.retry_errors else False,
             args.count,
             args.interval,
             args.reverse,

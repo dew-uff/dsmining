@@ -77,7 +77,6 @@ class Repository(Base):
                         REP_REQUIREMENTS_OK,
                         REP_REQUIREMENTS_ERROR,
                         REP_UNAVAILABLE_FILES,
-                        STOPPED,
                         name='requirement_file_states',
                         validate_strings=True), default=REP_LOADED)
     domain = Column(String)

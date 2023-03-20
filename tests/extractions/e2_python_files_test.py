@@ -15,6 +15,7 @@ from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.factories.models import PythonFileFactory
 from tests.test_helpers.h1_stubs import stub_unzip, stub_unzip_failed
+from src.states import *
 
 
 class TestE2PythonFilesFindPythonFiles:
@@ -73,7 +74,7 @@ class TestE2PythonFilesFindPythonFiles:
 
         python_files = e2.find_python_files(session, repository)
         assert python_files == []
-        assert repository.processed == consts.R_UNAVAILABLE_FILES
+        assert repository.state == REP_UNAVAILABLE_FILES
 
 
 class TestE2PythonFilesProcessRepository:
@@ -88,7 +89,7 @@ class TestE2PythonFilesProcessRepository:
         output = e2.process_repository(session, repository)
 
         assert output == "done"
-        assert repository.processed == consts.R_P_EXTRACTION
+        assert repository.state == REP_P_EXTRACTION
         assert session.query(Repository).first().python_files_count == 1
 
     def test_process_repository_error(self, session, monkeypatch):
@@ -102,47 +103,47 @@ class TestE2PythonFilesProcessRepository:
         output = e2.process_repository(session, repository)
 
         assert output == "done"
-        assert repository.processed == consts.R_P_ERROR
+        assert repository.state == REP_P_ERROR
         assert session.query(Repository).first().python_files_count is None
 
     def test_process_repository_already_processed(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(
-            processed=consts.R_P_EXTRACTION)
+            state=REP_P_EXTRACTION)
 
         output = e2.process_repository(session, repository)
 
         assert output == "already processed"
 
     def test_process_repository_retry_error_success(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(processed=consts.R_P_ERROR)
+        repository = RepositoryFactory(session).create(state=REP_P_ERROR)
 
         monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
         monkeypatch.setattr(e2, 'process_python_files',
                             lambda _session, _repository, _python_files_names, count: (1, True))
 
-        output = e2.process_repository(session, repository, skip_if_error=0)
+        output = e2.process_repository(session, repository, retry=True)
 
-        assert repository.processed == consts.R_P_EXTRACTION
+        assert repository.state == REP_P_EXTRACTION
         captured = capsys.readouterr()
         assert "retrying to process" in captured.out
         assert output == "done"
 
     def test_process_repository_retry_error(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(processed=consts.R_P_ERROR)
+        repository = RepositoryFactory(session).create(state=REP_P_ERROR)
         assert repository.python_files_count is None
 
         monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
         monkeypatch.setattr(e2, 'process_python_files',
                             lambda _session, _repository, _python_files_names, count:
                             (1, False))
-        output = e2.process_repository(session, repository, skip_if_error=0)
+        output = e2.process_repository(session, repository, retry=True)
 
         assert output == "done"
-        assert repository.processed == consts.R_P_ERROR
+        assert repository.state == REP_P_ERROR
         assert session.query(Repository).first().python_files_count is None
 
     def test_process_repository_skip_error(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(processed=consts.R_P_ERROR)
+        repository = RepositoryFactory(session).create(state=REP_P_ERROR)
 
         output = e2.process_repository(session, repository)
 

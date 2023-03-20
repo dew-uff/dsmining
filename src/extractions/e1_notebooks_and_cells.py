@@ -13,6 +13,7 @@ from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, Stat
 from src.helpers.h3_script_helpers import filter_repositories, broken_link, cell_output_formats
 from src.states import *
 
+
 def load_cells(repository_id, nbrow, notebook, status):
     shell = InteractiveShell.instance()
     is_python = nbrow["language"] == "python"
@@ -198,7 +199,7 @@ def process_notebooks(session, repository, repository_notebooks_names):
             )
 
         except Exception as err:  # pylint: disable=broad-except
-            repository.processed |= consts.R_N_ERROR
+            repository.state = REP_N_ERROR
             session.add(repository)
             vprint(1, "Failed to load notebook {} due {!r}".format(name, err))
             if config.VERBOSE > 4:
@@ -305,7 +306,7 @@ def main():
         status.report()
     with connect() as session, savepid():
         apply(
-            SafeSession(session, interrupted=STOPPED),
+            SafeSession(session, interrupted=consts.N_STOPPED),
             status,
             args.repositories or True,
             True if args.retry_errors else False,
