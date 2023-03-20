@@ -76,6 +76,7 @@ class Repository(Base):
                         REP_P_ERROR,
                         REP_REQUIREMENTS_OK,
                         REP_REQUIREMENTS_ERROR,
+                        REP_FINISHED,
                         REP_UNAVAILABLE_FILES,
                         name='requirement_file_states',
                         validate_strings=True), default=REP_LOADED)

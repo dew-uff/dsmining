@@ -95,7 +95,7 @@ class TestE3RequiremtFilesFindRequirements:
 
 class TestE3RequiremtFilesProcessRepository:
     def test_process_repository_success(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
         assert repository.python_files_count is None
 
         file = [Path('setup.py')]
@@ -110,7 +110,7 @@ class TestE3RequiremtFilesProcessRepository:
         assert repository.state == REP_REQUIREMENTS_OK
 
     def test_process_repository_error(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
 
         file = [Path('setup.py')]
         monkeypatch.setattr(e3, 'find_requirements',
@@ -123,15 +123,7 @@ class TestE3RequiremtFilesProcessRepository:
         assert output == "done"
         assert repository.state == REP_REQUIREMENTS_ERROR
 
-    def test_process_repository_already_processed(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(
-            state=REP_REQUIREMENTS_OK)
-
-        output = e3.process_repository(session, repository)
-
-        assert output == "already processed"
-
-    def test_process_repository_retry_error_success(self, session, monkeypatch, capsys):
+    def test_process_repository_retry_success(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(state=REP_REQUIREMENTS_ERROR)
 
         file = [Path('setup.py')]
@@ -164,12 +156,36 @@ class TestE3RequiremtFilesProcessRepository:
         assert repository.state == REP_REQUIREMENTS_ERROR
         assert session.query(Repository).first().python_files_count is None
 
-    def test_process_repository_skip_error(self, session, monkeypatch, capsys):
+    def test_process_repository_not_retry(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(state=REP_REQUIREMENTS_ERROR)
 
         output = e3.process_repository(session, repository)
 
         assert output == "already processed"
+
+    def test_process_repository_already_processed(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(
+            state=REP_REQUIREMENTS_OK)
+
+        output = e3.process_repository(session, repository)
+
+        assert output == "already processed"
+
+    def test_process_repository_state_after(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(
+            state=REP_FINISHED)
+
+        output = e3.process_repository(session, repository)
+
+        assert output == "already processed"
+
+    def test_process_repository_state_before(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(
+            state=REP_N_EXTRACTION)
+
+        output = e3.process_repository(session, repository)
+
+        assert "wrong script order" in output
 
 
 class TestE3RequiremtFilesProcessRequirementFiles:
