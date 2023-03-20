@@ -108,15 +108,17 @@ def process_requirement_files(session, repository, req_names, reqformat):
 
 def process_repository(session, repository, retry=False):
     """ Processes repository """
-    # TODO - Maybe I could have a array of possible errors for each file
+
     if retry and repository.state == REP_REQUIREMENTS_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
-        repository.state = REP_LOADED
-
-    # TODO - This should be the opposite, if state not in allow states
-    if repository.state == REP_REQUIREMENTS_OK or repository.state in REP_ERRORS:
+        repository.state = REP_P_EXTRACTION
+    elif repository.state == REP_REQUIREMENTS_OK \
+            or repository.state in REP_ERRORS\
+            or repository.state in states_after(REP_REQUIREMENTS_OK, REP_ORDER):
         return "already processed"
+    elif repository.state in states_before(REP_P_EXTRACTION, REP_ORDER):
+        return f'wrong script order, before you must run {states_before(REP_P_EXTRACTION, REP_ORDER)}'
 
     no_error = True
 
@@ -144,10 +146,12 @@ def apply(
     while selected_repositories:
 
         selected_repositories, query = filter_repositories(
-            session=session, selected_repositories=selected_repositories,
-            skip_if_error=REP_ERRORS, count=count,
-            interval=interval, reverse=reverse,
-            skip_already_processed=consts.R_REQUIREMENTS_OK)
+            session=session,
+            selected_repositories=selected_repositories,
+            count=count,
+            interval=interval,
+            reverse=reverse
+        )
 
         for repository in query:
             if check_exit(check):

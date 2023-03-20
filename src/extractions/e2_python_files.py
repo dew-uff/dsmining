@@ -108,7 +108,7 @@ def process_repository(session, repository, retry=False):
     if retry and repository.state == REP_P_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
-        repository.state = REP_LOADED
+        repository.state = REP_N_EXTRACTION
     elif repository.state == REP_P_EXTRACTION \
             or repository.state in REP_ERRORS\
             or repository.state in states_after(REP_P_EXTRACTION, REP_ORDER):
