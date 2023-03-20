@@ -32,11 +32,9 @@ class TestH3ScripHelpersFilterRepositories:
         selected_repositories, query = filter_repositories(
             session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
-            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
             reverse=False,
-            skip_already_processed=REP_N_EXTRACTION
         )
 
         assert query.count() == 2
@@ -51,11 +49,9 @@ class TestH3ScripHelpersFilterRepositories:
         filter_repositories(
             session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
-            skip_if_error=REP_ERRORS,
             count=True,
             interval=None,
-            reverse=False,
-            skip_already_processed=REP_N_EXTRACTION
+            reverse=False
         )
 
         captured = capsys.readouterr()
@@ -69,11 +65,9 @@ class TestH3ScripHelpersFilterRepositories:
         selected_repositories, query = filter_repositories(
             session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
-            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
-            reverse=True,
-            skip_already_processed=REP_N_EXTRACTION
+            reverse=True
         )
 
         assert query.count() == 2
@@ -88,11 +82,9 @@ class TestH3ScripHelpersFilterRepositories:
         selected_repositories, query = filter_repositories(
             session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=True,
-            skip_if_error=REP_ERRORS,
             count=False,
             interval=[3, 6],
-            reverse=False,
-            skip_already_processed=REP_N_EXTRACTION
+            reverse=False
         )
 
         assert query.count() == 4
@@ -113,11 +105,9 @@ class TestH3ScripHelpersFilterRepositories:
                                    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
                                    21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
                                    31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
-            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
-            reverse=False,
-            skip_already_processed=REP_N_EXTRACTION
+            reverse=False
         )
 
         assert selected_repositories == [31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
@@ -126,55 +116,13 @@ class TestH3ScripHelpersFilterRepositories:
         new_selected_repositories, new_query = filter_repositories(
             session=SafeSession(session, interrupted=consts.N_STOPPED),
             selected_repositories=selected_repositories,
-            skip_if_error=REP_ERRORS,
             count=False,
             interval=None,
             reverse=False,
-            skip_already_processed=REP_N_EXTRACTION
         )
 
         assert new_selected_repositories == []
         assert new_query.count() == 10
-
-    def test_filter_filters_skip_if_error(self, session):
-        rep = RepositoryFactory(session).create()
-        rep_erro = RepositoryFactory(session).create(state=REP_N_ERROR)
-
-        assert len(session.query(Repository).all()) == 2
-
-        selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
-            selected_repositories=True,
-            skip_if_error=REP_ERRORS,
-            count=False,
-            interval=None,
-            reverse=False,
-            skip_already_processed=REP_N_EXTRACTION
-        )
-
-        assert query.count() == 1
-        assert rep_erro not in query
-        assert rep in query
-
-    def test_filter_filters_skip_already_processed(self, session):
-        rep = RepositoryFactory(session).create()
-        rep_processed = RepositoryFactory(session).create(state=REP_N_EXTRACTION)
-
-        assert len(session.query(Repository).all()) == 2
-
-        selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
-            selected_repositories=True,
-            skip_if_error=REP_ERRORS,
-            count=False,
-            interval=None,
-            reverse=False,
-            skip_already_processed=REP_N_EXTRACTION
-        )
-
-        assert query.count() == 1
-        assert rep_processed not in query
-        assert rep in query
 
 
 class TestH3ScriptHelpersLoadRepository:

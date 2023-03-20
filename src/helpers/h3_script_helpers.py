@@ -16,14 +16,10 @@ from src.helpers.h1_utils import timeout
 from src.db.database import Repository, Cell, PythonFile, RepositoryFile
 from src.states import *
 
-def filter_repositories(session, selected_repositories,
-                        skip_if_error, count, interval, reverse, skip_already_processed):
-    filters = [
-        Repository.state != skip_already_processed,
-    ]
 
-    for error in skip_if_error:
-        filters += [Repository.state != error]
+def filter_repositories(session, selected_repositories,
+                        count, interval, reverse):
+    filters = []
 
     if selected_repositories is not True:
         filters += [Repository.id.in_(selected_repositories[:30])]

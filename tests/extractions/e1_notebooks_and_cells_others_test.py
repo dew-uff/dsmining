@@ -178,16 +178,7 @@ class Test1NotebooksAndCellsProcessRepository:
         assert "failed due 'error 1'" in output
         assert repository.state == REP_N_ERROR
 
-    def test_process_repository_already_processed(self, session, monkeypatch):
-        safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
-        repository = RepositoryFactory(safe_session).create(
-            state=REP_N_EXTRACTION)
-
-        output = e1.process_repository(safe_session, repository)
-
-        assert output == "already processed"
-
-    def test_process_repository_retry_error_success(self, session, monkeypatch, capsys):
+    def test_process_repository_retry_success(self, session, monkeypatch, capsys):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_N_ERROR,
                                                             notebooks_count=1)
@@ -203,7 +194,7 @@ class Test1NotebooksAndCellsProcessRepository:
         assert "retrying to process" in captured.out
         assert output == "done"
 
-    def test_process_repository_retry_error_error(self, session, monkeypatch, capsys):
+    def test_process_repository_retry_error(self, session, monkeypatch, capsys):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_N_ERROR)
 
@@ -219,10 +210,35 @@ class Test1NotebooksAndCellsProcessRepository:
         assert output == "done"
         assert repository.state == REP_N_ERROR
 
-    def test_process_repository_skip_error(self, session, monkeypatch, capsys):
+    def test_process_repository_not_retry(self, session, monkeypatch, capsys):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_N_ERROR)
 
         output = e1.process_repository(safe_session, repository)
 
         assert output == "already processed"
+
+    def test_process_repository_already_processed(self, session, monkeypatch):
+        safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
+        repository = RepositoryFactory(safe_session).create(
+            state=REP_N_EXTRACTION)
+
+        output = e1.process_repository(safe_session, repository)
+
+        assert output == "already processed"
+
+    def test_process_repository_state_after(self, session, monkeypatch, capsys):
+        safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
+        repository = RepositoryFactory(safe_session).create(state=REP_P_EXTRACTION)
+
+        output = e1.process_repository(safe_session, repository)
+
+        assert output == "already processed"
+
+    def test_process_repository_state_before(self, session, monkeypatch, capsys):
+        safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
+        repository = RepositoryFactory(safe_session).create(state=REP_FILTERED)
+
+        output = e1.process_repository(safe_session, repository)
+
+        assert "wrong script order" in output

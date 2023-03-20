@@ -79,7 +79,7 @@ class TestE2PythonFilesFindPythonFiles:
 
 class TestE2PythonFilesProcessRepository:
     def test_process_repository_success(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_N_EXTRACTION)
         assert repository.python_files_count is None
 
         monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
@@ -93,7 +93,7 @@ class TestE2PythonFilesProcessRepository:
         assert session.query(Repository).first().python_files_count == 1
 
     def test_process_repository_error(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_N_EXTRACTION)
         assert repository.python_files_count is None
 
         monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
@@ -106,15 +106,7 @@ class TestE2PythonFilesProcessRepository:
         assert repository.state == REP_P_ERROR
         assert session.query(Repository).first().python_files_count is None
 
-    def test_process_repository_already_processed(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(
-            state=REP_P_EXTRACTION)
-
-        output = e2.process_repository(session, repository)
-
-        assert output == "already processed"
-
-    def test_process_repository_retry_error_success(self, session, monkeypatch, capsys):
+    def test_process_repository_retry_success(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(state=REP_P_ERROR)
 
         monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
@@ -142,12 +134,36 @@ class TestE2PythonFilesProcessRepository:
         assert repository.state == REP_P_ERROR
         assert session.query(Repository).first().python_files_count is None
 
-    def test_process_repository_skip_error(self, session, monkeypatch, capsys):
+    def test_process_repository_not_retry(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(state=REP_P_ERROR)
 
         output = e2.process_repository(session, repository)
 
         assert output == "already processed"
+
+    def test_process_repository_already_processed(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(
+            state=REP_P_EXTRACTION)
+
+        output = e2.process_repository(session, repository)
+
+        assert output == "already processed"
+
+    def test_process_repository_state_after(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(
+            state=REP_REQUIREMENTS_OK)
+
+        output = e2.process_repository(session, repository)
+
+        assert output == "already processed"
+
+    def test_process_repository_already_processed(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(
+            state=REP_LOADED)
+
+        output = e2.process_repository(session, repository)
+
+        assert "wrong script order" in output
 
 
 class TestE2PythonFilesProcessPythonFiles:
