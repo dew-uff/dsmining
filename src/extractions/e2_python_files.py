@@ -93,7 +93,7 @@ def process_python_files(session, repository, python_files_names, count):
     return count
 
 
-def process_repository(session, repository, retry=False):
+def process_repository(session, repository):
     """ Processes repository """
 
     if repository.state == REP_PF_EXTRACTED \
@@ -157,7 +157,8 @@ def main():
             reverse=args.reverse,
             check=set(args.check),
             process_repository=process_repository,
-            model_type='python files'
+            model_type='python files',
+            params=2
         )
 
 

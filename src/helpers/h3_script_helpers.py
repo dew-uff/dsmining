@@ -19,7 +19,7 @@ from src.states import *
 
 def apply(session, status, selected_repositories, retry,
           count, interval, reverse, check,
-          process_repository, model_type):
+          process_repository, model_type, params=3):
     while selected_repositories:
 
         selected_repositories, query = filter_repositories(
@@ -36,7 +36,10 @@ def apply(session, status, selected_repositories, retry,
             status.report()
             vprint(0, f"Extracting {model_type} from {repository}")
 
-            result = process_repository(session, repository, retry)
+            if params == 3:
+                result = process_repository(session, repository, retry)
+            elif params == 2:
+                result = process_repository(session, repository)
             vprint(0, result)
 
             status.count += 1
