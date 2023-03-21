@@ -28,7 +28,12 @@ NB_GENERIC_LOAD_ERROR = "generic_error_loading_notebook"
 CELL_LOADED = "cell_loaded"
 CELL_UNKNOWN_VERSION = "unknown_version_cell"
 CELL_SYNTAX_ERROR = "syntax_error_loading_cell"
+CELL_PROCESSED = "cell_processed"
+CELL_PROCESS_ERROR = "error_processing_cell"
+CELL_PROCESS_TIMEOUT = "time_out_processing_cell"
 
+CELL_ORDER = [CELL_LOADED, CELL_PROCESSED]
+MARKDOWN_CELL_ERROR = [CELL_PROCESS_TIMEOUT, CELL_SYNTAX_ERROR, CELL_PROCESS_ERROR]
 
 # Python Files
 PF_LOADED = "python_file_loaded"
@@ -56,9 +61,7 @@ N_SYNTAX_ERROR = 16                  # 2 ** 4
 N_AGGREGATE_OK = 32                  # 2 ** 5
 N_AGGREGATE_ERROR = 64
 
-C_PROCESS_ERROR = 2                  # 2 ** 1
-C_PROCESS_OK = 4                     # 2 ** 2
-C_TIMEOUT = 8                        # 2 ** 3
+
 
 PF_PROCESS_OK = 4                     # 2 ** 2
 PF_PROCESS_ERROR = 8                  # 2 ** 3

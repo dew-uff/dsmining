@@ -415,6 +415,7 @@ class Cell(Base):
     repository_id = Column(Integer)
     notebook_id = Column(Integer)
     state = Column(Enum(CELL_LOADED, CELL_UNKNOWN_VERSION, CELL_SYNTAX_ERROR,
+                        CELL_PROCESSED, CELL_PROCESS_ERROR, CELL_PROCESS_TIMEOUT,
                         name='cell_states',
                         validate_strings=True), default=CELL_LOADED)
     index = Column(Integer)
