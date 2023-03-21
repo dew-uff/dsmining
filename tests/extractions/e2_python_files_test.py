@@ -84,62 +84,13 @@ class TestE2PythonFilesProcessRepository:
 
         monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
         monkeypatch.setattr(e2, 'process_python_files',
-                            lambda _session, _repository, _python_files_names, count: (1, True))
+                            lambda _session, _repository, _python_files_names, count: 1)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         output = e2.process_repository(session, repository)
 
         assert output == "done"
         assert repository.state == REP_PF_EXTRACTED
         assert session.query(Repository).first().python_files_count == 1
-
-    def test_process_repository_error(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(state=REP_N_EXTRACTED)
-        assert repository.python_files_count is None
-
-        monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
-        monkeypatch.setattr(e2, 'process_python_files',
-                            lambda _session, _repository, _python_files_names, count:
-                            (1, False))
-        output = e2.process_repository(session, repository)
-
-        assert output == "done"
-        assert repository.state == REP_PF_ERROR
-        assert session.query(Repository).first().python_files_count is None
-
-    def test_process_repository_retry_success(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_PF_ERROR)
-
-        monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
-        monkeypatch.setattr(e2, 'process_python_files',
-                            lambda _session, _repository, _python_files_names, count: (1, True))
-
-        output = e2.process_repository(session, repository, retry=True)
-
-        assert repository.state == REP_PF_EXTRACTED
-        captured = capsys.readouterr()
-        assert "retrying to process" in captured.out
-        assert output == "done"
-
-    def test_process_repository_retry_error(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(state=REP_PF_ERROR)
-        assert repository.python_files_count is None
-
-        monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
-        monkeypatch.setattr(e2, 'process_python_files',
-                            lambda _session, _repository, _python_files_names, count:
-                            (1, False))
-        output = e2.process_repository(session, repository, retry=True)
-
-        assert output == "done"
-        assert repository.state == REP_PF_ERROR
-        assert session.query(Repository).first().python_files_count is None
-
-    def test_process_repository_not_retry(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_PF_ERROR)
-
-        output = e2.process_repository(session, repository)
-
-        assert output == "already processed"
 
     def test_process_repository_already_processed(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(
@@ -157,7 +108,7 @@ class TestE2PythonFilesProcessRepository:
 
         assert output == "already processed"
 
-    def test_process_repository_already_processed(self, session, monkeypatch):
+    def test_process_repository_state_before(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(
             state=REP_LOADED)
 
@@ -168,113 +119,101 @@ class TestE2PythonFilesProcessRepository:
 
 class TestE2PythonFilesProcessPythonFiles:
     def test_process_python_files_sucess(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_N_EXTRACTED)
         python_files_names = ['test.py']
         count = 0
         source = 'import matplotlib\nprint("test")\n'
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=source))
 
-        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        count = e2.process_python_files(session, repository, python_files_names, count)
         session.commit()
         python_file = session.query(PythonFile).first()
 
         assert count == 1
-        assert no_errors is True
         assert python_file.repository_id == repository.id
         assert python_file.total_lines == 2
         assert python_file.source == source
-
-    def test_process_python_files_sucess_empty_file(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create()
-        python_files_names = ['test.py']
-        count = 0
-        source = ''
-        monkeypatch.setattr(Path, 'exists', lambda path: True)
-        monkeypatch.setattr('builtins.open', mock_open(read_data=source))
-
-        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
-        session.commit()
-        python_file = session.query(PythonFile).first()
-
-        assert count == 1
-        assert no_errors is True
-        assert python_file.repository_id == repository.id
-        assert python_file.total_lines == 0
-        assert python_file.processed == consts.PF_EMPTY
-
-    def test_process_python_files_path_zip(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create()
-        python_files_names = ['test.py']
-        count = 0
-        source = 'import matplotlib\nprint("test")\n'
-        monkeypatch.setattr(Path, 'exists', lambda path: False)
-        monkeypatch.setattr(e2, 'unzip_repository', stub_unzip)
-        monkeypatch.setattr('builtins.open', mock_open(read_data=source))
-
-        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
-        session.commit()
-        python_file = session.query(PythonFile).first()
-        captured = capsys.readouterr()
-
-        assert count == 1
-        assert no_errors is True
-        assert python_file.repository_id == repository.id
-        assert 'Unzipping repository' in captured.out
-
-    def test_process_python_files_path_error(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create()
-        python_files_names = ['test.py']
-        count = 0
-        monkeypatch.setattr(Path, 'exists', lambda path: False)
-
-        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
-        session.commit()
-        query = session.query(PythonFile).all()
-        captured = capsys.readouterr()
-
-        assert count == 0
-        assert no_errors is False
-        assert query == []
-        assert 'Failed to load' in captured.out
+        assert python_file.state == PF_LOADED
 
     def test_process_python_files_no_name(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_N_EXTRACTED)
         python_files_names = ['']
         count = 0
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
-        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        count = e2.process_python_files(session, repository, python_files_names, count)
         session.commit()
         query = session.query(PythonFile).all()
 
         assert count == 0
         assert query == []
-        assert no_errors is True
 
-    def test_process_python_files_already_exists(self, session, monkeypatch, capsys):
+    def test_process_python_files_already_exists_with_error(self, session, monkeypatch, capsys):
         """ If python file with error, reprocesses """
 
         count = 0
         name = "test.py"
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_N_EXTRACTED)
         python_files_names = [name]
         python_file = PythonFileFactory(session).create(repository_id=repository.id,
                                                         name=name,
-                                                        processed=consts.PF_ERROR)
+                                                        state=PF_L_ERROR)
         initial_created_at = python_file.created_at
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data="import matplotlib\n"))
 
-        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        count = e2.process_python_files(session, repository, python_files_names, count)
         session.commit()
 
         python_file_result = session.query(PythonFile).first()
 
         assert initial_created_at != python_file_result.created_at
         assert count == 1
-        assert no_errors is True
+        assert python_file_result.state == PF_LOADED
+
+    def test_process_python_files_already_exists_loaded(self, session, monkeypatch, capsys):
+        """ If python file with error, reprocesses """
+
+        count = 0
+        name = "test.py"
+        repository = RepositoryFactory(session).create(state=REP_N_EXTRACTED)
+        python_files_names = [name]
+        python_file = PythonFileFactory(session).create(repository_id=repository.id,
+                                                        name=name,
+                                                        state=PF_LOADED)
+        initial_created_at = python_file.created_at
+
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data="import matplotlib\n"))
+
+        count = e2.process_python_files(session, repository, python_files_names, count)
+        session.commit()
+        captured = capsys.readouterr()
+        python_file_result = session.query(PythonFile).first()
+
+        assert initial_created_at == python_file_result.created_at
+        assert count == 1
+        assert python_file_result.state == PF_LOADED
+        assert "Python File already processed" in captured.out
+
+    def test_process_python_files_sucess_empty(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(state=REP_N_EXTRACTED)
+        python_files_names = ['test.py']
+        count = 0
+        source = ''
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        monkeypatch.setattr('builtins.open', mock_open(read_data=source))
+
+        count = e2.process_python_files(session, repository, python_files_names, count)
+        session.commit()
+        python_file = session.query(PythonFile).first()
+
+        assert count == 1
+        assert python_file.repository_id == repository.id
+        assert python_file.total_lines == 0
+        assert python_file.state == PF_EMPTY
 
     def test_process_python_files_IOError(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
@@ -288,13 +227,12 @@ class TestE2PythonFilesProcessPythonFiles:
         m.side_effect = raise_error
         monkeypatch.setattr('builtins.open', m)
 
-        count, no_errors = e2.process_python_files(session, repository, python_files_names, count)
+        count = e2.process_python_files(session, repository, python_files_names, count)
         session.commit()
         python_file = session.query(PythonFile).first()
 
         assert count == 1
-        assert no_errors is True
         assert python_file.repository_id == repository.id
-        assert python_file.processed == consts.PF_ERROR
+        assert python_file.state == PF_L_ERROR
         assert python_file.source is None
         assert python_file.total_lines is None

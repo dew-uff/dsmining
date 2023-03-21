@@ -3,7 +3,6 @@
 import os
 import argparse
 import src.config as config
-import src.consts as consts
 
 from src.db.database import PythonFile, connect
 from src.helpers.h1_utils import vprint, StatusLogger, savepid
@@ -34,15 +33,6 @@ def find_python_files(session, repository):
 
 
 def process_python_files(session, repository, python_files_names, count):
-    no_errors = True
-
-    if not repository.path.exists():
-        vprint(2, "Unzipping repository: {}".format(repository.zip_path))
-        msg = unzip_repository(session, repository)
-        if msg != "done":
-            vprint(2, msg)
-            no_errors = False
-            return count, no_errors
 
     for name in python_files_names:
         if not name:
@@ -56,7 +46,7 @@ def process_python_files(session, repository, python_files_names, count):
         ).first()
 
         if python_file is not None:
-            if python_file.processed & consts.PF_ERROR:
+            if python_file.state == PF_L_ERROR:
                 session.delete(python_file)
                 session.commit()
             else:
@@ -75,16 +65,16 @@ def process_python_files(session, repository, python_files_names, count):
                 total = len(f.readlines())
 
             if total == 0:
-                pf_processed = consts.PF_EMPTY
+                pf_state = PF_EMPTY
             else:
-                pf_processed = consts.PF_OK
+                pf_state = PF_LOADED
 
             python_file = PythonFile(
                 repository_id=repository.id,
                 name=name,
                 source=source,
                 total_lines=total,
-                processed=pf_processed
+                state=pf_state
             )
 
             session.add(python_file)
@@ -96,21 +86,17 @@ def process_python_files(session, repository, python_files_names, count):
             python_file = PythonFile(
                 repository_id=repository.id,
                 name=name,
-                processed=consts.PF_ERROR
+                state=PF_L_ERROR
             )
             session.add(python_file)
 
-    return count, no_errors
+    return count
 
 
 def process_repository(session, repository, retry=False):
     """ Processes repository """
 
-    if retry and repository.state == REP_PF_ERROR:
-        session.add(repository)
-        vprint(3, "retrying to process {}".format(repository))
-        repository.state = REP_N_EXTRACTED
-    elif repository.state == REP_PF_EXTRACTED \
+    if repository.state == REP_PF_EXTRACTED \
             or repository.state in REP_ERRORS\
             or repository.state in states_after(REP_PF_EXTRACTED, REP_ORDER):
         return "already processed"
@@ -119,13 +105,11 @@ def process_repository(session, repository, retry=False):
 
     count = 0
     repository_python_files_names = find_python_files(session, repository)
-    count, no_errors = process_python_files(session, repository, repository_python_files_names, count)
 
-    if no_errors:
+    if repository.state is not REP_UNAVAILABLE_FILES:
+        count = process_python_files(session, repository, repository_python_files_names, count)
         repository.state = REP_PF_EXTRACTED
         repository.python_files_count = count
-    else:
-        repository.state = REP_PF_ERROR
 
     session.add(repository)
     session.commit()
