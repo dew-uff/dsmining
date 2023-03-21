@@ -8,7 +8,7 @@ import src.consts as consts
 from src.db.database import RequirementFile, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid, unzip_repository
 from src.helpers.h1_utils import find_files_in_path, mount_basedir
-from src.helpers.h3_script_helpers import filter_repositories
+from src.helpers.h3_script_helpers import filter_repositories, apply
 from src.states import *
 
 
@@ -139,33 +139,6 @@ def process_repository(session, repository, retry=False):
     return "done"
 
 
-def apply(
-        session, status, selected_repositories, retry,
-        count, interval, reverse, check
-):
-    while selected_repositories:
-
-        selected_repositories, query = filter_repositories(
-            session=session,
-            selected_repositories=selected_repositories,
-            count=count,
-            interval=interval,
-            reverse=reverse
-        )
-
-        for repository in query:
-            if check_exit(check):
-                vprint(0, "Found .exit file. Exiting")
-                return
-            status.report()
-            vprint(0, "Extracting requirement files from {}".format(repository))
-            with mount_basedir():
-                result = process_repository(session, repository, retry)
-                vprint(1, result)
-            status.count += 1
-            session.commit()
-
-
 def main():
     """Main function"""
     script_name = os.path.basename(__file__)[:-3]
@@ -198,14 +171,16 @@ def main():
 
     with connect() as session, savepid():
         apply(
-            session,
-            status,
-            args.repositories or True,
-            True if args.retry_errors else False,
-            args.count,
-            args.interval,
-            args.reverse,
-            set(args.check)
+            session=session,
+            status=status,
+            selected_repositories=args.repositories or True,
+            retry=True if args.retry_errors else False,
+            count=args.count,
+            interval=args.interval,
+            reverse=args.reverse,
+            check=set(args.check),
+            process_repository=process_repository,
+            model_type='requirement files'
         )
 
 

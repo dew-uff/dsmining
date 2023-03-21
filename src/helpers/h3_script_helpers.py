@@ -11,10 +11,36 @@ import src.extras.e8_extract_files as e8
 from src import consts
 from src.classes.c2_local_checkers import SetLocalChecker, CompressedLocalChecker, PathLocalChecker
 from src.classes.c3_cell_visitor import CellVisitor
-from src.helpers.h1_utils import vprint, to_unicode
+from src.helpers.h1_utils import vprint, to_unicode, check_exit
 from src.helpers.h1_utils import timeout
 from src.db.database import Repository, Cell, PythonFile, RepositoryFile
 from src.states import *
+
+
+def apply(session, status, selected_repositories, retry,
+          count, interval, reverse, check,
+          process_repository, model_type):
+    while selected_repositories:
+
+        selected_repositories, query = filter_repositories(
+            session=session,
+            selected_repositories=selected_repositories,
+            count=count,
+            interval=interval, reverse=reverse
+        )
+
+        for repository in query:
+            if check_exit(check):
+                vprint(0, "Found .exit file. Exiting")
+                return
+            status.report()
+            vprint(0, f"Extracting {model_type} from {repository}")
+
+            result = process_repository(session, repository, retry)
+            vprint(0, result)
+
+            status.count += 1
+            session.commit()
 
 
 def filter_repositories(session, selected_repositories,
