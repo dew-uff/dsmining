@@ -1,6 +1,7 @@
 import sys
 import os
 
+
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
@@ -8,6 +9,7 @@ if src not in sys.path:
 import src.consts as consts
 import src.extractions.e4_markdown_cells as e4
 
+from src.states import *
 from nltk.corpus import stopwords
 from src.db.database import CellMarkdownFeature
 from src.extractions.e4_markdown_cells import process_markdown_cell
@@ -21,30 +23,27 @@ class TestE4MarkdownCellsProcessMarkdownCell:
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = MarkdownCellFactory(session).create(repository_id=repository.id,
-                                                   notebook_id=notebook.id)
+                                                   notebook_id=notebook.id,
+                                                   state=CELL_LOADED)
 
         monkeypatch.setattr(e4, 'extract_features', stub_extract_features)
 
-        result = process_markdown_cell(
-            session, repository.id, notebook.id, cell, consts.C_PROCESS_ERROR
-        )
+        result = process_markdown_cell(session, repository.id, notebook.id, cell)
         session.commit()
 
         cell_markdown_features = session.query(CellMarkdownFeature).first()
 
         assert result == 'done'
         assert cell_markdown_features.cell_id == cell.id
-        assert cell.processed == consts.C_PROCESS_OK
+        assert cell.state == CELL_PROCESSED
 
     def test_process_markdown_cell_already_processed(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = MarkdownCellFactory(session).create(repository_id=repository.id,
                                                    notebook_id=notebook.id,
-                                                   processed=consts.C_PROCESS_OK)
-        result = process_markdown_cell(
-            session, repository.id, notebook.id, cell, consts.C_PROCESS_ERROR
-        )
+                                                   state=CELL_PROCESSED)
+        result = process_markdown_cell(session, repository.id, notebook.id, cell)
         assert result == 'already processed'
 
     def test_process_markdown_cell_retry_error_not_exist_success(self, session, monkeypatch):
@@ -52,26 +51,24 @@ class TestE4MarkdownCellsProcessMarkdownCell:
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = MarkdownCellFactory(session).create(repository_id=repository.id,
                                                    notebook_id=notebook.id,
-                                                   processed=consts.C_PROCESS_ERROR)
+                                                   state=CELL_PROCESS_ERROR)
         monkeypatch.setattr(e4, 'extract_features', stub_extract_features)
 
-        result = process_markdown_cell(
-            session, repository.id, notebook.id, cell, 0
-        )
+        result = process_markdown_cell(session, repository.id, notebook.id, cell, True)
         session.commit()
 
         cell_markdown_features = session.query(CellMarkdownFeature).first()
 
         assert result == 'done'
         assert cell_markdown_features.cell_id == cell.id
-        assert cell.processed == consts.C_PROCESS_OK
+        assert cell.state == CELL_PROCESSED
 
     def test_process_markdown_cell_retry_error_exists_success(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = MarkdownCellFactory(session).create(repository_id=repository.id,
                                                    notebook_id=notebook.id,
-                                                   processed=consts.C_PROCESS_ERROR)
+                                                   state=CELL_PROCESS_ERROR)
         cell_markdown = CellMarkdownFeatureFactory(session).create(repository_id=repository.id,
                                                                    notebook_id=notebook.id,
                                                                    cell_id=cell.id)
@@ -79,38 +76,50 @@ class TestE4MarkdownCellsProcessMarkdownCell:
 
         monkeypatch.setattr(e4, 'extract_features', stub_extract_features)
 
-        result = process_markdown_cell(
-            session, repository.id, notebook.id, cell, 0
-        )
+        result = process_markdown_cell(session, repository.id, notebook.id, cell, True)
         session.commit()
 
         cell_markdown_features = session.query(CellMarkdownFeature).first()
 
         assert result == 'done'
         assert cell_markdown_features.cell_id == cell.id
-        assert cell.processed == consts.C_PROCESS_OK
+        assert cell.state == CELL_PROCESSED
         assert created_at != cell_markdown_features.created_at
+
+    def test_process_markdown_cell_not_retry(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create()
+        notebook = NotebookFactory(session).create(repository_id=repository.id)
+        cell = MarkdownCellFactory(session).create(repository_id=repository.id,
+                                                   notebook_id=notebook.id,
+                                                   state=CELL_PROCESS_ERROR)
+        monkeypatch.setattr(e4, 'extract_features', stub_extract_features)
+
+        result = process_markdown_cell(session, repository.id, notebook.id, cell)
+        session.commit()
+
+
+        assert result == 'already processed'
+        assert cell.state == CELL_PROCESS_ERROR
 
     def test_process_markdown_cell_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = MarkdownCellFactory(session).create(repository_id=repository.id,
-                                                   notebook_id=notebook.id)
+                                                   notebook_id=notebook.id,
+                                                   state=CELL_LOADED)
 
         def stub_extract_features_error(cell_source):  # noqa: F841
             raise Exception
 
         monkeypatch.setattr(e4, 'extract_features', stub_extract_features_error)
 
-        result = process_markdown_cell(
-            session, repository.id, notebook.id, cell, consts.C_PROCESS_ERROR
-        )
+        result = process_markdown_cell(session, repository.id, notebook.id, cell)
         session.commit()
 
         cell_markdown_features = session.query(CellMarkdownFeature).first()
 
         assert 'Failed to process' in result
-        assert cell.processed == consts.C_PROCESS_ERROR
+        assert cell.state == CELL_PROCESS_ERROR
         assert cell_markdown_features is None
 
 

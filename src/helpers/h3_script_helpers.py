@@ -92,11 +92,8 @@ def filter_repositories(session, selected_repositories,
     return selected_repositories, query
 
 
-def filter_markdown_cells(session, skip_if_error, count, interval,
-                          reverse, skip_already_processed):
+def filter_markdown_cells(session, count, interval,reverse):
     filters = [
-        Cell.processed.op('&')(skip_already_processed) == 0,
-        Cell.processed.op('&')(skip_if_error) == 0,
         Cell.cell_type == 'markdown',
     ]
 
