@@ -8,9 +8,9 @@ import src.consts as consts
 
 from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect
-from src.helpers.h1_utils import check_exit, savepid, SafeSession, mount_basedir, unzip_repository
+from src.helpers.h1_utils import  savepid, SafeSession, unzip_repository
 from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger
-from src.helpers.h3_script_helpers import filter_repositories, broken_link, cell_output_formats, apply
+from src.helpers.h3_script_helpers import  broken_link, cell_output_formats, apply
 from src.states import *
 
 
@@ -45,7 +45,7 @@ def load_cells(repository_id, nbrow, notebook, status):
                 except (IndentationError, SyntaxError) as err:
                     vprint(3, "Error on cell transformation: {}".format(err))
                     source = ""
-                    status = consts.N_LOAD_SYNTAX_ERROR
+                    status = NB_LOAD_SYNTAX_ERROR
                     cell_processed |= consts.C_SYNTAX_ERROR
                 if "\0" in source:
                     vprint(3, "Found null byte in source. Replacing it by \\n")
@@ -81,7 +81,7 @@ def load_cells(repository_id, nbrow, notebook, status):
 
         except KeyError as err:
             vprint(3, "Error on cell extraction: {}".format(err))
-            status = consts.N_LOAD_FORMAT_ERROR
+            status = NB_LOAD_FORMAT_ERROR
 
     return nbrow, cells_info, exec_count, status
 
@@ -91,7 +91,7 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
     """ Extract notebook information and cells from notebook """
     # pylint: disable=too-many-locals
 
-    status = 0
+    status = NB_LOADED
 
     try:
         with open(str(path / notebook_file)) as ofile:
@@ -107,7 +107,7 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
     except OSError as e:
         vprint(3, "Failed to open notebook {}".format(e))
 
-        nbrow["processed"] = consts.N_LOAD_ERROR
+        nbrow["state"] = NB_LOAD_ERROR
         if os.path.islink(str(path / notebook_file)):
             broken_link(notebook_file, repository_id)
 
@@ -116,7 +116,7 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
     except Exception as e:  # pylint: disable=broad-except
         vprint(3, "Failed to load notebook {}".format(e))
 
-        nbrow["processed"] = consts.N_LOAD_FORMAT_ERROR
+        nbrow["state"] = NB_LOAD_FORMAT_ERROR
         return nbrow, []
 
     nbrow["kernel"] = metadata.get("kernelspec", {}).get("name", "no-kernel")
@@ -129,10 +129,10 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
         = load_cells(repository_id, nbrow, notebook, status)
 
     if nbrow["total_cells"] == 0:
-        status = consts.N_LOAD_FORMAT_ERROR
+        status = NB_LOAD_FORMAT_ERROR
 
     nbrow["max_execution_count"] = exec_count
-    nbrow["processed"] = status
+    nbrow["state"] = status
     return nbrow, cells_info
 
 
@@ -149,11 +149,11 @@ def process_notebooks(session, repository, repository_notebooks_names):
         ).first()
 
         if notebook is not None:
-            if notebook.processed & consts.N_STOPPED:
+            if notebook.state == NB_STOPPED:
                 session.delete(notebook)
                 session.commit()
             else:
-                if notebook.processed & consts.N_GENERIC_LOAD_ERROR:
+                if notebook.state == NB_GENERIC_LOAD_ERROR:
                     count -= 1
                     vprint(2, "Notebook already exists. Delete from DB: {}".format(notebook))
                     with open(str(config.LOGS_DIR / "todo_delete"), "a") as f:
@@ -186,14 +186,14 @@ def process_notebooks(session, repository, repository_notebooks_names):
                 "raw_cells": 0,
                 "unknown_cell_formats": 0,
                 "empty_cells": 0,
-                "processed": consts.N_OK,
+                "state": NB_LOADED,
             }
             try:
                 nbrow, cells = load_notebook(repository.id, repository.path, name, nbrow)
             except TimeoutError:
-                nbrow["processed"] = consts.N_LOAD_TIMEOUT
+                nbrow["state"] = NB_LOAD_TIMEOUT
                 cells = []
-            nbrow["processed"] |= consts.N_STOPPED
+            nbrow["state"] = NB_STOPPED
             notebook = Notebook(**nbrow)
             session.dependent_add(
                 notebook, [Cell(**cellrow) for cellrow in cells], "notebook_id"
@@ -289,7 +289,7 @@ def main():
 
     with connect() as session, savepid():
         apply(
-            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            session=SafeSession(session, interrupted=NB_STOPPED),
             status=status,
             selected_repositories=args.repositories or True,
             retry=True if args.retry_errors else False,

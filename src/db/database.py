@@ -74,7 +74,6 @@ class Repository(Base):
                         REP_N_ERROR,
                         REP_PF_EXTRACTED,
                         REP_REQ_FILE_EXTRACTED,
-                        REP_REQ_FILE_ERROR,
                         REP_FINISHED,
                         REP_UNAVAILABLE_FILES,
                         name='repository_states',
@@ -229,7 +228,7 @@ class PythonFile(Base):
     repository_id = Column(Integer)
     state = Column(Enum(PF_LOADED, PF_EMPTY, PF_L_ERROR,
                         name='python_files_states',
-                        validate_strings=True), default=REQ_FILE_LOADED)
+                        validate_strings=True), default=PF_LOADED)
     name = Column(String)
     source = Column(String)
     total_lines = Column(Integer)
@@ -351,6 +350,15 @@ class Notebook(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
+    state = Column(Enum(NB_LOADED,
+                        NB_LOAD_ERROR,
+                        NB_LOAD_FORMAT_ERROR,
+                        NB_LOAD_SYNTAX_ERROR,
+                        NB_LOAD_TIMEOUT,
+                        NB_STOPPED,
+                        NB_GENERIC_LOAD_ERROR,
+                        name='repository_states',
+                        validate_strings=True), default=NB_LOADED)
     name = Column(String)
     nbformat = Column(String)
     kernel = Column(String)

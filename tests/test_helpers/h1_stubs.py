@@ -1,11 +1,12 @@
 # noqa: E501
 from src import consts
 import nbformat
+from src.states import *
 
 nbrow = {'repository_id': 1, 'name': 'file.ipynb', 'nbformat': '4.0', 'kernel': 'python3',
          'language': 'python', 'language_version': '3.5.1', 'max_execution_count': 22, 'total_cells': 61,
          'code_cells': 22, 'code_cells_with_output': 15, 'markdown_cells': 39, 'raw_cells': 0,
-         'unknown_cell_formats': 0, 'empty_cells': 0, 'processed': 0}
+         'unknown_cell_formats': 0, 'empty_cells': 0, 'state': NB_LOADED}
 cells = [
     {'repository_id': 1, 'notebook_id': None, 'index': 0, 'cell_type': 'markdown', 'execution_count': None,
      'lines': 6, 'output_formats': '',
@@ -301,7 +302,7 @@ def get_empty_nbrow(repository, name):
                 "raw_cells": 0,
                 "unknown_cell_formats": 0,
                 "empty_cells": 0,
-                "processed": consts.N_OK,
+                "state": NB_LOADED,
             }
     return empty_nbrow
 
@@ -352,7 +353,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                 "raw_cells": 0,
                 "unknown_cell_formats": 0,
                 "empty_cells": 0,
-                "processed": 0,
+                "state": NB_LOADED,
             }
     _cells_info = [
                     {
@@ -693,7 +694,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                     },
                   ]
     _exec_count = 10
-    _status = 0
+    _status = NB_LOADED
     return _nbrow, _cells_info, _exec_count, _status
 
 
@@ -713,7 +714,7 @@ def stub_load_no_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):  # n
                 "raw_cells": 0,
                 "unknown_cell_formats": 0,
                 "empty_cells": 0,
-                "processed": 0,
+                "state": NB_LOADED,
             }
     _cells_info = []
     _exec_count = 10
@@ -737,7 +738,7 @@ def get_notebook_nbrow(repository_id, name):  # noqa: F841
         "raw_cells": 0,
         "unknown_cell_formats": 0,
         "empty_cells": 0,
-        "processed": 0,
+        "state": NB_LOADED,
     }
     return __nbrow
 
