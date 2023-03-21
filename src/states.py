@@ -4,23 +4,22 @@
 REP_FILTERED = "repository_filtered"
 REP_LOADED = "repository_loaded"
 REP_FAILED_TO_CLONE = 'error_cloning_repository'
-REP_N_EXTRACTION = "extracted_notebooks_cells"
+REP_N_EXTRACTED = "notebooks_cells_extracted"
 REP_N_ERROR = "error_extracting_notebooks_cells"
-REP_P_EXTRACTION = "extracted_python_files"
-REP_P_ERROR = "error_extracting_python_files"
-REP_REQUIREMENTS_OK = "extracted_requirements"
-REP_REQUIREMENTS_ERROR = "error_extracting_requirements"
+REP_PF_EXTRACTED = "python_files_extracted"
+REP_PF_ERROR = "error_extracting_python_files"
+REP_REQ_FILE_EXTRACTED = "requirement_files_extracted"
+REP_REQ_FILE_ERROR = "error_extracting_requirements"
 REP_UNAVAILABLE_FILES = "error_unavailable_files"
 REP_FINISHED = "repository_finished_processing"
 
-REP_ORDER = [REP_FILTERED, REP_LOADED, REP_N_EXTRACTION, REP_P_EXTRACTION, REP_REQUIREMENTS_OK, REP_FINISHED]
-REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR, REP_P_ERROR, REP_REQUIREMENTS_ERROR, REP_UNAVAILABLE_FILES]
+REP_ORDER = [REP_FILTERED, REP_LOADED, REP_N_EXTRACTED, REP_PF_EXTRACTED, REP_REQ_FILE_EXTRACTED, REP_FINISHED]
+REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR, REP_PF_ERROR, REP_REQ_FILE_ERROR, REP_UNAVAILABLE_FILES]
 
 # Requirement Files
-REQ_FILE_EXTRACTED = "requirement_file_loaded"
+REQ_FILE_EXTRACTED = "requirement_file_extracted"
 REQ_FILE_EMPTY = "requirement_file_empty"
 REQ_FILE_ERROR = "requirement_file_error"
-
 
 
 def states_before(state, order):
@@ -39,4 +38,3 @@ R_TROUBLESOME = 512                  # 2 ** 9
 R_COMPRESS_ERROR = 1024              # 2 ** 10
 R_COMPRESS_OK = 2048                 # 2 ** 11
 R_EXTRACTED_FILES = 4096             # 2 ** 12
-
