@@ -78,7 +78,7 @@ class Repository(Base):
                         REP_REQUIREMENTS_ERROR,
                         REP_FINISHED,
                         REP_UNAVAILABLE_FILES,
-                        name='requirement_file_states',
+                        name='repository_states',
                         validate_strings=True), default=REP_LOADED)
     domain = Column(String)
     repository = Column(String)
@@ -443,6 +443,9 @@ class RequirementFile(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
+    state = Column(Enum(REQ_FILE_EXTRACTED, REQ_FILE_ERROR, REQ_FILE_EMPTY,
+                        name='requirement_file_states',
+                        validate_strings=True), default=REQ_FILE_EXTRACTED)
     name = Column(String)
     reqformat = Column(String)  # setup.py, requirements.py, Pipfile, Pipfile.lock
     content = Column(String)
