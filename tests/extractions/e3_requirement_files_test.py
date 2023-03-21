@@ -204,7 +204,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.state == REQ_FILE_EXTRACTED
+        assert requirement_file.state == REQ_FILE_LOADED
         assert requirement_file.content == REQUIREMENTS_TXT.decode('ascii')
 
     def test_process_requirement_files_path_zip(self, session, monkeypatch, capsys):
@@ -224,7 +224,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.state == REQ_FILE_EXTRACTED
+        assert requirement_file.state == REQ_FILE_LOADED
         assert requirement_file.content == REQUIREMENTS_TXT.decode('ascii')
         assert 'Unzipping repository' in captured.out
 
@@ -264,7 +264,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         req_names = [Path(name)]
         python_file = RequirementFileFactory(session).create(repository_id=repository.id,
                                                              name=name,
-                                                             state=REQ_FILE_ERROR)
+                                                             state=REQ_FILE_L_ERROR)
         initial_created_at = python_file.created_at
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
@@ -276,18 +276,18 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         requirement_file_result = session.query(RequirementFile).first()
 
         assert requirement_file_result.repository_id == repository.id
-        assert requirement_file_result.state == REQ_FILE_EXTRACTED
+        assert requirement_file_result.state == REQ_FILE_LOADED
         assert initial_created_at != requirement_file_result.created_at
         assert no_errors is True
 
-    def test_process_requirement_files_already_exists_extracted(self, session, monkeypatch, capsys):
+    def test_process_requirement_files_already_exists_loaded(self, session, monkeypatch, capsys):
         name = 'requirements.txt'
         repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
         reqformat = 'requirements.txt'
         req_names = [Path(name)]
         python_file = RequirementFileFactory(session).create(repository_id=repository.id,
                                                              name=name,
-                                                             state=REQ_FILE_EXTRACTED)
+                                                             state=REQ_FILE_LOADED)
         initial_created_at = python_file.created_at
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
@@ -299,7 +299,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         requirement_file_result = session.query(RequirementFile).first()
 
         assert requirement_file_result.repository_id == repository.id
-        assert requirement_file_result.state == REQ_FILE_EXTRACTED
+        assert requirement_file_result.state == REQ_FILE_LOADED
         assert initial_created_at == requirement_file_result.created_at
         assert "Python File already processed" in captured.out
         assert no_errors is True
@@ -319,7 +319,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.state == REQ_FILE_ERROR
+        assert requirement_file.state == REQ_FILE_L_ERROR
         assert 'codec not detected' in captured.out
 
     def test_process_requirement_files_invalid_codec(self, session, monkeypatch, capsys):
@@ -338,7 +338,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.state == REQ_FILE_ERROR
+        assert requirement_file.state == REQ_FILE_L_ERROR
         assert 'invalid codec' in captured.out
 
     def test_process_requirement_files_null_byte(self, session, monkeypatch, capsys):
@@ -356,7 +356,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.state == REQ_FILE_EXTRACTED
+        assert requirement_file.state == REQ_FILE_LOADED
         assert requirement_file.content == "test\ntest\n"
 
     def test_process_requirement_files_empty(self, session, monkeypatch, capsys):
@@ -398,5 +398,5 @@ class TestE3RequiremtFilesProcessRequirementFiles:
 
         assert no_errors is True
         assert requirement_file.repository_id == repository.id
-        assert requirement_file.state == REQ_FILE_ERROR
+        assert requirement_file.state == REQ_FILE_L_ERROR
         assert 'Failed to load' in captured.out

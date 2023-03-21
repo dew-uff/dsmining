@@ -73,7 +73,6 @@ class Repository(Base):
                         REP_N_EXTRACTED,
                         REP_N_ERROR,
                         REP_PF_EXTRACTED,
-                        REP_PF_ERROR,
                         REP_REQ_FILE_EXTRACTED,
                         REP_REQ_FILE_ERROR,
                         REP_FINISHED,
@@ -228,6 +227,9 @@ class PythonFile(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
+    state = Column(Enum(PF_LOADED, PF_EMPTY, PF_L_ERROR,
+                        name='python_files_states',
+                        validate_strings=True), default=REQ_FILE_LOADED)
     name = Column(String)
     source = Column(String)
     total_lines = Column(Integer)
@@ -443,9 +445,9 @@ class RequirementFile(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
-    state = Column(Enum(REQ_FILE_EXTRACTED, REQ_FILE_ERROR, REQ_FILE_EMPTY,
+    state = Column(Enum(REQ_FILE_LOADED, REQ_FILE_L_ERROR, REQ_FILE_EMPTY,
                         name='requirement_file_states',
-                        validate_strings=True), default=REQ_FILE_EXTRACTED)
+                        validate_strings=True), default=REQ_FILE_LOADED)
     name = Column(String)
     reqformat = Column(String)  # setup.py, requirements.py, Pipfile, Pipfile.lock
     content = Column(String)

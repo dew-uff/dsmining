@@ -59,7 +59,7 @@ def process_requirement_files(session, repository, req_names, reqformat):
         ).first()
 
         if requirement_file is not None:
-            if requirement_file.state == REQ_FILE_ERROR:
+            if requirement_file.state == REQ_FILE_L_ERROR:
                 session.delete(requirement_file)
                 session.commit()
             else:
@@ -93,7 +93,7 @@ def process_requirement_files(session, repository, req_names, reqformat):
                 name=name,
                 reqformat=reqformat,
                 content=content,
-                state=REQ_FILE_EXTRACTED,
+                state=REQ_FILE_LOADED,
             )
             session.add(requirement_file)
         except ValueError as err:
@@ -113,7 +113,7 @@ def process_requirement_files(session, repository, req_names, reqformat):
                 repository_id=repository.id,
                 name=name,
                 reqformat=reqformat,
-                state=REQ_FILE_ERROR,
+                state=REQ_FILE_L_ERROR,
             )
             session.add(requirement_file)
 
