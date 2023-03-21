@@ -92,6 +92,24 @@ class TestE2PythonFilesProcessRepository:
         assert repository.state == REP_PF_EXTRACTED
         assert session.query(Repository).first().python_files_count == 1
 
+    def test_process_repository_unavailable(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(state=REP_N_EXTRACTED)
+        assert repository.python_files_count is None
+
+        def unavailable_files(_session, _repository):
+            _repository.state = REP_UNAVAILABLE_FILES
+            return []
+
+        monkeypatch.setattr(e2, 'find_python_files', unavailable_files)
+        monkeypatch.setattr(e2, 'process_python_files',
+                            lambda _session, _repository, _python_files_names, count: 1)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+        output = e2.process_repository(session, repository)
+
+        assert output == "done"
+        assert repository.state == REP_UNAVAILABLE_FILES
+        assert session.query(PythonFile).count() == 0
+
     def test_process_repository_already_processed(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(
             state=REP_PF_EXTRACTED)

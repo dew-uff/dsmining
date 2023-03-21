@@ -38,18 +38,9 @@ def find_requirements(session, repository):
 
 def process_requirement_files(session, repository, req_names, reqformat):
     """ Processes a requirement file """
-    no_errors = True
-
-    if not repository.path.exists():
-        vprint(2, "Unzipping repository: {}".format(repository.zip_path))
-        msg = unzip_repository(session, repository)
-        if msg != "done":
-            vprint(2, msg)
-            no_errors = False
-            return no_errors
-
     for item in req_names:
         name = str(item)
+
         if not name:
             continue
 
@@ -117,36 +108,27 @@ def process_requirement_files(session, repository, req_names, reqformat):
             )
             session.add(requirement_file)
 
-    return no_errors
 
-
-def process_repository(session, repository, retry=False):
+def process_repository(session, repository):
     """ Processes repository """
 
-    if retry and repository.state == REP_REQ_FILE_ERROR:
-        session.add(repository)
-        vprint(3, "retrying to process {}".format(repository))
-        repository.state = REP_PF_EXTRACTED
-    elif repository.state == REP_REQ_FILE_EXTRACTED \
+    if repository.state == REP_REQ_FILE_EXTRACTED \
             or repository.state in REP_ERRORS\
             or repository.state in states_after(REP_REQ_FILE_EXTRACTED, REP_ORDER):
         return "already processed"
     elif repository.state in states_before(REP_PF_EXTRACTED, REP_ORDER):
         return f'wrong script order, before you must run {states_before(REP_PF_EXTRACTED, REP_ORDER)}'
 
-    no_error = True
-
     setups, requirements, pipfiles, pipfile_locks = find_requirements(session, repository)
 
-    no_error &= process_requirement_files(session, repository, setups, "setup.py")
-    no_error &= process_requirement_files(session, repository, requirements, "requirements.txt")
-    no_error &= process_requirement_files(session, repository, pipfiles, "Pipfile")
-    no_error &= process_requirement_files(session, repository, pipfile_locks, "Pipfile.lock")
-
-    if no_error:
+    if repository.state is not REP_UNAVAILABLE_FILES:
+        process_requirement_files(session, repository, setups, "setup.py")
+        process_requirement_files(session, repository, requirements, "requirements.txt")
+        process_requirement_files(session, repository, pipfiles, "Pipfile")
+        process_requirement_files(session, repository, pipfile_locks, "Pipfile.lock")
         repository.state = REP_REQ_FILE_EXTRACTED
     else:
-        repository.state = REP_REQ_FILE_ERROR
+        vprint(3, f"files are unavailable for repository {repository}, fix it then rerun all scripts.")
 
     session.add(repository)
     session.commit()
@@ -186,7 +168,8 @@ def main():
             reverse=args.reverse,
             check=set(args.check),
             process_repository=process_repository,
-            model_type="requirement files"
+            model_type="requirement files",
+            params=2
         )
 
 
