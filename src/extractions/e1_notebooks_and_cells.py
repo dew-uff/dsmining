@@ -4,13 +4,12 @@ import os
 import argparse
 import nbformat as nbf
 import src.config as config
-import src.consts as consts
 
 from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect
-from src.helpers.h1_utils import  savepid, SafeSession, unzip_repository
+from src.helpers.h1_utils import savepid, SafeSession, unzip_repository
 from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger
-from src.helpers.h3_script_helpers import  broken_link, cell_output_formats, apply
+from src.helpers.h3_script_helpers import broken_link, cell_output_formats, apply, set_up_argument_parser
 from src.states import *
 
 
@@ -33,9 +32,9 @@ def load_cells(repository_id, nbrow, notebook, status):
             exec_count = max(exec_count, cell_exec_count)
         output_formats = ";".join(set(cell_output_formats(cell)))
 
-        cell_processed = consts.C_OK
+        cell_state = CELL_LOADED
         if is_unknown_version:
-            cell_processed = consts.C_UNKNOWN_VERSION
+            cell_state = CELL_UNKNOWN_VERSION
 
         try:
             source = cell["source"] = cell["source"] or ""
@@ -46,7 +45,7 @@ def load_cells(repository_id, nbrow, notebook, status):
                     vprint(3, "Error on cell transformation: {}".format(err))
                     source = ""
                     status = NB_LOAD_SYNTAX_ERROR
-                    cell_processed |= consts.C_SYNTAX_ERROR
+                    cell_state = CELL_SYNTAX_ERROR
                 if "\0" in source:
                     vprint(3, "Found null byte in source. Replacing it by \\n")
                     source = source.replace("\0", "\n")
@@ -61,7 +60,7 @@ def load_cells(repository_id, nbrow, notebook, status):
                 "output_formats": output_formats,
                 "source": source,
                 "python": is_python,
-                "processed": cell_processed,
+                "state": cell_state,
             }
             cells_info.append(cellrow)
 
@@ -259,25 +258,10 @@ def process_repository(session, repository, retry=False):
 def main():
     """Main function"""
     script_name = os.path.basename(__file__)[:-3]
+
     parser = argparse.ArgumentParser(
         description="Extract notebooks from registered repositories")
-    parser.add_argument("-v", "--verbose", type=int, default=config.VERBOSE,
-                        help="increase output verbosity")
-    parser.add_argument("-n", "--repositories", type=int, default=None,
-                        nargs="*",
-                        help="repositories ids")
-    parser.add_argument("-e", "--retry-errors", action='store_true',
-                        help="retry errors")
-    parser.add_argument("-i", "--interval", type=int, nargs=2,
-                        default=config.REPOSITORY_INTERVAL,
-                        help="id interval")
-    parser.add_argument("-c", "--count", action='store_true',
-                        help="count results")
-    parser.add_argument('-r', '--reverse', action='store_true',
-                        help='iterate in reverse order')
-    parser.add_argument('--check', type=str, nargs='*',
-                        default={'all', script_name, script_name + '.py'},
-                        help='check name in .exit')
+    parser = set_up_argument_parser(parser, script_name)
     args = parser.parse_args()
 
     config.VERBOSE = args.verbose

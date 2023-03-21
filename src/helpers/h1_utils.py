@@ -15,6 +15,7 @@ import csv
 import src.config as config
 from src.states import *
 
+
 def ignore_surrogates(original):
     new = original.encode('utf8', 'ignore').decode('utf8', 'ignore')
     return new, new != original

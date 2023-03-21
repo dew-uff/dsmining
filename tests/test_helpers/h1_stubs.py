@@ -11,7 +11,7 @@ cells = [
     {'repository_id': 1, 'notebook_id': None, 'index': 0, 'cell_type': 'markdown', 'execution_count': None,
      'lines': 6, 'output_formats': '',
      'source': '<!--BOOK_INFORMATION-->\n<img align="left"style="padding-right:10px;" src="figures/PDSH-cover-small.png">\n\n*This notebook contains an excerpt from the [Python Data Science Handbook](http://shop.oreilly.com/product/0636920034919.do) by Jake VanderPlas; the content is available [on GitHub](https://github.com/jakevdp/PythonDataScienceHandbook).*\n\n*The text is released under the [CC-BY-NC-ND license](https://creativecommons.org/licenses/by-nc-nd/3.0/us/legalcode), and code is released under the [MIT license](https://opensource.org/licenses/MIT). If you find this content useful, please consider supporting the work by [buying the book](http://shop.oreilly.com/product/0636920034919.do)!*',
-     'python': True, 'processed': 0}]
+     'python': True, 'state': CELL_LOADED}]
 
 REQUIREMENTS_TXT = b"# local package\n-e .\n\n# external requirements\nclick\nSphinx\ncoverage\nawscli\nflake8\npython-dotenv>=0.5.1\n{% if cookiecutter.python_interpreter != 'python3' %}\n\n# backwards compatibility\npathlib2\n{% endif %}"
 
@@ -366,7 +366,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "# Running Code",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -378,7 +378,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "First and foremost, the Jupyter Notebook is an interactive environment for writing and running code. The notebook is capable of running code in a wide range of languages. However, each notebook is associated with a single kernel.  This notebook is associated with the IPython kernel, therefore runs Python code.",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -390,7 +390,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "## Code cells allow you to enter and run code",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -402,7 +402,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "Run a code cell using `Shift-Enter` or pressing the <button class='btn btn-default btn-xs'><i class=\"icon-step-forward fa fa-play\"></i></button> button in the toolbar above:",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -414,7 +414,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "a = 10\n",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -426,7 +426,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "print(a)\n",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -438,7 +438,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "There are two other keyboard shortcuts for running code:\n\n* `Alt-Enter` runs the current cell and inserts a new one below.\n* `Ctrl-Enter` run the current cell and enters command mode.",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -450,7 +450,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "## Managing the Kernel",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -462,7 +462,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "Code is run in a separate process called the Kernel.  The Kernel can be interrupted or restarted.  Try running the following cell and then hit the <button class='btn btn-default btn-xs'><i class='icon-stop fa fa-stop'></i></button> button in the toolbar above.",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -474,7 +474,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "import time\ntime.sleep(10)\n",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -486,7 +486,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "If the Kernel dies you will be prompted to restart it. Here we call the low-level system libc.time routine with the wrong argument via\nctypes to segfault the Python interpreter:",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -498,7 +498,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "import sys\nfrom ctypes import CDLL\n# This will crash a Linux or Mac system\n# equivalent calls can be made on Windows\n\n# Uncomment these lines if you would like to see the segfault\n\n# dll = 'dylib' if sys.platform == 'darwin' else 'so.6'\n# libc = CDLL(\"libc.%s\" % dll) \n# libc.time(-1)  # BOOM!!\n",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -510,7 +510,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "## Cell menu",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -522,7 +522,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": 'The "Cell" menu has a number of menu items for running code in different ways. These includes:\n\n* Run and Select Below\n* Run and Insert Below\n* Run All\n* Run All Above\n* Run All Below',
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -534,7 +534,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "## Restarting the kernels",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -546,7 +546,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "The kernel maintains the state of a notebook's computations. You can reset this state by restarting the kernel. This is done by clicking on the <button class='btn btn-default btn-xs'><i class='fa fa-repeat icon-repeat'></i></button> in the toolbar above.",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -558,7 +558,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "## sys.stdout and sys.stderr",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -570,7 +570,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "The stdout and stderr streams are displayed as text in the output area.",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -582,7 +582,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": 'print("hi, stdout")\n',
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -594,7 +594,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "from __future__ import print_function\nprint('hi, stderr', file=sys.stderr)\n",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -606,7 +606,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "## Output is asynchronous",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -618,7 +618,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "All output is displayed asynchronously as it is generated in the Kernel. If you execute the next cell, you will see the output one piece at a time, not all at the end.",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -630,7 +630,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "import time, sys\nfor i in range(8):\n    print(i)\n    time.sleep(0.5)\n",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -642,7 +642,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "## Large outputs",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -654,7 +654,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "To better handle large outputs, the output area can be collapsed. Run the following cell and then single- or double- click on the active area to the left of the output:",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -666,7 +666,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "for i in range(50):\n    print(i)\n",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -678,7 +678,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "Beyond a certain point, output will scroll automatically:",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                     {
                         "repository_id": 1,
@@ -690,7 +690,7 @@ def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noq
                         "output_formats": "",
                         "source": "for i in range(500):\n    print(2**i - 1)\n",
                         "python": True,
-                        "processed": 0,
+                        "state": CELL_LOADED,
                     },
                   ]
     _exec_count = 10

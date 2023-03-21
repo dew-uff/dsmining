@@ -94,6 +94,16 @@ class TestE1NotebooksAndCellsProcessNotebook:
         assert os.path.exists(str(LOGS_DIR)+"/todo_delete")
         os.remove(str(LOGS_DIR)+"/todo_delete")
 
+    def test_process_notebooks_no_none_already_exists(self, session, capsys):
+        safe_session = SafeSession(session, interrupted=NB_STOPPED)
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
+        notebook = NotebookFactory(session).create(repository_id=repository.id,
+                                                   state=NB_LOADED)
+
+        e1.process_notebooks(safe_session, repository, [notebook.name])
+        captured = capsys.readouterr()
+        assert "Notebook already processed" in captured.out
+
     def test_process_notebooks_no_path_done(self, session, monkeypatch):
 
         safe_session = SafeSession(session, interrupted=NB_STOPPED)

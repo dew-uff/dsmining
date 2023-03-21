@@ -8,13 +8,32 @@ import ast
 import tarfile
 import src.extras.e8_extract_files as e8
 
-from src import consts
+from src import consts, config
 from src.classes.c2_local_checkers import SetLocalChecker, CompressedLocalChecker, PathLocalChecker
 from src.classes.c3_cell_visitor import CellVisitor
 from src.helpers.h1_utils import vprint, to_unicode, check_exit
 from src.helpers.h1_utils import timeout
 from src.db.database import Repository, Cell, PythonFile, RepositoryFile
 from src.states import *
+
+
+def set_up_argument_parser(parser, script_name):
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                        type=int, default=config.VERBOSE)
+    parser.add_argument("-n", "--repositories", help="selected repositories ids",
+                        type=int, default=None, nargs="*")
+    parser.add_argument("-e", "--retry-errors", help="retry errors",
+                        action="store_true")
+    parser.add_argument("-c", "--count", help="count filtered repositories",
+                        action="store_true")
+    parser.add_argument("-r", "--reverse", help="iterate in reverse order",
+                        action="store_true")
+    parser.add_argument("-i", "--interval", help="interval",
+                        type=int, nargs=2, default=config.REPOSITORY_INTERVAL)
+    parser.add_argument("--check", help="check name in .exit", type=str,
+                        nargs="*", default={"all", script_name, script_name + ".py"})
+
+    return parser
 
 
 def apply(session, status, selected_repositories, retry,
