@@ -13,7 +13,7 @@ print('Total repositories: ', len(df))
 with connect() as session, mount_basedir():
     for repository in df.itertuples():
         load_repository_and_commits(
-            SafeSession(session, interrupted=consts.N_STOPPED),
+            SafeSession(session),
             "github.com", repository, commit='all')
         session.commit()
 

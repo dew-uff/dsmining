@@ -25,6 +25,7 @@ N_LOAD_ERROR = 1                     # 2 ** 0
 N_LOAD_FORMAT_ERROR = 2              # 2 ** 1
 N_LOAD_SYNTAX_ERROR = 4              # 2 ** 2
 N_LOAD_TIMEOUT = 8                   # 2 ** 3
+
 N_SYNTAX_ERROR = 16                  # 2 ** 4
 N_AGGREGATE_OK = 32                  # 2 ** 5
 N_AGGREGATE_ERROR = 64               # 2 ** 6

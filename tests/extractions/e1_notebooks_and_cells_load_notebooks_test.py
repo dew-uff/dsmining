@@ -9,7 +9,7 @@ import src.helpers.h3_script_helpers as h2
 import src.extractions.e1_notebooks_and_cells as e1
 
 from unittest.mock import mock_open
-from src.consts import N_OK, N_LOAD_ERROR, N_LOAD_FORMAT_ERROR
+from src.states import *
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.test_helpers.h1_stubs import stub_nbf_read, get_empty_nbrow
@@ -20,7 +20,7 @@ from tests.test_helpers.h1_stubs import stub_load_no_cells
 class TestE1NotebooksAndCellsLoadNotebooks:
 
     def test_load_notebooks(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_empty_nbrow(repository, name)
 
@@ -31,11 +31,11 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         nbrow, cells_info = e1.load_notebook(repository.id, repository.path, name, nbrow)
         assert len(cells_info) == 28
         assert nbrow["language"] == 'python'
-        assert nbrow["processed"] == N_OK
+        assert nbrow["state"] == NB_LOADED
 
     def test_load_notebooksOSError(self, session, monkeypatch, capsys):
 
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_empty_nbrow(repository, name)
 
@@ -52,10 +52,10 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         # assert "Failed to open notebook" in captured.out
 
         assert len(cells_info) == 0
-        assert nbrow["processed"] == N_LOAD_ERROR
+        assert nbrow["state"] == NB_LOAD_ERROR
 
     def test_load_notebooksOSErrorLink(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_empty_nbrow(repository, name)
 
@@ -68,7 +68,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         nbrow, cells_info = e1.load_notebook(repository.id, repository.path, name, nbrow)
 
         assert len(cells_info) == 0
-        assert nbrow["processed"] == N_LOAD_ERROR
+        assert nbrow["state"] == NB_LOAD_ERROR
 
         ''' capsys does not receive ouput if timeout is enabled
         and an Exception is thrown comment timeout 
@@ -79,7 +79,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         # assert "Notebook is broken link" in captured.out
 
     def test_load_notebooksException(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_empty_nbrow(repository, name)
 
@@ -89,7 +89,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         nbrow, cells_info = e1.load_notebook(repository.id, repository.path, name, nbrow)
 
         assert len(cells_info) == 0
-        assert nbrow["processed"] == N_LOAD_FORMAT_ERROR
+        assert nbrow["state"] == NB_LOAD_FORMAT_ERROR
 
         ''' capsys does not receive ouput if timeout is enabled
                 and an Exception is thrown comment timeout 
@@ -98,7 +98,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         # assert "Failed to load notebook" in captured.out
 
     def test_load_notebooksNoCells(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_empty_nbrow(repository, name)
 
@@ -109,4 +109,4 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         nbrow, cells_info = e1.load_notebook(repository.id, repository.path, name, nbrow)
 
         assert len(cells_info) == 0
-        assert nbrow["processed"] == N_LOAD_FORMAT_ERROR
+        assert nbrow["state"] == NB_LOAD_FORMAT_ERROR

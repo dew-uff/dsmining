@@ -7,18 +7,18 @@ if src not in sys.path:
 import src.extractions.e1_notebooks_and_cells as e1
 
 from IPython.core.inputtransformer2 import TransformerManager
-from src.consts import N_LOAD_FORMAT_ERROR, N_LOAD_SYNTAX_ERROR
 from src.consts import C_OK, C_UNKNOWN_VERSION, C_SYNTAX_ERROR
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.test_helpers.h1_stubs import get_notebook_nbrow, stub_KeyError
 from tests.test_helpers.h1_stubs import stub_IndentationError, get_notebook_node
+from src.states import *
 
 
 class TestE1NotebooksAndCellsLoadNotebooks:
 
     def test_load_notebooks(self, session):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_notebook_nbrow(repository.id, name)
         notebook = get_notebook_node()
@@ -27,6 +27,8 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
         assert len(cells_info) == 28
         assert status == 0
+
+        assert nbrow["state"] == NB_LOADED
 
         markdown_cell = cells_info[0]
         assert markdown_cell["repository_id"] == repository.id
@@ -41,7 +43,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         assert code_cell["processed"] == C_OK
 
     def test_load_notebooks_unknown_version(self, session):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_notebook_nbrow(repository.id, name)
         notebook = get_notebook_node()
@@ -59,7 +61,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         assert markdown_cell["processed"] == C_UNKNOWN_VERSION
 
     def test_load_notebooks_syntax_error(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_notebook_nbrow(repository.id, name)
         notebook = get_notebook_node('code_cell')
@@ -72,13 +74,13 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         cell = cells_info[0]
 
         assert len(cells_info) == 1
-        assert status == N_LOAD_SYNTAX_ERROR
+        assert status == NB_LOAD_SYNTAX_ERROR
         assert cell["processed"] == C_SYNTAX_ERROR
         assert cell["source"] == ""
         assert "Error on cell transformation" in captured.out
 
     def test_load_notebooks_null_byte(self, session, capsys):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_notebook_nbrow(repository.id, name)
         notebook = get_notebook_node('code_cell')
@@ -99,7 +101,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         assert "Found null byte in source" in captured.out
 
     def test_load_notebooks_output(self, session):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_notebook_nbrow(repository.id, name)
         notebook = get_notebook_node('display_data')
@@ -119,7 +121,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         assert cell["output_formats"] == 'text/plain;image/png' or 'image/png;text/plain'
 
     def test_load_notebooks_raw_cell(self, session):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_notebook_nbrow(repository.id, name)
         notebook = get_notebook_node('code_cell')
@@ -138,7 +140,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         assert nbrow["raw_cells"] == 1
 
     def test_load_notebooks_unknown(self, session):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_notebook_nbrow(repository.id, name)
         notebook = get_notebook_node('code_cell')
@@ -157,7 +159,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         assert nbrow["unknown_cell_formats"] == 1
 
     def test_load_notebooks_empty(self, session):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_notebook_nbrow(repository.id, name)
         notebook = get_notebook_node('code_cell')
@@ -176,7 +178,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         assert nbrow["empty_cells"] == 1
 
     def test_load_notebooks_key_error(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
         name = "file.ipynb"
         nbrow = get_notebook_nbrow(repository.id, name)
         notebook = get_notebook_node('code_cell')
@@ -187,5 +189,5 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
         captured = capsys.readouterr()
 
-        assert status == N_LOAD_FORMAT_ERROR
+        assert status == NB_LOAD_FORMAT_ERROR
         assert "Error on cell extraction" in captured.out

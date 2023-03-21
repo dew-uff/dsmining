@@ -13,7 +13,7 @@ import sys
 import time
 import csv
 import src.config as config
-
+from src.states import *
 
 def ignore_surrogates(original):
     new = original.encode('utf8', 'ignore').decode('utf8', 'ignore')
@@ -167,7 +167,7 @@ timeout_decorator._target = _target
 
 class SafeSession(object):
 
-    def __init__(self, session, interrupted=536870912):
+    def __init__(self, session, interrupted=NB_STOPPED):
         self.session = session
         self.future = []
         self.interrupted = interrupted
@@ -176,7 +176,7 @@ class SafeSession(object):
         self.session.add(element)
 
     def dependent_add(self, parent, children, on):
-        parent.processed |= self.interrupted
+        parent.state = self.interrupted
         self.session.add(parent)
         self.future.append([
             parent, children, on
@@ -187,8 +187,8 @@ class SafeSession(object):
             self.session.commit()
             if self.future:
                 for parent, children, on in self.future:
-                    if parent.processed & self.interrupted:
-                        parent.processed -= self.interrupted
+                    if parent.state == self.interrupted:
+                        parent.state = NB_LOADED
                     self.session.add(parent)
                     for child in children:
                         setattr(child, on, parent.id)
