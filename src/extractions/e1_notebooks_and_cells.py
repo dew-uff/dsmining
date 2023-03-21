@@ -229,9 +229,9 @@ def process_repository(session, repository, retry=False):
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
         repository.state = REP_LOADED
-    elif repository.state == REP_N_EXTRACTION \
+    elif repository.state == REP_N_EXTRACTED \
             or repository.state in REP_ERRORS\
-            or repository.state in states_after(REP_N_EXTRACTION, REP_ORDER):
+            or repository.state in states_after(REP_N_EXTRACTED, REP_ORDER):
         return "already processed"
     elif repository.state in states_before(REP_LOADED, REP_ORDER):
         return f'wrong script order, before you must run {states_before(REP_LOADED, REP_ORDER)}'
@@ -240,7 +240,7 @@ def process_repository(session, repository, retry=False):
     count, repository = process_notebooks(session, repository, repository_notebooks_names)
 
     if repository.state != REP_N_ERROR and count == repository.notebooks_count:
-        repository.state = REP_N_EXTRACTION
+        repository.state = REP_N_EXTRACTED
     else:
         repository.state = REP_N_ERROR
     session.add(repository)

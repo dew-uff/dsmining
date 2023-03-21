@@ -148,7 +148,7 @@ class Test1NotebooksAndCellsProcessRepository:
 
         assert output == "done"
         assert safe_session.query(Repository).first().notebooks_count == 1
-        assert repository.state == REP_N_EXTRACTION
+        assert repository.state == REP_N_EXTRACTED
 
     def test_process_repository_error(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
@@ -189,7 +189,7 @@ class Test1NotebooksAndCellsProcessRepository:
         output = e1.process_repository(safe_session, repository, retry=True)
         repository = safe_session.query(Repository).first()
 
-        assert repository.state == REP_N_EXTRACTION
+        assert repository.state == REP_N_EXTRACTED
         captured = capsys.readouterr()
         assert "retrying to process" in captured.out
         assert output == "done"
@@ -221,7 +221,7 @@ class Test1NotebooksAndCellsProcessRepository:
     def test_process_repository_already_processed(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
         repository = RepositoryFactory(safe_session).create(
-            state=REP_N_EXTRACTION)
+            state=REP_N_EXTRACTED)
 
         output = e1.process_repository(safe_session, repository)
 
@@ -229,7 +229,7 @@ class Test1NotebooksAndCellsProcessRepository:
 
     def test_process_repository_state_after(self, session, monkeypatch, capsys):
         safe_session = SafeSession(session, interrupted=consts.N_STOPPED)
-        repository = RepositoryFactory(safe_session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(safe_session).create(state=REP_PF_EXTRACTED)
 
         output = e1.process_repository(safe_session, repository)
 

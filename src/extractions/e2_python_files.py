@@ -106,26 +106,26 @@ def process_python_files(session, repository, python_files_names, count):
 def process_repository(session, repository, retry=False):
     """ Processes repository """
 
-    if retry and repository.state == REP_P_ERROR:
+    if retry and repository.state == REP_PF_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
-        repository.state = REP_N_EXTRACTION
-    elif repository.state == REP_P_EXTRACTION \
+        repository.state = REP_N_EXTRACTED
+    elif repository.state == REP_PF_EXTRACTED \
             or repository.state in REP_ERRORS\
-            or repository.state in states_after(REP_P_EXTRACTION, REP_ORDER):
+            or repository.state in states_after(REP_PF_EXTRACTED, REP_ORDER):
         return "already processed"
-    elif repository.state in states_before(REP_N_EXTRACTION, REP_ORDER):
-        return f'wrong script order, before you must run {states_before(REP_N_EXTRACTION, REP_ORDER)}'
+    elif repository.state in states_before(REP_N_EXTRACTED, REP_ORDER):
+        return f'wrong script order, before you must run {states_before(REP_N_EXTRACTED, REP_ORDER)}'
 
     count = 0
     repository_python_files_names = find_python_files(session, repository)
     count, no_errors = process_python_files(session, repository, repository_python_files_names, count)
 
     if no_errors:
-        repository.state = REP_P_EXTRACTION
+        repository.state = REP_PF_EXTRACTED
         repository.python_files_count = count
     else:
-        repository.state = REP_P_ERROR
+        repository.state = REP_PF_ERROR
 
     session.add(repository)
     session.commit()

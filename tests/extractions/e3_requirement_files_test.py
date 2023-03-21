@@ -95,7 +95,7 @@ class TestE3RequiremtFilesFindRequirements:
 
 class TestE3RequiremtFilesProcessRepository:
     def test_process_repository_success(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
         assert repository.python_files_count is None
 
         file = [Path('setup.py')]
@@ -107,10 +107,10 @@ class TestE3RequiremtFilesProcessRepository:
         output = e3.process_repository(session, repository)
 
         assert output == "done"
-        assert repository.state == REP_REQUIREMENTS_OK
+        assert repository.state == REP_REQ_FILE_EXTRACTED
 
     def test_process_repository_error(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
 
         file = [Path('setup.py')]
         monkeypatch.setattr(e3, 'find_requirements',
@@ -121,10 +121,10 @@ class TestE3RequiremtFilesProcessRepository:
         output = e3.process_repository(session, repository)
 
         assert output == "done"
-        assert repository.state == REP_REQUIREMENTS_ERROR
+        assert repository.state == REP_REQ_FILE_ERROR
 
     def test_process_repository_retry_success(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_REQUIREMENTS_ERROR)
+        repository = RepositoryFactory(session).create(state=REP_REQ_FILE_ERROR)
 
         file = [Path('setup.py')]
         monkeypatch.setattr(e3, 'find_requirements',
@@ -135,13 +135,13 @@ class TestE3RequiremtFilesProcessRepository:
 
         output = e3.process_repository(session, repository, retry=True)
 
-        assert repository.state == REP_REQUIREMENTS_OK
+        assert repository.state == REP_REQ_FILE_EXTRACTED
         captured = capsys.readouterr()
         assert "retrying to process" in captured.out
         assert output == "done"
 
     def test_process_repository_retry_error(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(state=REP_REQUIREMENTS_ERROR)
+        repository = RepositoryFactory(session).create(state=REP_REQ_FILE_ERROR)
         assert repository.python_files_count is None
 
         file = [Path('setup.py')]
@@ -153,11 +153,11 @@ class TestE3RequiremtFilesProcessRepository:
         output = e3.process_repository(session, repository, retry=True)
 
         assert output == "done"
-        assert repository.state == REP_REQUIREMENTS_ERROR
+        assert repository.state == REP_REQ_FILE_ERROR
         assert session.query(Repository).first().python_files_count is None
 
     def test_process_repository_not_retry(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_REQUIREMENTS_ERROR)
+        repository = RepositoryFactory(session).create(state=REP_REQ_FILE_ERROR)
 
         output = e3.process_repository(session, repository)
 
@@ -165,7 +165,7 @@ class TestE3RequiremtFilesProcessRepository:
 
     def test_process_repository_already_processed(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(
-            state=REP_REQUIREMENTS_OK)
+            state=REP_REQ_FILE_EXTRACTED)
 
         output = e3.process_repository(session, repository)
 
@@ -181,7 +181,7 @@ class TestE3RequiremtFilesProcessRepository:
 
     def test_process_repository_state_before(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(
-            state=REP_N_EXTRACTION)
+            state=REP_N_EXTRACTED)
 
         output = e3.process_repository(session, repository)
 
@@ -190,7 +190,7 @@ class TestE3RequiremtFilesProcessRepository:
 
 class TestE3RequiremtFilesProcessRequirementFiles:
     def test_process_requirement_files_sucess(self, session, monkeypatch):
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
@@ -208,7 +208,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         assert requirement_file.content == REQUIREMENTS_TXT.decode('ascii')
 
     def test_process_requirement_files_path_zip(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
         reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
         monkeypatch.setattr(Path, 'exists', lambda path: False)
@@ -229,7 +229,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         assert 'Unzipping repository' in captured.out
 
     def test_process_requirement_files_path_error(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
         reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
         monkeypatch.setattr(Path, 'exists', lambda path: False)
@@ -259,7 +259,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
 
     def test_process_requirement_files_already_exists_with_error(self, session, monkeypatch, capsys):
         name = 'requirements.txt'
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
         reqformat = 'requirements.txt'
         req_names = [Path(name)]
         python_file = RequirementFileFactory(session).create(repository_id=repository.id,
@@ -282,7 +282,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
 
     def test_process_requirement_files_already_exists_extracted(self, session, monkeypatch, capsys):
         name = 'requirements.txt'
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
         reqformat = 'requirements.txt'
         req_names = [Path(name)]
         python_file = RequirementFileFactory(session).create(repository_id=repository.id,
@@ -305,7 +305,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         assert no_errors is True
 
     def test_process_requirement_files_no_codec(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
         reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
         monkeypatch.setattr(Path, 'exists', lambda path: True)
@@ -323,7 +323,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         assert 'codec not detected' in captured.out
 
     def test_process_requirement_files_invalid_codec(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
         reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
         monkeypatch.setattr(Path, 'exists', lambda path: True)
@@ -342,7 +342,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         assert 'invalid codec' in captured.out
 
     def test_process_requirement_files_null_byte(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=b"test\0test\n"))
@@ -360,7 +360,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         assert requirement_file.content == "test\ntest\n"
 
     def test_process_requirement_files_empty(self, session, monkeypatch, capsys):
-        repository = RepositoryFactory(session).create(state=REP_P_EXTRACTION)
+        repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=b""))

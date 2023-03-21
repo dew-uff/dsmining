@@ -11,7 +11,6 @@ from src.helpers.h1_utils import find_files_in_path, unzip_repository
 from src.helpers.h3_script_helpers import apply
 
 
-
 def find_requirements(session, repository):
     setups, requirements, pipfiles, pipfile_locks = [], [], [], []
 
@@ -124,16 +123,16 @@ def process_requirement_files(session, repository, req_names, reqformat):
 def process_repository(session, repository, retry=False):
     """ Processes repository """
 
-    if retry and repository.state == REP_REQUIREMENTS_ERROR:
+    if retry and repository.state == REP_REQ_FILE_ERROR:
         session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
-        repository.state = REP_P_EXTRACTION
-    elif repository.state == REP_REQUIREMENTS_OK \
+        repository.state = REP_PF_EXTRACTED
+    elif repository.state == REP_REQ_FILE_EXTRACTED \
             or repository.state in REP_ERRORS\
-            or repository.state in states_after(REP_REQUIREMENTS_OK, REP_ORDER):
+            or repository.state in states_after(REP_REQ_FILE_EXTRACTED, REP_ORDER):
         return "already processed"
-    elif repository.state in states_before(REP_P_EXTRACTION, REP_ORDER):
-        return f'wrong script order, before you must run {states_before(REP_P_EXTRACTION, REP_ORDER)}'
+    elif repository.state in states_before(REP_PF_EXTRACTED, REP_ORDER):
+        return f'wrong script order, before you must run {states_before(REP_PF_EXTRACTED, REP_ORDER)}'
 
     no_error = True
 
@@ -145,9 +144,9 @@ def process_repository(session, repository, retry=False):
     no_error &= process_requirement_files(session, repository, pipfile_locks, "Pipfile.lock")
 
     if no_error:
-        repository.state = REP_REQUIREMENTS_OK
+        repository.state = REP_REQ_FILE_EXTRACTED
     else:
-        repository.state = REP_REQUIREMENTS_ERROR
+        repository.state = REP_REQ_FILE_ERROR
 
     session.add(repository)
     session.commit()
