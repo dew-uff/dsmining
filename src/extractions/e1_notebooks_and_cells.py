@@ -10,7 +10,7 @@ from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect
 from src.helpers.h1_utils import check_exit, savepid, SafeSession, mount_basedir, unzip_repository
 from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger
-from src.helpers.h3_script_helpers import filter_repositories, broken_link, cell_output_formats
+from src.helpers.h3_script_helpers import filter_repositories, broken_link, cell_output_formats, apply
 from src.states import *
 
 
@@ -256,31 +256,6 @@ def process_repository(session, repository, retry=False):
     return "done"
 
 
-def apply(
-        session, status, selected_repositories, retry,
-        count, interval, reverse, check):
-    while selected_repositories:
-
-        selected_repositories, query = filter_repositories(
-            session=session,
-            selected_repositories=selected_repositories,
-            count=count,
-            interval=interval, reverse=reverse
-        )
-
-        for repository in query:
-            if check_exit(check):
-                vprint(0, "Found .exit file. Exiting")
-                return
-            status.report()
-            vprint(0, "Extracting notebooks/cells from {}".format(repository))
-            with mount_basedir():
-                result = process_repository(session, repository, retry)
-                vprint(0, result)
-            status.count += 1
-            session.commit()
-
-
 def main():
     """Main function"""
     script_name = os.path.basename(__file__)[:-3]
@@ -304,21 +279,26 @@ def main():
                         default={'all', script_name, script_name + '.py'},
                         help='check name in .exit')
     args = parser.parse_args()
+
     config.VERBOSE = args.verbose
     status = None
+
     if not args.count:
         status = StatusLogger(script_name)
         status.report()
+
     with connect() as session, savepid():
         apply(
-            SafeSession(session, interrupted=consts.N_STOPPED),
-            status,
-            args.repositories or True,
-            True if args.retry_errors else False,
-            args.count,
-            args.interval,
-            args.reverse,
-            set(args.check)
+            session=SafeSession(session, interrupted=consts.N_STOPPED),
+            status=status,
+            selected_repositories=args.repositories or True,
+            retry=True if args.retry_errors else False,
+            count=args.count,
+            interval=args.interval,
+            reverse=args.reverse,
+            check=set(args.check),
+            process_repository=process_repository,
+            model_type='notebooks/cells'
         )
 
 
