@@ -8,7 +8,7 @@ from src.states import *
 from src.db.database import RequirementFile, connect
 from src.helpers.h1_utils import vprint, StatusLogger, savepid
 from src.helpers.h1_utils import find_files_in_path, unzip_repository
-from src.helpers.h3_script_helpers import apply
+from src.helpers.h3_script_helpers import apply, set_up_argument_parser
 
 
 def find_requirements(session, repository):
@@ -138,18 +138,11 @@ def process_repository(session, repository):
 def main():
     """ Main function """
     script_name = os.path.basename(__file__)[:-3]
+
     parser = argparse.ArgumentParser(description="Extract requirement files from registered repositories")
-
-    parser.add_argument("-v", "--verbose",      type=int, default=config.VERBOSE,   help="increase output verbosity")
-    parser.add_argument("-n", "--repositories", type=int, default=None, nargs="*",  help="selected repositories ids")
-    parser.add_argument("-e", "--retry-errors", action="store_true", help="retry errors")
-    parser.add_argument("-c", "--count",        action="store_true", help="count filtered repositories")
-    parser.add_argument("-r", "--reverse",      action="store_true", help="iterate in reverse order")
-    parser.add_argument("-i", "--interval",     type=int, nargs=2, default=config.REPOSITORY_INTERVAL, help="interval")
-    parser.add_argument("--check",              type=str, nargs="*", default={"all", script_name, script_name + ".py"},
-                        help="check name in .exit")
-
+    parser = set_up_argument_parser(parser, script_name)
     args = parser.parse_args()
+
     config.VERBOSE = args.verbose
     status = None
 

@@ -357,7 +357,7 @@ class Notebook(Base):
                         NB_LOAD_TIMEOUT,
                         NB_STOPPED,
                         NB_GENERIC_LOAD_ERROR,
-                        name='repository_states',
+                        name='notebook_states',
                         validate_strings=True), default=NB_LOADED)
     name = Column(String)
     nbformat = Column(String)
@@ -414,6 +414,9 @@ class Cell(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
     notebook_id = Column(Integer)
+    state = Column(Enum(CELL_LOADED, CELL_UNKNOWN_VERSION, CELL_SYNTAX_ERROR,
+                        name='cell_states',
+                        validate_strings=True), default=CELL_LOADED)
     index = Column(Integer)
     cell_type = Column(String)
     execution_count = Column(String)
