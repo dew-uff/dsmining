@@ -16,6 +16,12 @@ REP_FINISHED = "repository_finished_processing"
 REP_ORDER = [REP_FILTERED, REP_LOADED, REP_N_EXTRACTION, REP_P_EXTRACTION, REP_REQUIREMENTS_OK, REP_FINISHED]
 REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR, REP_P_ERROR, REP_REQUIREMENTS_ERROR, REP_UNAVAILABLE_FILES]
 
+# Requirement Files
+REQ_FILE_EXTRACTED = "requirement_file_loaded"
+REQ_FILE_EMPTY = "requirement_file_empty"
+REQ_FILE_ERROR = "requirement_file_error"
+
+
 
 def states_before(state, order):
     index = order.index(state)
@@ -27,6 +33,7 @@ def states_after(state, order):
     return order[index+1:]
 
 
+# stand-by processed
 R_COMMIT_MISMATCH = 128              # 2 ** 7
 R_TROUBLESOME = 512                  # 2 ** 9
 R_COMPRESS_ERROR = 1024              # 2 ** 10
