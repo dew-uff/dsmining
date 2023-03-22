@@ -76,29 +76,34 @@ class Repository(Base):
                         REP_REQ_FILE_EXTRACTED,
                         REP_FINISHED,
                         REP_UNAVAILABLE_FILES,
+                        REP_STOPPED,
                         name='repository_states',
-                        validate_strings=True), default=REP_LOADED)
+                        validate_strings=True), default=REP_FILTERED)
+
     domain = Column(String)
     repository = Column(String)
-    hash_dir1 = Column(String)
-    hash_dir2 = Column(String)
-    commit = Column(String)
-
-    is_mirror = Column(Boolean)
-    disk_usage = Column(String)
     primary_language = Column(String)
+    disk_usage = Column(String)
+    is_mirror = Column(Boolean)
+    git_created_at = Column(DateTime)
+    git_pushed_at = Column(DateTime)
+
     languages = Column(Integer)
     contributors = Column(Integer)
-    watchers = Column(Integer)
-    stargazers = Column(Integer)
-    forks = Column(Integer)
-    issues = Column(Integer)
     commits = Column(Integer)
     pull_requests = Column(Integer)
     branches = Column(Integer)
+    watchers = Column(Integer)
+    issues = Column(Integer)
+    stargazers = Column(Integer)
+    forks = Column(Integer)
+    description = Column(String)
     tags = Column(Integer)
     releases = Column(Integer)
-    description = Column(String)
+
+    hash_dir1 = Column(String)
+    hash_dir2 = Column(String)
+    commit = Column(String)
 
     processed = Column(Integer, default=0)
     notebooks_count = Column(Integer)

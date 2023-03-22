@@ -189,7 +189,10 @@ class SafeSession(object):
             if self.future:
                 for parent, children, on in self.future:
                     if parent.state == self.interrupted:
-                        parent.state = NB_LOADED
+                        if self.interrupted is NB_STOPPED:
+                            parent.state = NB_LOADED
+                        elif self.interrupted is REP_STOPPED:
+                            parent.state = REP_LOADED
                     self.session.add(parent)
                     for child in children:
                         setattr(child, on, parent.id)

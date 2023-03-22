@@ -18,7 +18,7 @@ from datetime import datetime
 from future.moves.urllib.parse import urlparse
 from src.db.database import Repository, Commit, connect
 from src.helpers.h1_utils import mount_basedir, savepid, vprint
-
+from src.states import *
 
 def extract_domain_repository(url):
     """Extract domain and repository from a repository url"""
@@ -110,6 +110,8 @@ def load_repository_and_commits(session, domain, repository,
                                 commit=None, clone_existing=False):
     """ Clones repository and extracts its information"""
     repo = f'{repository.owner}/{repository.name}'
+    git_created_at = repository.createdAt
+    git_pushed_at = repository.pushedAt
     is_mirror = repository.isMirror
     disk_usage = repository.diskUsage
     primary_language = repository.primaryLanguage
@@ -162,6 +164,7 @@ def load_repository_and_commits(session, domain, repository,
     repository = Repository(
         domain=domain, repository=repo,
         hash_dir1=part, hash_dir2=end, commit=commit,
+        git_created_at=git_created_at, git_pushed_at=git_pushed_at,
         is_mirror=is_mirror, disk_usage=disk_usage,
         primary_language=primary_language, languages=languages,
         contributors=contributors, watchers=watchers,
@@ -169,7 +172,7 @@ def load_repository_and_commits(session, domain, repository,
         issues=issues, commits=commits,
         pull_requests=pull_requests, branches=branches,
         tags=tags, releases=releases, description=description,
-        processed=consts.R_LOADED,
+        state=REP_LOADED,
     )
     if all_commits:
         session.dependent_add(

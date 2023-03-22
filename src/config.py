@@ -8,6 +8,7 @@ else:
     from pathlib import Path
 
 # GitHub Credentials
+GITHUB = "github.com"
 GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 MACHINE = os.environ.get("GITHUB_USERNAME")
