@@ -79,4 +79,3 @@ R_TROUBLESOME = 512                  # 2 ** 9
 R_COMPRESS_ERROR = 1024              # 2 ** 10
 R_COMPRESS_OK = 2048                 # 2 ** 11
 R_EXTRACTED_FILES = 4096             # 2 ** 12
-
