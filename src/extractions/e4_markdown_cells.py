@@ -10,7 +10,7 @@ from nbconvert.filters.markdown_mistune import MarkdownWithMath
 from src.db.database import CellMarkdownFeature, connect
 from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
 from src.classes.c1_renderer import CountRenderer, LANG_MAP
-from src.helpers.h3_script_helpers import filter_markdown_cells
+from src.helpers.h3_script_helpers import filter_markdown_cells, set_up_argument_parser
 from src.states import *
 
 
@@ -60,7 +60,7 @@ def process_markdown_cell(session, repository_id, notebook_id, cell, retry=False
         session.add(cell)
 
     elif cell.state == CELL_PROCESSED \
-            or cell.state in MARKDOWN_CELL_ERROR \
+            or cell.state in CELL_ERRORS \
             or cell.state in states_after(CELL_PROCESSED, CELL_ORDER):
         return 'already processed'
 
@@ -128,21 +128,8 @@ def apply(session, status, retry,
 def main():
     """Main function"""
     script_name = os.path.basename(__file__)[:-3]
-    parser = argparse.ArgumentParser(
-        description='Execute repositories')
-
-    parser.add_argument("-v", "--verbose", help="increase output verbosity",
-                        type=int, default=config.VERBOSE)
-    parser.add_argument("-e", "--retry-errors", help="retry errors",
-                        action="store_true")
-    parser.add_argument("-c", "--count", help="count filtered repositories",
-                        action="store_true")
-    parser.add_argument("-r", "--reverse", help="iterate in reverse order",
-                        action="store_true")
-    parser.add_argument("-i", "--interval", help="interval",
-                        type=int, nargs=2, default=config.REPOSITORY_INTERVAL)
-    parser.add_argument("--check", help="check name in .exit", type=str,
-                        nargs="*", default={"all", script_name, script_name + ".py"})
+    parser = argparse.ArgumentParser(description='Execute repositories')
+    parser = set_up_argument_parser(parser, script_name, "markdown_cells")
 
     args = parser.parse_args()
     config.VERBOSE = args.verbose

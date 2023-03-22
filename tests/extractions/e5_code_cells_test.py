@@ -15,6 +15,7 @@ from tests.factories.models import RepositoryFactory
 from tests.factories.models import NotebookFactory, CodeCellFactory
 from tests.factories.models import CellModuleFactory, CellDataIOFactory
 from tests.database_config import connection, session  # noqa: F401
+from src.states import *
 
 
 class TestE5CodeCellsProcessCodeCell:
@@ -22,12 +23,13 @@ class TestE5CodeCellsProcessCodeCell:
         module_name = 'pandas'
         caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
 
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_REQ_FILE_EXTRACTED)
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = CodeCellFactory(session).create(repository_id=repository.id,
                                                notebook_id=notebook.id,
                                                source=f"import {module_name} as pd\n"
-                                                      f"df={caller}.{function_name}({source})")
+                                                      f"df={caller}.{function_name}({source})",
+                                               state=CELL_LOADED)
         checker = PathLocalChecker("")
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker)
@@ -36,7 +38,7 @@ class TestE5CodeCellsProcessCodeCell:
         data_io = session.query(CellDataIO).first()
 
         assert result == 'done'
-        assert cell.processed == consts.C_PROCESS_OK
+        assert cell.state == CELL_PROCESSED
 
         assert module.cell_id == cell.id
         assert module.module_name == module_name
@@ -48,24 +50,25 @@ class TestE5CodeCellsProcessCodeCell:
         assert data_io.source == source
 
     def test_process_code_cell_already_processed(self, session):
-        repository = RepositoryFactory(session).create()
+        repository = RepositoryFactory(session).create(state=REP_REQ_FILE_EXTRACTED)
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = CodeCellFactory(session).create(repository_id=repository.id,
                                                notebook_id=notebook.id,
-                                               processed=consts.C_PROCESS_OK)
+                                               state=CELL_PROCESSED)
         checker = PathLocalChecker("")
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker)
         session.commit()
 
         assert result == 'already processed'
-        assert cell.processed == consts.C_PROCESS_OK
+        assert cell.state == CELL_PROCESSED
 
     def test_process_code_cell_time_out(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id)
+                                               notebook_id=notebook.id,
+                                               state=CELL_LOADED)
         checker = PathLocalChecker("")
 
         def mock_extract(_source, _checker):
@@ -77,13 +80,14 @@ class TestE5CodeCellsProcessCodeCell:
         session.commit()
 
         assert result == 'Failed due to  Time Out Error.'
-        assert cell.processed == consts.C_TIMEOUT
+        assert cell.state == CELL_PROCESS_TIMEOUT
 
     def test_process_code_cell_syntax_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id)
+                                               notebook_id=notebook.id,
+                                               state=CELL_LOADED)
         checker = PathLocalChecker("")
 
         def mock_extract(_source, _checker):
@@ -95,13 +99,14 @@ class TestE5CodeCellsProcessCodeCell:
         session.commit()
 
         assert result == 'Failed due to Syntax Error.'
-        assert cell.processed == consts.C_SYNTAX_ERROR
+        assert cell.state == CELL_SYNTAX_ERROR
 
     def test_process_code_cell_other_errors(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id)
+                                               notebook_id=notebook.id,
+                                               state=CELL_LOADED)
         checker = PathLocalChecker("")
 
         def mock_extract(_source, _checker):
@@ -113,7 +118,7 @@ class TestE5CodeCellsProcessCodeCell:
         session.commit()
 
         assert 'Failed to process' in result
-        assert cell.processed == consts.C_PROCESS_ERROR
+        assert cell.state == CELL_PROCESS_ERROR
 
     def test_process_code_cell_retry_process_error(self, session):
         module_name = 'pandas'
@@ -123,7 +128,7 @@ class TestE5CodeCellsProcessCodeCell:
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = CodeCellFactory(session).create(repository_id=repository.id,
                                                notebook_id=notebook.id,
-                                               processed=consts.C_PROCESS_ERROR,
+                                               state=CELL_PROCESS_ERROR,
                                                source=f"import {module_name} as pd\n"
                                                       f"df={caller}.{function_name}({source})")
         checker = PathLocalChecker("")
@@ -135,13 +140,13 @@ class TestE5CodeCellsProcessCodeCell:
 
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker,
-                                   skip_if_error=0)
+                                   retry_error=True)
         session.commit()
         module = session.query(CellModule).first()
         data_io = session.query(CellDataIO).first()
 
         assert result == 'done'
-        assert cell.processed == consts.C_PROCESS_OK
+        assert cell.state == CELL_PROCESSED
 
         assert module.cell_id == cell.id
         assert cm_created_at != module.created_at
@@ -157,7 +162,7 @@ class TestE5CodeCellsProcessCodeCell:
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = CodeCellFactory(session).create(repository_id=repository.id,
                                                notebook_id=notebook.id,
-                                               processed=consts.C_SYNTAX_ERROR,
+                                               state=CELL_SYNTAX_ERROR,
                                                source=f"import {module_name} as pd\n"
                                                       f"df={caller}.{function_name}({source})")
         checker = PathLocalChecker("")
@@ -169,13 +174,13 @@ class TestE5CodeCellsProcessCodeCell:
 
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker,
-                                   skip_if_syntaxerror=0)
+                                   retry_syntax_error=True)
         session.commit()
         module = session.query(CellModule).first()
         data_io = session.query(CellDataIO).first()
 
         assert result == 'done'
-        assert cell.processed == consts.C_PROCESS_OK
+        assert cell.state == CELL_PROCESSED
 
         assert module.cell_id == cell.id
         assert cm_created_at != module.created_at
@@ -191,7 +196,7 @@ class TestE5CodeCellsProcessCodeCell:
         notebook = NotebookFactory(session).create(repository_id=repository.id)
         cell = CodeCellFactory(session).create(repository_id=repository.id,
                                                notebook_id=notebook.id,
-                                               processed=consts.C_TIMEOUT,
+                                               state=CELL_PROCESS_TIMEOUT,
                                                source=f"import {module_name} as pd\n"
                                                       f"df={caller}.{function_name}({source})")
         checker = PathLocalChecker("")
@@ -203,13 +208,13 @@ class TestE5CodeCellsProcessCodeCell:
 
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker,
-                                   skip_if_timeout=0)
+                                   retry_timeout=True)
         session.commit()
         module = session.query(CellModule).first()
         data_io = session.query(CellDataIO).first()
 
         assert result == 'done'
-        assert cell.processed == consts.C_PROCESS_OK
+        assert cell.state == CELL_PROCESSED
 
         assert module.cell_id == cell.id
         assert cm_created_at != module.created_at
