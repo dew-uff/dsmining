@@ -33,7 +33,7 @@ CELL_PROCESS_ERROR = "error_processing_cell"
 CELL_PROCESS_TIMEOUT = "time_out_processing_cell"
 
 CELL_ORDER = [CELL_LOADED, CELL_PROCESSED]
-MARKDOWN_CELL_ERROR = [CELL_PROCESS_TIMEOUT, CELL_SYNTAX_ERROR, CELL_PROCESS_ERROR]
+CELL_ERRORS = [CELL_PROCESS_TIMEOUT, CELL_SYNTAX_ERROR, CELL_PROCESS_ERROR]
 
 # Python Files
 PF_LOADED = "python_file_loaded"
@@ -61,12 +61,6 @@ N_SYNTAX_ERROR = 16                  # 2 ** 4
 N_AGGREGATE_OK = 32                  # 2 ** 5
 N_AGGREGATE_ERROR = 64
 
-
-
-PF_PROCESS_OK = 4                     # 2 ** 2
-PF_PROCESS_ERROR = 8                  # 2 ** 3
-PF_TIMEOUT = 16                       # 2 ** 4
-PF_SYNTAX_ERROR = 32                  # 2 ** 5
 
 PF_AGGREGATE_OK = 64                  # 2 ** 6
 PF_AGGREGATE_ERROR = 128              # 2 ** 7

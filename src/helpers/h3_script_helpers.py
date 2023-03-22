@@ -17,11 +17,9 @@ from src.db.database import Repository, Cell, PythonFile, RepositoryFile
 from src.states import *
 
 
-def set_up_argument_parser(parser, script_name):
+def set_up_argument_parser(parser, script_name, script_type="repository"):
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                         type=int, default=config.VERBOSE)
-    parser.add_argument("-n", "--repositories", help="selected repositories ids",
-                        type=int, default=None, nargs="*")
     parser.add_argument("-e", "--retry-errors", help="retry errors",
                         action="store_true")
     parser.add_argument("-c", "--count", help="count filtered repositories",
@@ -32,6 +30,18 @@ def set_up_argument_parser(parser, script_name):
                         type=int, nargs=2, default=config.REPOSITORY_INTERVAL)
     parser.add_argument("--check", help="check name in .exit", type=str,
                         nargs="*", default={"all", script_name, script_name + ".py"})
+
+    if script_type == "repository":
+        parser.add_argument("-n", "--repositories", help="selected repositories ids",
+                            type=int, default=None, nargs="*")
+
+    elif script_type == "code_cells":
+        parser.add_argument('-s', '--retry-syntaxerrors', help='retry syntax errors',
+                            action='store_true')
+        parser.add_argument('-t', '--retry-timeout', help='retry timeout',
+                            action='store_true')
+        parser.add_argument("-n", "--notebooks", help="notebooks ids",
+                            type=int, nargs="*", default=None)
 
     return parser
 
@@ -126,14 +136,9 @@ def filter_markdown_cells(session, count, interval,reverse):
 
 
 def filter_code_cells(session, selected_notebooks,
-                      skip_if_error, skip_if_syntaxerror, skip_if_timeout,
-                      count, interval, reverse, skip_already_processed):
+                      count, interval, reverse):
     filters = [
-        Cell.processed.op('&')(skip_already_processed) == 0,
-        Cell.processed.op('&')(skip_if_error) == 0,
-        Cell.processed.op('&')(skip_if_syntaxerror) == 0,
-        Cell.processed.op('&')(skip_if_timeout) == 0,
-        Cell.processed.op('&')(consts.C_UNKNOWN_VERSION) == 0,  # known version
+        Cell.state is not CELL_UNKNOWN_VERSION,  # known version
         Cell.cell_type == 'code',
         Cell.python.is_(True),
     ]
@@ -150,10 +155,7 @@ def filter_code_cells(session, selected_notebooks,
                 Cell.repository_id <= interval[1],
             ]
 
-    query = (
-        session.query(Cell)
-        .filter(*filters)
-    )
+    query = (session.query(Cell).filter(*filters))
 
     if count:
         print(query.count())
