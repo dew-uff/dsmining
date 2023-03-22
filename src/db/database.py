@@ -227,6 +227,8 @@ class PythonFile(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     repository_id = Column(Integer)
     state = Column(Enum(PF_LOADED, PF_EMPTY, PF_L_ERROR,
+                        PF_PROCESSED, PF_PROCESS_ERROR, PF_PROCESS_TIMEOUT,
+                        PF_SYNTAX_ERROR,
                         name='python_files_states',
                         validate_strings=True), default=PF_LOADED)
     name = Column(String)
