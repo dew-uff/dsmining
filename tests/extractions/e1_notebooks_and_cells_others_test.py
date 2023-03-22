@@ -29,12 +29,27 @@ class TestE1NotebooksAndCellsFindNotebooks:
                     Path(f'{repository.path}/{file2_relative_path}'),
                     Path(f'{repository.path}/{file3_relative_path}')]
         monkeypatch.setattr(e1, 'find_files', mock_find_files)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
 
         notebooks = e1.find_notebooks(session, repository)
         assert file1_relative_path in notebooks
         assert file2_relative_path in notebooks
         assert file3_relative_path not in notebooks
         assert repository.notebooks_count == 2
+        assert repository.state == REP_LOADED
+
+    def test_find_notebooks_no_path(self, session, monkeypatch, capsys):
+        repository = RepositoryFactory(session).create(state=REP_LOADED)
+        assert len(session.query(Repository).all()) == 1
+        monkeypatch.setattr(Path, 'exists', lambda path: False)
+
+        notebooks = e1.find_notebooks(session, repository)
+        captured = capsys.readouterr()
+
+        assert notebooks == []
+        assert repository.notebooks_count is None
+        assert "repository not found" in captured.out
+        assert repository.state == REP_UNAVAILABLE_FILES
 
 
 class TestE1NotebooksAndCellsProcessNotebook:
@@ -171,6 +186,23 @@ class Test1NotebooksAndCellsProcessRepository:
         assert output == "done"
         assert repository.notebooks_count is None
         assert repository.state == REP_N_ERROR
+
+    def test_process_repository_error(self, session, monkeypatch):
+        safe_session = SafeSession(session, interrupted=NB_STOPPED)
+        repository = RepositoryFactory(safe_session).create(state=REP_LOADED)
+
+        def mock_unavailable_files(_session, _repository):
+            _repository.state = REP_UNAVAILABLE_FILES
+            return []
+
+        monkeypatch.setattr(e1, 'find_notebooks', mock_unavailable_files)
+        monkeypatch.setattr(e1, 'process_notebooks',
+                            lambda _session, _repository, _repository_notebooks_names: (1, repository))
+        output = e1.process_repository(safe_session, repository)
+
+        assert output == "done"
+        assert repository.notebooks_count is None
+        assert repository.state == REP_UNAVAILABLE_FILES
 
     def test_process_repository_no_status_extracted(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=NB_STOPPED)

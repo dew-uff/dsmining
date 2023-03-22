@@ -211,6 +211,16 @@ def process_notebooks(session, repository, repository_notebooks_names):
 def find_notebooks(session, repository):
     """ Finds all jupyter notebooks files in a repository """
     notebooks = []
+
+    if not repository.path.exists():
+        msg = unzip_repository(session, repository)
+        if msg != "done":
+            vprint(2, "repository not found")
+            repository.state = REP_UNAVAILABLE_FILES
+            session.add(repository)
+            session.commit()
+            return notebooks
+
     files = find_files(repository.path, "*.ipynb")
     for file in files:
         if ".ipynb_checkpoints" not in str(file):
@@ -236,12 +246,15 @@ def process_repository(session, repository, retry=False):
         return f'wrong script order, before you must run {states_before(REP_LOADED, REP_ORDER)}'
 
     repository_notebooks_names = find_notebooks(session, repository)
-    count, repository = process_notebooks(session, repository, repository_notebooks_names)
 
-    if repository.state != REP_N_ERROR and count == repository.notebooks_count:
-        repository.state = REP_N_EXTRACTED
-    else:
-        repository.state = REP_N_ERROR
+    if repository.state is not REP_UNAVAILABLE_FILES:
+        count, repository = process_notebooks(session, repository, repository_notebooks_names)
+
+        if repository.state != REP_N_ERROR and count == repository.notebooks_count:
+            repository.state = REP_N_EXTRACTED
+        else:
+            repository.state = REP_N_ERROR
+
     session.add(repository)
 
     status, err = session.commit()
@@ -259,8 +272,7 @@ def main():
     """Main function"""
     script_name = os.path.basename(__file__)[:-3]
 
-    parser = argparse.ArgumentParser(
-        description="Extract notebooks from registered repositories")
+    parser = argparse.ArgumentParser(description="Extract notebooks from registered repositories")
     parser = set_up_argument_parser(parser, script_name)
     args = parser.parse_args()
 
