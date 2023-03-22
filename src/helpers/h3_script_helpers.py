@@ -43,6 +43,14 @@ def set_up_argument_parser(parser, script_name, script_type="repository"):
         parser.add_argument("-n", "--notebooks", help="notebooks ids",
                             type=int, nargs="*", default=None)
 
+    elif script_type == "python_files":
+        parser.add_argument('-s', '--retry-syntaxerrors', help='retry syntax errors',
+                            action='store_true')
+        parser.add_argument('-t', '--retry-timeout', help='retry timeout',
+                            action='store_true')
+        parser.add_argument("-n", "--python_files", help="python_files ids",
+                            type=int, nargs="*", default=None)
+
     return parser
 
 
@@ -178,14 +186,9 @@ def filter_code_cells(session, selected_notebooks,
 
 
 def filter_python_files(session, selected_python_files,
-                        skip_if_error, skip_if_syntaxerror, skip_if_timeout,
-                        count, interval, reverse, skip_already_processed):
+                        count, interval, reverse):
     filters = [
-        PythonFile.processed.op('&')(skip_already_processed) == 0,
-        PythonFile.processed.op('&')(skip_if_error) == 0,
-        PythonFile.processed.op('&')(skip_if_syntaxerror) == 0,
-        PythonFile.processed.op('&')(consts.PF_EMPTY) == 0,
-        PythonFile.processed.op('&')(skip_if_timeout) == 0
+        PythonFile.processed.op('&')(PF_EMPTY) == 0,
     ]
 
     if selected_python_files is not True:

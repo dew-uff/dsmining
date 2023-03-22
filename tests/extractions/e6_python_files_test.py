@@ -5,9 +5,9 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.consts as consts
 import src.extractions.e6_python_features as e6
 
+from src.states import *
 from src.helpers.h1_utils import TimeoutError
 from src.classes.c2_local_checkers import PathLocalChecker
 from src.extractions.e6_python_features import process_python_file
@@ -25,7 +25,8 @@ class TestE6PythonFilesExtract:
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
             repository_id=repository.id,
-            source=f"import {module_name} as pd\ndf={caller}.{function_name}({source})"
+            source=f"import {module_name} as pd\ndf={caller}.{function_name}({source})",
+            state=PF_LOADED
         )
 
         checker = PathLocalChecker("")
@@ -36,7 +37,7 @@ class TestE6PythonFilesExtract:
         data_io = session.query(PythonFileDataIO).first()
 
         assert result == 'done'
-        assert python_file.processed == consts.PF_PROCESS_OK
+        assert python_file.state == PF_PROCESSED
 
         assert module.python_file_id == python_file.id
         assert module.module_name == module_name
@@ -51,7 +52,7 @@ class TestE6PythonFilesExtract:
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
             repository_id=repository.id,
-            processed=consts.PF_PROCESS_OK
+            state=PF_PROCESSED
         )
         checker = PathLocalChecker("")
         result = process_python_file(session=session, repository_id=repository.id,
@@ -59,12 +60,13 @@ class TestE6PythonFilesExtract:
         session.commit()
 
         assert result == 'already processed'
-        assert python_file.processed == consts.PF_PROCESS_OK
+        assert python_file.state == PF_PROCESSED
 
     def test_process_python_file_time_out(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
-            repository_id=repository.id
+            repository_id=repository.id,
+            state=PF_LOADED
         )
         checker = PathLocalChecker("")
 
@@ -78,12 +80,13 @@ class TestE6PythonFilesExtract:
         session.commit()
 
         assert result == 'Failed due to  Time Out Error.'
-        assert python_file.processed == consts.PF_TIMEOUT
+        assert python_file.state == PF_PROCESS_TIMEOUT
 
     def test_process_python_file_syntax_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
-            repository_id=repository.id
+            repository_id=repository.id,
+            state=PF_LOADED
         )
         checker = PathLocalChecker("")
 
@@ -97,12 +100,13 @@ class TestE6PythonFilesExtract:
         session.commit()
 
         assert result == 'Failed due to Syntax Error.'
-        assert python_file.processed == consts.PF_SYNTAX_ERROR
+        assert python_file.state == PF_SYNTAX_ERROR
 
     def test_process_python_file_other_errors(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
-            repository_id=repository.id
+            repository_id=repository.id,
+            state=PF_LOADED
         )
         checker = PathLocalChecker("")
 
@@ -116,7 +120,7 @@ class TestE6PythonFilesExtract:
         session.commit()
 
         assert 'Failed to process' in result
-        assert python_file.processed == consts.PF_PROCESS_ERROR
+        assert python_file.state == PF_PROCESS_ERROR
 
     def test_process_python_file_retry_process_error(self, session):
         module_name = 'pandas'
@@ -124,7 +128,7 @@ class TestE6PythonFilesExtract:
 
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
-            repository_id=repository.id, processed=consts.PF_PROCESS_ERROR,
+            repository_id=repository.id, state=PF_PROCESS_ERROR,
             source=f"import {module_name} as pd\ndf={caller}.{function_name}({source})"
         )
         checker = PathLocalChecker("")
@@ -138,13 +142,13 @@ class TestE6PythonFilesExtract:
 
         result = process_python_file(session=session, repository_id=repository.id,
                                      python_file=python_file, checker=checker,
-                                     skip_if_error=0)
+                                     retry_error=True)
         session.commit()
         module = session.query(PythonFileModule).first()
         data_io = session.query(PythonFileDataIO).first()
 
         assert result == 'done'
-        assert python_file.processed == consts.C_PROCESS_OK
+        assert python_file.state == PF_PROCESSED
 
         assert module.python_file_id == python_file.id
         assert pm_created_at != module.created_at
@@ -158,7 +162,7 @@ class TestE6PythonFilesExtract:
 
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
-            repository_id=repository.id, processed=consts.PF_SYNTAX_ERROR,
+            repository_id=repository.id, state=PF_SYNTAX_ERROR,
             source=f"import {module_name} as pd\ndf={caller}.{function_name}({source})"
         )
         checker = PathLocalChecker("")
@@ -172,13 +176,13 @@ class TestE6PythonFilesExtract:
 
         result = process_python_file(session=session, repository_id=repository.id,
                                      python_file=python_file, checker=checker,
-                                     skip_if_syntaxerror=0)
+                                     retry_syntax_error=True)
         session.commit()
         module = session.query(PythonFileModule).first()
         data_io = session.query(PythonFileDataIO).first()
 
         assert result == 'done'
-        assert python_file.processed == consts.C_PROCESS_OK
+        assert python_file.state == PF_PROCESSED
 
         assert module.python_file_id == python_file.id
         assert pm_created_at != module.created_at
@@ -192,7 +196,7 @@ class TestE6PythonFilesExtract:
 
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
-            repository_id=repository.id, processed=consts.PF_TIMEOUT,
+            repository_id=repository.id, state=PF_PROCESS_TIMEOUT,
             source=f"import {module_name} as pd\ndf={caller}.{function_name}({source})"
         )
         checker = PathLocalChecker("")
@@ -205,13 +209,14 @@ class TestE6PythonFilesExtract:
         pd_created_at = python_file_data_io.created_at
 
         result = process_python_file(session=session, repository_id=repository.id,
-                                     python_file=python_file, checker=checker, skip_if_timeout=0)
+                                     python_file=python_file, checker=checker,
+                                     retry_timeout=True)
         session.commit()
         module = session.query(PythonFileModule).first()
         data_io = session.query(PythonFileDataIO).first()
 
         assert result == 'done'
-        assert python_file.processed == consts.C_PROCESS_OK
+        assert python_file.state == PF_PROCESSED
 
         assert module.python_file_id == python_file.id
         assert pm_created_at != module.created_at

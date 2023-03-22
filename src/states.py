@@ -35,10 +35,19 @@ CELL_PROCESS_TIMEOUT = "time_out_processing_cell"
 CELL_ORDER = [CELL_LOADED, CELL_PROCESSED]
 CELL_ERRORS = [CELL_PROCESS_TIMEOUT, CELL_SYNTAX_ERROR, CELL_PROCESS_ERROR]
 
+
 # Python Files
 PF_LOADED = "python_file_loaded"
 PF_L_ERROR = "error_extracting_python_file"
+PF_SYNTAX_ERROR = "syntax_error_loading_python_file"
 PF_EMPTY = "empty_python_file"
+PF_PROCESSED = "python_file_processed"
+PF_PROCESS_ERROR = "error_processing_python_file"
+PF_PROCESS_TIMEOUT = "time_out_processing_python_file"
+
+PF_ORDER = [PF_LOADED, PF_PROCESSED]
+PF_ERRORS = [PF_PROCESS_TIMEOUT, PF_SYNTAX_ERROR, PF_PROCESS_ERROR, PF_EMPTY]
+
 
 # Requirement Files
 REQ_FILE_LOADED = "requirement_file_load"

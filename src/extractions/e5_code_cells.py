@@ -17,7 +17,7 @@ from src.states import *
 
 def process_code_cell(
     session, repository_id, notebook_id, cell, checker,
-    retry_error=False, retry_syntax_error=False, retry_timeout=False,
+    retry_error=False, retry_syntax_error=False, retry_timeout=False
 ):
     """ Processes Code Cells to collect features"""
     if (retry_error and cell.state == CELL_PROCESS_ERROR) or\
@@ -50,35 +50,40 @@ def process_code_cell(
 
         vprint(2, "Adding session objects")
         for line, import_type, module_name, local in modules:
-            session.add(CellModule(
-                repository_id=repository_id,
-                notebook_id=notebook_id,
-                cell_id=cell.id,
-                index=cell.index,
+            session.add(
+                CellModule(
+                    repository_id=repository_id,
+                    notebook_id=notebook_id,
+                    cell_id=cell.id,
+                    index=cell.index,
 
-                line=line,
-                import_type=import_type,
-                module_name=module_name,
-                local=local,
-            ))
+                    line=line,
+                    import_type=import_type,
+                    module_name=module_name,
+                    local=local,
+                )
+            )
 
         for line, type_, caller,\
                 function_name, function_type,\
                 source, source_type in data_ios:
-            session.add(CellDataIO(
-                repository_id=repository_id,
-                notebook_id=notebook_id,
-                cell_id=cell.id,
-                index=cell.index,
 
-                line=line,
-                type=type_,
-                caller=caller,
-                function_name=function_name,
-                function_type=function_type,
-                source=source,
-                source_type=source_type
-            ))
+            session.add(
+                CellDataIO(
+                    repository_id=repository_id,
+                    notebook_id=notebook_id,
+                    cell_id=cell.id,
+                    index=cell.index,
+
+                    line=line,
+                    type=type_,
+                    caller=caller,
+                    function_name=function_name,
+                    function_type=function_type,
+                    source=source,
+                    source_type=source_type
+                )
+            )
 
         cell.state = CELL_PROCESSED
         return "done"
@@ -123,28 +128,28 @@ def apply(
                 return
             status.report()
 
-            with mount_basedir():
+            skip_repo, repository_id, repository, archives = load_repository(
+                session, cell, skip_repo, repository_id, repository, archives
+            )
+            if skip_repo:
+                continue
 
-                skip_repo, repository_id, repository, archives = load_repository(
-                    session, cell, skip_repo, repository_id, repository, archives
-                )
-                if skip_repo:
-                    continue
+            skip_repo, skip_notebook, notebook_id, archives, checker = load_notebook(
+                session, cell, repository,
+                skip_repo, skip_notebook, notebook_id, archives, checker
+            )
 
-                skip_repo, skip_notebook, notebook_id, archives, checker = load_notebook(
-                    session, cell, repository, skip_repo, skip_notebook, notebook_id, archives, checker)
+            if skip_repo or skip_notebook:
+                continue
 
-                if skip_repo or skip_notebook:
-                    continue
+            vprint(2, 'Processing cell: {}'.format(cell))
 
-                vprint(2, 'Processing cell: {}'.format(cell))
+            result = process_code_cell(
+                session, repository_id, notebook_id, cell, checker,
+                retry_error, retry_syntax_error, retry_timeout,
+            )
 
-                result = process_code_cell(
-                    session, repository_id, notebook_id, cell, checker,
-                    retry_error, retry_syntax_error, retry_timeout,
-                )
-
-                vprint(2, result)
+            vprint(2, result)
 
             status.count += 1
         session.commit()
