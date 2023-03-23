@@ -73,6 +73,7 @@ def apply(session, status, selected_repositories, retry,
             status.report()
             vprint(0, f"Extracting {model_type} from {repository}")
 
+            result = ''
             if params == 3:
                 result = process_repository(session, repository, retry)
             elif params == 2:
