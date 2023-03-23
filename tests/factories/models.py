@@ -1,6 +1,8 @@
+import datetime
+
 import factory
 from src.db.database import Repository, Notebook, PythonFile, RequirementFile, Cell, CellMarkdownFeature, CellModule, \
-    CellDataIO, PythonFileModule, PythonFileDataIO
+    CellDataIO, PythonFileModule, PythonFileDataIO, Commit
 
 
 def RepositoryFactory(session):
@@ -26,6 +28,26 @@ def RepositoryFactory(session):
                 session.commit()
 
     return _RepositoryFactory
+
+
+def CommitFactory(session):
+    class _CommitFactory(factory.alchemy.SQLAlchemyModelFactory):
+        class Meta:
+            model = Commit
+            sqlalchemy_session = session
+
+        type = "commit"
+        hash = factory.Sequence(lambda n: f"dd{n}d1c3")
+        author = factory.Sequence(lambda n: 'person{}'.format(n + 1))
+        message = "test message"
+
+        @factory.post_generation
+        def commit_to_db(self, create, extracted, **kwargs):
+            if create:
+                session.add(self)
+                session.commit()
+
+    return _CommitFactory
 
 
 def NotebookFactory(session):

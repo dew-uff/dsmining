@@ -2,6 +2,7 @@
 
 # Repositories
 REP_FILTERED = "repository_filtered"
+REP_EMPTY = "empty_repository"
 REP_LOADED = "repository_loaded"
 REP_FAILED_TO_CLONE = 'error_cloning_repository'
 REP_N_EXTRACTED = "notebooks_cells_extracted"
@@ -13,7 +14,7 @@ REP_FINISHED = "repository_finished_processing"
 REP_STOPPED = "loading_repository_stopped"
 
 REP_ORDER = [REP_FILTERED, REP_LOADED, REP_N_EXTRACTED, REP_PF_EXTRACTED, REP_REQ_FILE_EXTRACTED, REP_FINISHED]
-REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR, REP_UNAVAILABLE_FILES, REP_STOPPED]
+REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR, REP_UNAVAILABLE_FILES, REP_STOPPED, REP_EMPTY]
 
 
 # Notebooks

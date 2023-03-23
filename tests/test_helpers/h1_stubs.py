@@ -873,3 +873,10 @@ def stub_extract_features(cell_source):  # noqa: F841
         "latex_stopwords": 0,
     }
     return result
+
+
+def mock_load_rep_and_commits(_session, _repository, branch, commit, retry):
+    _repository.state = REP_LOADED
+    return None
+
+

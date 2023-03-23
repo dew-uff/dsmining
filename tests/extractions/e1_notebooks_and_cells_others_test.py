@@ -187,7 +187,7 @@ class Test1NotebooksAndCellsProcessRepository:
         assert repository.notebooks_count is None
         assert repository.state == REP_N_ERROR
 
-    def test_process_repository_error(self, session, monkeypatch):
+    def test_process_repository_error_unavailable(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_LOADED)
 
