@@ -77,6 +77,7 @@ class Repository(Base):
                         REP_FINISHED,
                         REP_UNAVAILABLE_FILES,
                         REP_STOPPED,
+                        REP_EMPTY,
                         name='repository_states',
                         validate_strings=True), default=REP_FILTERED)
 
@@ -138,6 +139,13 @@ class Repository(Base):
         return (
                 config.Path(config.SELECTED_REPOS_DIR) / "content" /
                 self.hash_dir1 / self.hash_dir2
+        )
+
+    @property
+    def dir_path(self):
+        """Return notebook path"""
+        return (
+                config.Path(config.SELECTED_REPOS_DIR) / "content" / self.hash_dir1
         )
 
     @property

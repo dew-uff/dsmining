@@ -2,7 +2,7 @@ import os
 import shutil
 from src.config import REPOS_DIR, DB_FILE, LOGS_DIR
 
-REPOS = False
+REPOS = True
 DATABASE = True
 LOGS = True
 

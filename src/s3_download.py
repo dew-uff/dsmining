@@ -52,21 +52,14 @@ def clone(part, end, repo, remote, branch=None, commit=None):
     part_dir = config.SELECTED_REPOS_DIR / "content" / part
     part_dir.mkdir(parents=True, exist_ok=True)
     full_dir = part_dir / end
+    commits = None
 
-    if (
-            full_dir.exists() and
-            (
-                    not (full_dir / ".git").exists()
-                    or list(full_dir.iterdir()) == [full_dir / ".git"]
-            )
-    ):
-        shutil.rmtree(str(full_dir), ignore_errors=True)
+    if full_dir.exists():
+        vprint(1, f"Repository already cloned."
+                  f"Delete it if you would like to re-run.")
 
     if not full_dir.exists():
         args = ["clone"]
-
-        if commit is None:
-            args += ["--depth", "1"]
         args += [remote, str(full_dir)]
 
         if branch is not None:
@@ -81,7 +74,8 @@ def clone(part, end, repo, remote, branch=None, commit=None):
             args = [
                 "--git-dir", str(full_dir / ".git"),
                 "--work-tree", str(full_dir),
-                "checkout"
+                "checkout",
+                commit
             ]
 
             if git(*args) != 0:
@@ -89,11 +83,8 @@ def clone(part, end, repo, remote, branch=None, commit=None):
                     repo, commit
                 ))
 
-            commits = load_commits(full_dir)
-
-            return full_dir, commits
-
-    return full_dir, None
+        commits = load_commits(full_dir)
+    return full_dir, commits
 
 
 def load_repository_and_commits(session, repository,  commit=None, branch=None, retry=False):
@@ -108,7 +99,7 @@ def load_repository_and_commits(session, repository,  commit=None, branch=None, 
         return
 
     try:
-        vprint(1, f"Remote: {remote}\nDownloading files...")
+        vprint(1, f"Remote: {remote}\nDownloading repository...")
 
         full_dir, repo_commits = clone(part, end, repo, remote, branch, commit)
 
