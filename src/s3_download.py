@@ -52,13 +52,12 @@ def clone(part, end, repo, remote, branch=None, commit=None):
     part_dir = config.SELECTED_REPOS_DIR / "content" / part
     part_dir.mkdir(parents=True, exist_ok=True)
     full_dir = part_dir / end
-    commits = None
 
     if full_dir.exists():
         vprint(1, f"Repository already cloned."
                   f"Delete it if you would like to re-run.")
-
-    if not full_dir.exists():
+        return full_dir, None, True
+    else:
         args = ["clone"]
         args += [remote, str(full_dir)]
 
@@ -67,7 +66,7 @@ def clone(part, end, repo, remote, branch=None, commit=None):
             args.append(branch)
 
         if git(*args) != 0:
-            raise EnvironmentError("Clone failed for {}".format(repo))
+            raise EnvironmentError(f"Clone failed for {repo}")
 
         if commit is not None:
 
@@ -84,7 +83,7 @@ def clone(part, end, repo, remote, branch=None, commit=None):
                 ))
 
         commits = load_commits(full_dir)
-    return full_dir, commits
+        return full_dir, commits, False
 
 
 def load_repository_and_commits(session, repository,  commit=None, branch=None, retry=False):
@@ -101,7 +100,7 @@ def load_repository_and_commits(session, repository,  commit=None, branch=None, 
     try:
         vprint(1, f"Remote: {remote}\nDownloading repository...")
 
-        full_dir, repo_commits = clone(part, end, repo, remote, branch, commit)
+        full_dir, repo_commits, already_exists = clone(part, end, repo, remote, branch, commit)
 
         commit = git_output("rev-parse", "HEAD", cwd=str(full_dir)).decode("utf-8").strip()
 
@@ -110,7 +109,9 @@ def load_repository_and_commits(session, repository,  commit=None, branch=None, 
         repository.commit = commit
         repository.state = REP_LOADED
 
-        if repo_commits:
+        if already_exists:
+            session.add(repository)
+        elif repo_commits:
             session.dependent_add(
                 repository, [Commit(**commitrow) for commitrow in repo_commits], "repository_id"
             )
