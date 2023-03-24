@@ -27,10 +27,11 @@ DB_CONNECTION_TEST = f'sqlite:////{DB_FILE}_test'
 
 
 LOGS_DIR = Path(SRC_DIR + os.sep + 'logs').expanduser()
+QUERY_GRAPHQL_FILE = f'{LOGS_DIR}/query.graphql'
 
 REPOS_DIR = ROOT + os.sep + 'repos'
 SELECTED_REPOS_DIR = Path(REPOS_DIR + os.sep + 'selected').expanduser()
-TEST_REPOS_DIR  =str(SELECTED_REPOS_DIR)  + os.sep + 'content' + os.sep + 'test'
+TEST_REPOS_DIR = str(SELECTED_REPOS_DIR) + os.sep + 'content' + os.sep + 'test'
 
 
 DATA_DIR = SRC_DIR + os.sep + 'data'
@@ -38,7 +39,6 @@ RESOURCE_DIR = DATA_DIR + os.sep + 'resources'
 REPOSITORIES_FILE = RESOURCE_DIR + os.sep + 'repositories.xlsx'
 FILTERED_FILE = RESOURCE_DIR + os.sep + 'filtered_repositories.xlsx'
 SELECTED_REPOS_FILE = RESOURCE_DIR + os.sep + 'selected_repositories.xlsx'
-
 
 
 # Configs

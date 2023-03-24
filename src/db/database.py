@@ -46,12 +46,29 @@ class Query(Base):
     __tablename__ = 'queries'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
-    query = Column(String)
-    first_date = Column(DateTime)
-    last_date = Column(DateTime)
-    delta = Column(Interval)
-    count = Column(Integer)
+    repo = Column(String)
+    end_cursor = Column(String)
+    has_next_page = Column(Boolean)
+
+    primary_language = Column(String)
+    disk_usage = Column(String)
+    description = Column(String)
+
+    is_mirror = Column(Boolean)
+
+    languages = Column(Integer)
+    contributors = Column(Integer)
+    commits = Column(Integer)
+    pull_requests = Column(Integer)
+    branches = Column(Integer)
+    watchers = Column(Integer)
+    issues = Column(Integer)
+    stargazers = Column(Integer)
+    forks = Column(Integer)
+    tags = Column(Integer)
+    releases = Column(Integer)
+    git_created_at = Column(DateTime)
+    git_pushed_at = Column(DateTime)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)

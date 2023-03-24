@@ -2,14 +2,11 @@
 
 import os
 import sys
-
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path:
     sys.path.append(src)
 
 import argparse
-import subprocess
-import shutil
 import src.config as config
 
 from src.states import *
@@ -48,7 +45,7 @@ def load_commits(full_dir):
                 commits_info.append(merge_row)
 
     except Exception as err:
-        raise EnvironmentError(f"Load commits failed.")
+        raise EnvironmentError(f"Load commits failed. Error:{err}")
 
     return commits_info
 
