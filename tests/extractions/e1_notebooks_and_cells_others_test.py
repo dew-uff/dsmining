@@ -8,7 +8,7 @@ import src.extractions.e1_notebooks_and_cells as e1
 from src.db.database import Repository, Notebook, Cell
 
 from src.config import LOGS_DIR, Path
-from src.helpers.h1_utils import SafeSession
+from src.classes.c1_safe_session import SafeSession
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, NotebookFactory
 from tests.test_helpers.h1_stubs import stub_load_notebook, stub_load_notebook_error, stub_unzip

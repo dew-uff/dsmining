@@ -1,6 +1,6 @@
 import argparse
 import pytest
-from src.helpers.h3_script_helpers import set_up_argument_parser
+from src.helpers.h2_script_helpers import set_up_argument_parser
 
 
 @pytest.fixture

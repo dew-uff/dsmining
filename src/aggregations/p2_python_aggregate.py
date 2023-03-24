@@ -6,8 +6,9 @@ import src.consts as consts
 
 from src.db.database import PythonFile, connect
 from src.db.database import Module
-from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-from src.helpers.h4_aggregation_helpers import  calculate_modules
+from src.helpers.h3_utils import vprint, check_exit, savepid
+from src.classes.c2_status_logger import StatusLogger
+from src.helpers.h6_aggregation_helpers import  calculate_modules
 
 TYPE = "python_file"
 

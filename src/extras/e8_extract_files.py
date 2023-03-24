@@ -5,8 +5,9 @@ import tarfile
 import src.config as config
 import src.consts as consts
 from src.db.database import Repository, RepositoryFile, connect
-from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-from src.helpers.h1_utils import mount_basedir, ignore_surrogates
+from src.helpers.h3_utils import vprint, check_exit, savepid
+from src.classes.c2_status_logger import StatusLogger
+from src.helpers.h3_utils import mount_basedir, ignore_surrogates
 from future.utils.surrogateescape import register_surrogateescape
 
 

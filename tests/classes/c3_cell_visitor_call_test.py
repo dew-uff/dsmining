@@ -6,8 +6,8 @@ if src not in sys.path:
     sys.path.append(src)
 
 import ast
-from src.classes.c3_cell_visitor import CellVisitor
-from src.classes.c2_local_checkers import PathLocalChecker
+from src.classes.c5_cell_visitor import CellVisitor
+from src.classes.c4_local_checkers import PathLocalChecker
 
 
 class TestCellVisitorNewDataIO:

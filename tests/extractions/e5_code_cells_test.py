@@ -7,8 +7,8 @@ if src not in sys.path:
 import src.consts as consts
 import src.extractions.e5_code_cells as e5
 
-from src.helpers.h1_utils import TimeoutError
-from src.classes.c2_local_checkers import PathLocalChecker
+from src.helpers.h3_utils import TimeoutError
+from src.classes.c4_local_checkers import PathLocalChecker
 from src.extractions.e5_code_cells import process_code_cell
 from src.db.database import CellModule, CellDataIO
 from tests.factories.models import RepositoryFactory

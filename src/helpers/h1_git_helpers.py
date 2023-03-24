@@ -3,9 +3,8 @@ import hashlib
 import shutil
 import subprocess
 import pytz
-from datetime import datetime
 
-from src.db.database import Commit
+from datetime import datetime
 from src.states import REP_FILTERED
 
 

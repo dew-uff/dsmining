@@ -1,19 +1,19 @@
 """ Util functions """
 from __future__ import print_function
+
+import ast
 from contextlib import contextmanager
 from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
 
 from src import consts as consts
+from src.classes.c5_cell_visitor import CellVisitor
 from src.config import Path
 
 import subprocess
 import os
 import fnmatch
 import sys
-import time
-import csv
 import src.config as config
-from src.states import *
 
 
 def ignore_surrogates(original):
@@ -166,98 +166,6 @@ def check_exit(matches):
 timeout_decorator._target = _target
 
 
-class SafeSession(object):
-
-    def __init__(self, session, interrupted=NB_STOPPED):
-        self.session = session
-        self.future = []
-        self.interrupted = interrupted
-
-    def add(self, element):
-        self.session.add(element)
-
-    def dependent_add(self, parent, children, on):
-        parent.state = self.interrupted
-        self.session.add(parent)
-        self.future.append([
-            parent, children, on
-        ])
-
-    def commit(self):
-        try:
-            self.session.commit()
-            if self.future:
-                for parent, children, on in self.future:
-                    if parent.state == self.interrupted:
-                        if self.interrupted is NB_STOPPED:
-                            parent.state = NB_LOADED
-                        elif self.interrupted is REP_STOPPED:
-                            parent.state = REP_LOADED
-                    self.session.add(parent)
-                    for child in children:
-                        setattr(child, on, parent.id)
-                        self.session.add(child)
-                self.session.commit()
-            return True, ""
-        except Exception as err:
-            if config.VERBOSE > 4:
-                import traceback
-                traceback.print_exc()
-            return False, err
-        finally:
-            self.future = []
-
-    def __getattr__(self, attr):
-        return getattr(self.session, attr)
-
-
-class StatusLogger(object):
-
-    def __init__(self, script="unknown"):
-        self.script = script
-        self._count = 0
-        self._skipped = 0
-        self._total = 0
-        self.time = time.time()
-        config.LOGS_DIR.mkdir(parents=True, exist_ok=True)
-        self.file = config.LOGS_DIR / "status.csv"
-        self.freq = config.STATUS_FREQUENCY.get(script, 5)
-        self.pid = os.getpid()
-
-    @property
-    def count(self):
-        return self._count
-
-    @count.setter
-    def count(self, value):
-        self._count = value
-        self._total = self._skipped + self._count
-
-    @property
-    def skipped(self):
-        return self._skipped
-
-    @skipped.setter
-    def skipped(self, value):
-        self._skipped = value
-        self._total = self._skipped + self._count
-
-    @property
-    def total(self):
-        return self._total
-
-    def report(self):
-        if self.total % self.freq == 0:
-            with open(str(self.file), "a") as csvfile:
-                writer = csv.writer(csvfile)
-                now = time.time()
-                writer.writerow([
-                    config.MACHINE, self.script,
-                    self.total, self.count, self.skipped,
-                    self.time, now, now - self.time, self.pid
-                ])
-
-
 def unzip_repository(session, repository):
     """Process repository"""
     if not repository.path.exists():
@@ -276,3 +184,59 @@ def unzip_repository(session, repository):
         session.add(repository)
 
     return "done"
+
+
+@timeout(1 * 60, use_signals=False)
+def extract_features(text, checker):
+    """Use cell visitor to extract features from cell text"""
+    visitor = CellVisitor(checker)
+    try:
+        parsed = ast.parse(text)
+    except ValueError:
+        raise SyntaxError("Invalid escape")
+    visitor.visit(parsed)
+
+    return visitor.modules, visitor.data_ios
+
+
+def cell_output_formats(cell):
+    """Generates output formats from code cells"""
+    if cell.get("cell_type") != "code":
+        return
+    for output in cell.get("outputs", []):
+        if output.get("output_type") in {"display_data", "execute_result"}:
+            for data_type in output.get("data", []):
+                yield data_type
+        elif output.get("output_type") == "error":
+            yield "error"
+
+
+def broken_link(notebook_file, repository_id):
+    import textwrap
+    vprint(3, "Notebook is broken link. Use the following SQL to fix:")
+    text = (textwrap.dedent("""\
+                select notebooks_count, (char_length(newtext) - char_length(replace(newtext, '''', ''))), concat(
+                    'update repositories ',
+                    'set notebooks_count = ',
+                    (char_length(newtext) - char_length(replace(newtext, ';', ''))) + 1,
+                    ', notebooks = ''',
+                    newtext,
+                    ''' where id = ',
+                    id,
+                    ';'
+                ) from (
+                    select id, notebooks_count, replace(
+                        replace(
+                            replace(
+                                notebooks,
+                                '{0};', ''
+                            ),
+                            ';{0}', ''
+                        ),
+                        '''', ''''''
+                    ) as newtext
+                    from repositories where id = {1}
+                ) as foo;
+                """.format(notebook_file, repository_id)))
+    text = " ".join(x.strip() for x in text.split("\n"))
+    print(text)

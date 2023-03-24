@@ -3,7 +3,8 @@
 import pandas as pd
 from config import SELECTED_REPOS_FILE
 from src.db.database import connect, Repository
-from src.helpers.h1_utils import mount_basedir, SafeSession
+from src.helpers.h3_utils import mount_basedir
+from src.classes.c1_safe_session import SafeSession
 from src.s3_download import load_repository_and_commits
 from src.states import REP_STOPPED
 

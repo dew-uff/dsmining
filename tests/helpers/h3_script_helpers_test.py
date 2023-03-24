@@ -1,6 +1,9 @@
 import os
 import sys
 
+import src.helpers.h3_utils
+import src.helpers.h5_loaders
+
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
@@ -10,15 +13,17 @@ import pytest
 import tarfile
 import src.consts as consts
 import src.extras.e8_extract_files as e8
-import src.helpers.h3_script_helpers as h3
+import src.helpers.h5_loaders as h5
 
 from src.config import Path
-from src.classes.c2_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
+from src.classes.c4_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
 from src.db.database import Repository, RepositoryFile
-from src.helpers.h1_utils import SafeSession, to_unicode
+from src.helpers.h3_utils import to_unicode, extract_features
+from src.classes.c1_safe_session import SafeSession
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, CodeCellFactory, NotebookFactory, PythonFileFactory
-from src.helpers.h3_script_helpers import filter_repositories, load_repository, load_notebook, load_files
+from src.helpers.h5_loaders import load_files, load_notebook, load_repository
+from src.helpers.h4_filters import filter_repositories
 from src.states import *
 
 
@@ -261,7 +266,7 @@ class TestH3ScriptHelpersLoadNotebook:
                             _skip_repo, _skip_notebook, _archives, _checker):
             return False, False, notebook.id, archives, checker
 
-        monkeypatch.setattr(h3, 'load_files', mock_load_files)
+        monkeypatch.setattr(h5, 'load_files', mock_load_files)
 
         result_skip_repo, result_skip_notebook, \
             result_notebook_id, result_archives, result_checker = \
@@ -292,7 +297,7 @@ class TestH3ScriptHelpersLoadNotebook:
                             _skip_repo, _skip_notebook, _archives, _checker):
             return False, False, notebook.id, archives, checker
 
-        monkeypatch.setattr(h3, 'load_files', mock_load_files)
+        monkeypatch.setattr(h5, 'load_files', mock_load_files)
 
         result_skip_repo, result_skip_notebook, \
             result_notebook_id, result_archives, result_checker = load_notebook(
@@ -319,7 +324,7 @@ class TestH3ScriptHelpersLoadFile:
         checker = None
         repo_path = to_unicode(repository.path)
 
-        monkeypatch.setattr(h3, 'load_archives',
+        monkeypatch.setattr(h5, 'load_archives',
                             lambda _session, _repository: (False, (None, repo_path)))
         monkeypatch.setattr(PathLocalChecker, 'exists',
                             lambda _path, _other: True)
@@ -344,7 +349,7 @@ class TestH3ScriptHelpersLoadFile:
         archives = "todo"
         checker = None
 
-        monkeypatch.setattr(h3, 'load_archives',
+        monkeypatch.setattr(h5, 'load_archives',
                             lambda _session, _repository: (True, None))
 
         skip_repo, skip_notebook, notebook_id, archives, checker = \
@@ -365,7 +370,7 @@ class TestH3ScriptHelpersLoadFile:
         archives = "todo"
         checker = None
 
-        monkeypatch.setattr(h3, 'load_archives',
+        monkeypatch.setattr(h5, 'load_archives',
                             lambda _session, _repository: (False, None))
 
         skip_repo, skip_notebook, notebook_id, archives, checker = \
@@ -389,7 +394,7 @@ class TestH3ScriptHelpersLoadFile:
         repo_path = to_unicode(repository.path)
         tarzip = ['path1', 'path2']
 
-        monkeypatch.setattr(h3, 'load_archives',
+        monkeypatch.setattr(h5, 'load_archives',
                             lambda _session, _repository: (False, (set(tarzip), repo_path)))
         monkeypatch.setattr(SetLocalChecker, 'exists',
                             lambda _path, _other: True)
@@ -415,7 +420,7 @@ class TestH3ScriptHelpersLoadFile:
         checker = None
         repo_path = to_unicode(repository.path)
 
-        monkeypatch.setattr(h3, 'load_archives',
+        monkeypatch.setattr(h5, 'load_archives',
                             lambda _session, _repository: (False, ('test.tar.gz', repo_path)))
         monkeypatch.setattr(CompressedLocalChecker, 'exists',
                             lambda _path, _other: True)
@@ -441,7 +446,7 @@ class TestH3ScriptHelpersLoadFile:
         checker = None
         repo_path = to_unicode(repository.path)
 
-        monkeypatch.setattr(h3, 'load_archives',
+        monkeypatch.setattr(h5, 'load_archives',
                             lambda _session, _repository: (False, (None, repo_path)))
         monkeypatch.setattr(PathLocalChecker, 'exists',
                             lambda _path, _other: False)
@@ -469,7 +474,7 @@ class TestH3ScriptHelpersLoadFile:
         checker = None
         repo_path = to_unicode(repository.path)
 
-        monkeypatch.setattr(h3, 'load_archives',
+        monkeypatch.setattr(h5, 'load_archives',
                             lambda _session, _repository: (False, (None, repo_path)))
         monkeypatch.setattr(PathLocalChecker, 'exists',
                             lambda _path, _other: True)
@@ -495,7 +500,7 @@ class TestH3ScriptHelpersLoadArchives:
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
 
-        skip_repo, archives = h3.load_archives(session, repository)
+        skip_repo, archives = h5.load_archives(session, repository)
         tarzip, repo_path = archives
 
         assert skip_repo is False
@@ -519,7 +524,7 @@ class TestH3ScriptHelpersLoadArchives:
         monkeypatch.setattr(Path, 'exists', mock_exists)
         monkeypatch.setattr(e8, 'process_repository', mock_process)
 
-        skip_repo, archives = h3.load_archives(session, repository)
+        skip_repo, archives = h5.load_archives(session, repository)
         tarzip, zip_path = archives
 
         assert skip_repo is False
@@ -539,7 +544,7 @@ class TestH3ScriptHelpersLoadArchives:
         monkeypatch.setattr(Path, 'exists', mock_exists)
         monkeypatch.setattr(e8, 'process_repository', mock_process)
 
-        skip_repo, archives = h3.load_archives(session, repository)
+        skip_repo, archives = h5.load_archives(session, repository)
 
         assert skip_repo is True
         assert archives is None
@@ -558,7 +563,7 @@ class TestH3ScriptHelpersLoadArchives:
         monkeypatch.setattr(e8, 'process_repository', mock_process)
         monkeypatch.setattr(tarfile, 'open', lambda path: "Ok")
 
-        skip_repo, archives = h3.load_archives(session, repository)
+        skip_repo, archives = h5.load_archives(session, repository)
         tarzip, zip_path = archives
 
         assert skip_repo is False
@@ -582,7 +587,7 @@ class TestH3ScriptHelpersLoadArchives:
         monkeypatch.setattr(e8, 'process_repository', mock_process)
         monkeypatch.setattr(tarfile, 'open', mock_open)
 
-        skip_repo, archives = h3.load_archives(session, repository)
+        skip_repo, archives = h5.load_archives(session, repository)
 
         assert skip_repo is True
         assert archives is None
@@ -597,7 +602,7 @@ class TestH3ScriptHelpersLoadArchives:
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
 
-        skip_repo, archives = h3.load_archives(session, repository)
+        skip_repo, archives = h5.load_archives(session, repository)
         assert skip_repo is True
         assert archives is None
         assert repository.processed == consts.R_UNAVAILABLE_FILES
@@ -607,7 +612,7 @@ class TestH3ScriptHelpersExtractFeatures:
     def test_extract_features(self, session):
         text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"
         checker = PathLocalChecker("")
-        modules, data_ios = h3.extract_features(text, checker)
+        modules, data_ios = extract_features(text, checker)
 
         assert modules[0] == (1, "import", "pandas", False)
         assert data_ios[0] == (2, 'input', 'pd', 'read_excel', 'Attribute', "'data.xlsx'", 'Constant')
@@ -621,4 +626,4 @@ class TestH3ScriptHelpersExtractFeatures:
         monkeypatch.setattr(ast, 'parse', mock_parse)
 
         with pytest.raises(SyntaxError):
-            h3.extract_features(text, checker)
+            extract_features(text, checker)

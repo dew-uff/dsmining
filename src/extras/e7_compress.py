@@ -6,7 +6,8 @@ import shutil
 import src.config as config
 import src.consts as consts
 from src.db.database import Repository, connect
-from src.helpers.h1_utils import vprint, StatusLogger, mount_basedir, check_exit, savepid
+from src.helpers.h3_utils import vprint, mount_basedir, check_exit, savepid
+from src.classes.c2_status_logger import StatusLogger
 
 
 def apply(session, status, keep, count, interval, reverse, check):

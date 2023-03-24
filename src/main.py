@@ -9,7 +9,8 @@ from datetime import datetime
 
 import src.config as config
 from src.config import EXTRACTION_DIR
-from src.helpers.h1_utils import StatusLogger, mount_basedir, check_exit, savepid
+from src.helpers.h3_utils import mount_basedir, check_exit, savepid
+from src.classes.c2_status_logger import StatusLogger
 
 ORDER = [
     "e1_notebooks_and_cells",

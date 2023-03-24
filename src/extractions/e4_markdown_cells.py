@@ -8,9 +8,11 @@ from langdetect import detect
 from nltk.corpus import stopwords
 from nbconvert.filters.markdown_mistune import MarkdownWithMath
 from src.db.database import CellMarkdownFeature, connect
-from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
-from src.classes.c1_renderer import CountRenderer, LANG_MAP
-from src.helpers.h3_script_helpers import filter_markdown_cells, set_up_argument_parser
+from src.helpers.h3_utils import vprint, check_exit, savepid
+from src.classes.c2_status_logger import StatusLogger
+from src.classes.c3_renderer import CountRenderer, LANG_MAP
+from src.helpers.h2_script_helpers import set_up_argument_parser
+from src.helpers.h4_filters import filter_markdown_cells
 from src.states import *
 
 

@@ -7,7 +7,7 @@ import pytest
 from src import config
 from src.config import TEST_REPOS_DIR
 from src.db.database import Commit
-from src.helpers.h1_utils import SafeSession
+from src.classes.c1_safe_session import SafeSession
 
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:

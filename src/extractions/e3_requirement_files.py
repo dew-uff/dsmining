@@ -6,9 +6,10 @@ import src.config as config
 
 from src.states import *
 from src.db.database import RequirementFile, connect
-from src.helpers.h1_utils import vprint, StatusLogger, savepid
-from src.helpers.h1_utils import find_files_in_path, unzip_repository
-from src.helpers.h3_script_helpers import apply, set_up_argument_parser
+from src.helpers.h3_utils import vprint, savepid
+from src.classes.c2_status_logger import StatusLogger
+from src.helpers.h3_utils import find_files_in_path, unzip_repository
+from src.helpers.h2_script_helpers import apply, set_up_argument_parser
 
 
 def find_requirements(session, repository):

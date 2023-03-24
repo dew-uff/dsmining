@@ -4,12 +4,15 @@ import argparse
 import os
 import src.config as config
 
-from src.helpers.h1_utils import mount_basedir, SafeSession
-from src.helpers.h1_utils import TimeoutError
-from src.helpers.h1_utils import vprint, StatusLogger, check_exit, savepid
+from src.helpers.h3_utils import mount_basedir, extract_features
+from src.classes.c1_safe_session import SafeSession
+from src.helpers.h3_utils import TimeoutError
+from src.helpers.h3_utils import vprint, check_exit, savepid
+from src.classes.c2_status_logger import StatusLogger
 from src.db.database import CellModule, connect, CellDataIO
-from src.helpers.h3_script_helpers import filter_code_cells, load_repository, set_up_argument_parser
-from src.helpers.h3_script_helpers import load_notebook, extract_features
+from src.helpers.h2_script_helpers import set_up_argument_parser
+from src.helpers.h4_filters import filter_code_cells
+from src.helpers.h5_loaders import load_notebook, load_repository
 from future.utils.surrogateescape import register_surrogateescape
 
 from src.states import *

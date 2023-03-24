@@ -8,8 +8,8 @@ if src not in sys.path:
 import src.extractions.e6_python_features as e6
 
 from src.states import *
-from src.helpers.h1_utils import TimeoutError
-from src.classes.c2_local_checkers import PathLocalChecker
+from src.helpers.h3_utils import TimeoutError
+from src.classes.c4_local_checkers import PathLocalChecker
 from src.extractions.e6_python_features import process_python_file
 from src.db.database import PythonFileModule, PythonFileDataIO
 from tests.database_config import connection, session  # noqa: F401

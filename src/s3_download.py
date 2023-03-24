@@ -11,9 +11,12 @@ import src.config as config
 
 from src.states import *
 from src.db.database import Commit, connect
-from src.helpers.git_helpers import git, extract_hash_parts, git_output, format_commit, remove_repo_and_prepare
-from src.helpers.h1_utils import savepid, vprint, StatusLogger, SafeSession, check_exit
-from src.helpers.h3_script_helpers import set_up_argument_parser, filter_repositories
+from src.helpers.h1_git_helpers import git, extract_hash_parts, git_output, format_commit, remove_repo_and_prepare
+from src.helpers.h3_utils import savepid, vprint, check_exit
+from src.classes.c2_status_logger import StatusLogger
+from src.classes.c1_safe_session import SafeSession
+from src.helpers.h2_script_helpers import set_up_argument_parser
+from src.helpers.h4_filters import filter_repositories
 
 
 def load_commits(full_dir):

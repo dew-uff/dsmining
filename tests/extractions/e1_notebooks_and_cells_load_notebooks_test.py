@@ -5,7 +5,7 @@ if src not in sys.path:
     sys.path.append(src)
 
 import nbformat as nbf
-import src.helpers.h3_script_helpers as h2
+import src.helpers.h3_utils as h3
 import src.extractions.e1_notebooks_and_cells as e1
 
 from unittest.mock import mock_open
@@ -62,7 +62,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         monkeypatch.setattr('builtins.open', mock_open())
         monkeypatch.setattr(nbf, 'read', stub_nbf_readOSError)
         monkeypatch.setattr('os.path.islink', lambda path: True)
-        monkeypatch.setattr(h2, 'broken_link',
+        monkeypatch.setattr(h3, 'broken_link',
                             lambda path: "Notebook is broken link. Use the following SQL to fix:")
 
         nbrow, cells_info = e1.load_notebook(repository.id, repository.path, name, nbrow)

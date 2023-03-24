@@ -7,9 +7,11 @@ import src.config as config
 
 from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect
-from src.helpers.h1_utils import savepid, SafeSession, unzip_repository
-from src.helpers.h1_utils import find_files, timeout, TimeoutError, vprint, StatusLogger
-from src.helpers.h3_script_helpers import broken_link, cell_output_formats, apply, set_up_argument_parser
+from src.helpers.h3_utils import savepid, unzip_repository, cell_output_formats, broken_link
+from src.classes.c1_safe_session import SafeSession
+from src.helpers.h3_utils import find_files, timeout, TimeoutError, vprint
+from src.classes.c2_status_logger import StatusLogger
+from src.helpers.h2_script_helpers import apply, set_up_argument_parser
 from src.states import *
 
 
