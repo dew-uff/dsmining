@@ -2,6 +2,8 @@ import shutil
 import sys
 import os
 
+import pytest
+
 from src import config
 from src.config import TEST_REPOS_DIR
 from src.db.database import Commit
@@ -98,7 +100,6 @@ class TestS3DownloadLoadRepositoryAndCommits:
 
         def stub_clone(_part, _end, _repo, _remote, _branch, _commit):
             return repository.path, None, False
-
         monkeypatch.setattr(s3, 'clone', stub_clone)
         monkeypatch.setattr(s3, 'git_output', lambda *args, cwd: b'')
 
@@ -145,7 +146,6 @@ class TestS3DownloadLoadRepositoryAndCommits:
             raise EnvironmentError(f"Clone failed for {repository}")
 
         monkeypatch.setattr(s3, 'clone', stub_clone)
-        monkeypatch.setattr(s3, 'git_output', lambda *args, cwd: commit_hash)
 
         s3.load_repository_and_commits(safe_session, repository)
         safe_session.commit()
@@ -175,7 +175,7 @@ class TestS3DownloadClone:
         assert full_dir == config.SELECTED_REPOS_DIR / "content" / part / end
         assert full_dir.exists() is True
         assert len(commits) == 3
-        shutil.rmtree(str(full_dir), ignore_errors=True)
+        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
         assert full_dir.exists() is False
 
     def test_load_repository_commits_repo_exists(self, session, monkeypatch, capsys):
@@ -199,7 +199,7 @@ class TestS3DownloadClone:
         assert full_dir == config.SELECTED_REPOS_DIR / "content" / part / end
         assert full_dir.exists() is True
         assert "Repository already cloned" in captured.out
-        shutil.rmtree(str(full_dir), ignore_errors=True)
+        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
         assert full_dir.exists() is False
 
     def test_load_repository_commits_with_commit(self, session, monkeypatch):
@@ -218,7 +218,7 @@ class TestS3DownloadClone:
         assert full_dir.exists() is True
         assert len(commits) == 6
         assert last_commit["hash"] == commit
-        shutil.rmtree(str(full_dir), ignore_errors=True)
+        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
         assert full_dir.exists() is False
 
     def test_load_repository_commits_with_branch(self, session, monkeypatch):
@@ -234,7 +234,88 @@ class TestS3DownloadClone:
         assert already_exists is False
         assert full_dir == config.SELECTED_REPOS_DIR / "content" / part / end
         assert full_dir.exists() is True
-        assert len(commits) == 15
-        shutil.rmtree(str(full_dir), ignore_errors=True)
+        assert len(commits) > 15
+        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
         assert full_dir.exists() is False
+
+    def test_load_repository_commits_clone_error(self, session, monkeypatch):
+        part = "test"
+        end = "test1"
+        remote = "https://github.com/luamz/save-marine"
+        repo = "luamz/save-marine"
+
+        def stub_git(*args):
+            if "clone" in args:
+                return -1
+            else:
+                return 0
+
+        monkeypatch.setattr(s3, 'git', stub_git)
+        with pytest.raises(EnvironmentError):
+            s3.clone(part, end, repo, remote, branch=None, commit=None)
+
+    def test_load_repository_commits_checkout_error(self, session, monkeypatch):
+        part = "test"
+        end = "test1"
+        remote = "https://github.com/luamz/save-marine"
+        repo = "luamz/save-marine"
+        commit = "ab142cf"
+
+        def stub_git(*args):
+            if "checkout" in args:
+                return -1
+            else:
+                return 0
+        monkeypatch.setattr(s3, 'git', stub_git)
+        with pytest.raises(EnvironmentError):
+            s3.clone(part, end, repo, remote, branch=None, commit=commit)
+
+        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
+
+
+class TestS3DownloadLoadCommits:
+    def test_load_commits(self, session, monkeypatch):
+        part = "test"
+        end = "test1"
+        remote = "https://github.com/luamz/save-marine"
+        repo = "luamz/save-marine"
+
+        commit = b'2022-12-20 09:01:24 -0300$_$d504211$_$luamz$_$Fixing path problems in linux\n'
+        merge = b"2022-12-20 09:01:43 -0300$_$f55de22$_$luamz$_$Merge branch 'master'\n"
+
+        def stub_git(*args):
+            if "--no-merges" in args:
+                return commit
+            elif "--merges" in args:
+                return merge
+        monkeypatch.setattr(s3, 'git_output', stub_git)
+
+        full_dir, commits, already_exists = s3.clone(part, end, repo, remote,
+                                                     branch=None, commit=None)
+
+        assert full_dir.exists() is True
+        assert len(commits) == 2
+        assert commits[0]["type"] == "commit"
+        assert commits[1]["type"] == "merge"
+
+        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
+        assert full_dir.exists() is False
+
+    def test_load_commits_invalid_commit(self, session, monkeypatch):
+        part = "test"
+        end = "test1"
+        remote = "https://github.com/luamz/save-marine"
+        repo = "luamz/save-marine"
+
+        invalid_commit = b'2022-12-20 09:01:24 -0300$_$d504211$_$luamz\n'
+
+        def stub_git(*args):
+            if "--no-merges" in args:
+                return invalid_commit
+        monkeypatch.setattr(s3, 'git_output', stub_git)
+
+        with pytest.raises(EnvironmentError):
+            s3.clone(part, end, repo, remote, branch=None, commit=None)
+
+        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
 

@@ -20,29 +20,35 @@ from src.helpers.h3_script_helpers import set_up_argument_parser, filter_reposit
 
 
 def load_commits(full_dir):
-    git_log_commits = subprocess.check_output(
-        ['git', "--git-dir", str(full_dir / ".git"),
-         'log', '--no-merges', '--pretty=format:%ci,%h,%an,%s'], stderr=subprocess.STDOUT
-    ).decode("utf-8")
-
     commits_info = []
 
-    if git_log_commits:
-        git_log_commits = git_log_commits.split("\n")
-        for cc in git_log_commits:
-            commit_row = format_commit(cc, "commit")
-            commits_info.append(commit_row)
+    try:
+        args = ["--git-dir", str(full_dir / ".git"), 'log',
+                '--no-merges', '--pretty=format:%ci$_$%h$_$%an$_$%s']
 
-    git_log_merges = subprocess.check_output(
-        ['git', "--git-dir", str(full_dir / ".git"),
-         'log', '--merges', '--pretty=format:%ci,%h,%an,%s'], stderr=subprocess.STDOUT
-    ).decode("utf-8")
+        git_log_commits = git_output(*args).decode("utf-8")
 
-    if git_log_merges:
-        git_log_merges = git_log_merges.split("\n")
-        for cm in git_log_merges:
-            commit_row = format_commit(cm, "merge")
-            commits_info.append(commit_row)
+        if git_log_commits:
+            git_log_commits = git_log_commits.split("\n")
+            git_log_commits = [x for x in git_log_commits if x != ""]
+
+            for commit_ in git_log_commits:
+                commit_row = format_commit(commit_, "commit")
+                commits_info.append(commit_row)
+
+        args = ["--git-dir", str(full_dir / ".git"),
+                'log', '--merges', '--pretty=format:%ci$_$%h$_$%an$_$%s']
+        git_log_merges = git_output(*args).decode("utf-8")
+
+        if git_log_merges:
+            git_log_merges = git_log_merges.split("\n")
+            git_log_merges = [y for y in git_log_merges if y != ""]
+            for merges_ in git_log_merges:
+                merge_row = format_commit(merges_, "merge")
+                commits_info.append(merge_row)
+
+    except Exception as err:
+        raise EnvironmentError(f"Load commits failed.")
 
     return commits_info
 

@@ -28,18 +28,21 @@ def git_output(*args, cwd=None):
 
 
 def format_commit(line, commit_type):
-    commit_datetime, commit_hash, author, message = line.split(',', 3)
-    commit_datetime = datetime.strptime(commit_datetime, "%Y-%m-%d %H:%M:%S %z")
-    commit_datetime = commit_datetime.astimezone(pytz.timezone('GMT'))
-    commit_row = {
-        "repository_id": None,
-        "type": commit_type,
-        "hash": commit_hash,
-        "date": commit_datetime,
-        "author": author,
-        "message": message
-    }
-    return commit_row
+    try:
+        commit_datetime, commit_hash, author, message = line.split('$_$', 3)
+        commit_datetime = datetime.strptime(commit_datetime, "%Y-%m-%d %H:%M:%S %z")
+        commit_datetime = commit_datetime.astimezone(pytz.timezone('GMT'))
+        commit_row = {
+            "repository_id": None,
+            "type": commit_type,
+            "hash": commit_hash,
+            "date": commit_datetime,
+            "author": author,
+            "message": message
+        }
+        return commit_row
+    except Exception as err:
+        raise EnvironmentError(f"Invalid commit.")
 
 
 def remove_repo_and_prepare(session, repository):
