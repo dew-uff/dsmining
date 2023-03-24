@@ -11,14 +11,9 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.extractions.e1_notebooks_and_cells as e1
-
-from IPython.core.inputtransformer2 import TransformerManager
-from src.consts import C_OK, C_UNKNOWN_VERSION, C_SYNTAX_ERROR
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
-from tests.test_helpers.h1_stubs import get_notebook_nbrow, stub_KeyError, mock_load_rep_and_commits, stub_repo_commits
-from tests.test_helpers.h1_stubs import stub_IndentationError, get_notebook_node
+from tests.test_helpers.h1_stubs import mock_load_rep_and_commits, stub_repo_commits
 from src.states import *
 import src.s3_download as s3
 
@@ -113,6 +108,22 @@ class TestS3DownloadLoadRepositoryAndCommits:
         assert safe_session.query(Commit).count() == 0
         assert repository.state == REP_EMPTY
 
+    def test_load_repository_path_already_exists(self, session, monkeypatch):
+        repository = RepositoryFactory(session).create(state=REP_FILTERED, commit=None)
+        safe_session = SafeSession(session, interrupted=REP_STOPPED)
+
+        def stub_clone(_part, _end, _repo, _remote, _branch, _commit):
+            return repository.path, None, True
+
+        monkeypatch.setattr(s3, 'clone', stub_clone)
+        monkeypatch.setattr(s3, 'git_output', lambda *args, cwd: b'')
+
+        s3.load_repository_and_commits(safe_session, repository)
+        safe_session.commit()
+
+        assert safe_session.query(Commit).count() == 0
+        assert repository.state == REP_LOADED
+
     def test_load_repository_already_loaded(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(state=REP_LOADED)
         safe_session = SafeSession(session, interrupted=REP_STOPPED)
@@ -190,3 +201,40 @@ class TestS3DownloadClone:
         assert "Repository already cloned" in captured.out
         shutil.rmtree(str(full_dir), ignore_errors=True)
         assert full_dir.exists() is False
+
+    def test_load_repository_commits_with_commit(self, session, monkeypatch):
+        part = "test"
+        end = "test1"
+        remote = "https://github.com/luamz/save-marine"
+        repo = "luamz/save-marine"
+        commit = "ab142cf"
+
+        full_dir, commits, already_exists = s3.clone(part, end, repo, remote,
+                                                     branch=None, commit=commit)
+        last_commit = commits[5]
+
+        assert already_exists is False
+        assert full_dir == config.SELECTED_REPOS_DIR / "content" / part / end
+        assert full_dir.exists() is True
+        assert len(commits) == 6
+        assert last_commit["hash"] == commit
+        shutil.rmtree(str(full_dir), ignore_errors=True)
+        assert full_dir.exists() is False
+
+    def test_load_repository_commits_with_branch(self, session, monkeypatch):
+        part = "test"
+        end = "test1"
+        remote = "https://github.com/luamz/save-marine"
+        repo = "luamz/save-marine"
+        branch = "test"
+
+        full_dir, commits, already_exists = s3.clone(part, end, repo, remote,
+                                                     branch=branch, commit=None)
+
+        assert already_exists is False
+        assert full_dir == config.SELECTED_REPOS_DIR / "content" / part / end
+        assert full_dir.exists() is True
+        assert len(commits) == 15
+        shutil.rmtree(str(full_dir), ignore_errors=True)
+        assert full_dir.exists() is False
+

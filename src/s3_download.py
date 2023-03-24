@@ -78,9 +78,9 @@ def clone(part, end, repo, remote, branch=None, commit=None):
             ]
 
             if git(*args) != 0:
-                raise EnvironmentError("Checkout failed for {}/{}".format(
-                    repo, commit
-                ))
+                raise EnvironmentError(
+                    "Checkout failed for {}/{}".format(repo, commit)
+                )
 
         commits = load_commits(full_dir)
         return full_dir, commits, False
