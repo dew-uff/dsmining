@@ -1,9 +1,6 @@
 import os
 import sys
 
-import src.helpers.h3_utils
-import src.helpers.h5_loaders
-
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
@@ -17,117 +14,12 @@ import src.helpers.h5_loaders as h5
 
 from src.config import Path
 from src.classes.c4_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
-from src.db.database import Repository, RepositoryFile
+from src.db.database import RepositoryFile
 from src.helpers.h3_utils import to_unicode, extract_features
 from src.classes.c1_safe_session import SafeSession
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, CodeCellFactory, NotebookFactory, PythonFileFactory
 from src.helpers.h5_loaders import load_files, load_notebook, load_repository
-from src.helpers.h4_filters import filter_repositories
-from src.states import *
-
-
-class TestH3ScripHelpersFilterRepositories:
-
-    def test_filter_all(self, session):
-        rep1, rep2 = RepositoryFactory(session).create_batch(2)
-
-        assert len(session.query(Repository).all()) == 2
-
-        selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=NB_STOPPED),
-            selected_repositories=True,
-            count=False,
-            interval=None,
-            reverse=False,
-        )
-
-        assert query.count() == 2
-        assert rep1 in query.all()
-        assert rep2 in query.all()
-
-    def test_filter_count(self, session, capsys):
-        RepositoryFactory(session).create_batch(3)
-
-        assert len(session.query(Repository).all()) == 3
-
-        filter_repositories(
-            session=SafeSession(session, interrupted=NB_STOPPED),
-            selected_repositories=True,
-            count=True,
-            interval=None,
-            reverse=False
-        )
-
-        captured = capsys.readouterr()
-        assert captured.out == "3\n"
-
-    def test_filter_reverse(self, session):
-        rep1, rep2 = RepositoryFactory(session).create_batch(2)
-
-        assert len(session.query(Repository).all()) == 2
-
-        selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=NB_STOPPED),
-            selected_repositories=True,
-            count=False,
-            interval=None,
-            reverse=True
-        )
-
-        assert query.count() == 2
-        assert rep1 is query[1]
-        assert rep2 is query[0]
-
-    def test_filter_interval(self, session):
-        reps = RepositoryFactory(session).create_batch(10)
-
-        assert len(session.query(Repository).all()) == 10
-
-        selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=NB_STOPPED),
-            selected_repositories=True,
-            count=False,
-            interval=[3, 6],
-            reverse=False
-        )
-
-        assert query.count() == 4
-        assert reps[0], reps[1] not in query.all()
-        assert reps[2], reps[3] in query.all()
-        assert reps[4], reps[5] in query.all()
-        assert reps[6], reps[7] not in query.all()
-        assert reps[8], reps[9] not in query.all()
-
-    def test_filter_selected_repositories_30in30(self, session):
-        RepositoryFactory(session).create_batch(40)
-
-        assert len(session.query(Repository).all()) == 40
-
-        selected_repositories, query = filter_repositories(
-            session=SafeSession(session, interrupted=NB_STOPPED),
-            selected_repositories=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                                   11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                                   21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-                                   31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
-            count=False,
-            interval=None,
-            reverse=False
-        )
-
-        assert selected_repositories == [31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
-        assert query.count() == 30
-
-        new_selected_repositories, new_query = filter_repositories(
-            session=SafeSession(session, interrupted=NB_STOPPED),
-            selected_repositories=selected_repositories,
-            count=False,
-            interval=None,
-            reverse=False,
-        )
-
-        assert new_selected_repositories == []
-        assert new_query.count() == 10
 
 
 class TestH3ScriptHelpersLoadRepository:

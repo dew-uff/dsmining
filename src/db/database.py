@@ -153,17 +153,19 @@ class Repository(Base):
     @property
     def path(self):
         """Return notebook path"""
-        return (
+        if self.hash_dir1 and self.hash_dir2:
+            return (
                 config.Path(config.SELECTED_REPOS_DIR) / "content" /
                 self.hash_dir1 / self.hash_dir2
-        )
+            )
 
     @property
     def dir_path(self):
         """Return notebook path"""
-        return (
-                config.Path(config.SELECTED_REPOS_DIR) / "content" / self.hash_dir1
-        )
+        if self.hash_dir1:
+            return (
+                    config.Path(config.SELECTED_REPOS_DIR) / "content" / self.hash_dir1
+            )
 
     @property
     def zip_path(self):

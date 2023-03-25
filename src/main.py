@@ -1,28 +1,24 @@
 """Main script that calls the others"""
-import argparse
 import subprocess
-import smtplib
 import sys
 import os
 from datetime import datetime
 
-
 import src.config as config
 from src.config import EXTRACTION_DIR
-from src.helpers.h3_utils import mount_basedir, check_exit, savepid
+from src.db.database import connect, Repository
+from src.helpers.h3_utils import check_exit, savepid, vprint
 from src.classes.c2_status_logger import StatusLogger
+from src.states import *
 
 ORDER = [
+    "s3_download",
     "e1_notebooks_and_cells",
     "e2_python_files",
     "e3_requirement_files",
     "e4_markdown_cells",
     "e5_code_cells",
-    "e6_python_files",
-    "e7_compress",
-    "e8_extract_files",
-    "p1_notebook_aggregate",
-    "p2_python_aggregate"
+    "e6_python_features",
 ]
 
 
@@ -33,50 +29,57 @@ def execute_script(script, args):
     out = config.LOGS_DIR / ("{}-{}.outerr".format(script, moment))
     if out.exists():
         out = str(out) + ".2"
+
     with open(str(out), "wb") as outf:
-        options = ['python', '-u', EXTRACTION_DIR +os.sep + script + ".py"] + args
+        if script == 's3_download':
+            options = ['python', '-u', config.SRC_DIR + os.sep + script + ".py"] + args
+        else:
+            options = ['python', '-u', EXTRACTION_DIR + os.sep + script + ".py"] + args
+
         status = subprocess.call(options, stdout=outf, stderr=outf)
+
         print("> Status", status)
         return status
 
 
 def main():
     """Main function"""
+    vprint(0, f"Starting main...")
+
+    with connect() as session:
+        query = session.query(Repository)
+        vprint(1, f"Processed Repositories: {query.filter(Repository.state == REP_REQ_FILE_EXTRACTED).count()}")
+        vprint(1, f"Failed Repositories: {query.filter(Repository.state in REP_ERRORS).count()}")
+        vprint(1, f"Filtered Repositories: {query.filter(Repository.state == REP_FILTERED).count()} (yet to process)")
+
     with savepid():
-        scripts = sys.argv[1:]
+        iteration = 0
+
+        while query.filter(Repository.state == REP_FILTERED).count() > 0:
+            filtered_repositories = query.filter(Repository.state == REP_FILTERED)
+            iteration = iteration + 1
+            iteration_repositories = []
+            iteration_size = 0
+
+            for rep in filtered_repositories:
+                if iteration_size < 5 * (10 ** 6):
+                    iteration_size = iteration_size + int(rep.disk_usage)
+                    iteration_repositories.append(rep)
+
+            vprint(2, f"Iteration {iteration}")
+            vprint(2, f"Selected Repositories:"
+                      f"{[repo.id for repo in iteration_repositories]}")
+            print("a")
 
         result = []
 
         try:
-            # with mount_basedir():
-            #     config.BASE_DIR.mkdir(parents=True, exist_ok=True)
-            # config.LOGS_DIR.mkdir(parents=True, exist_ok=True)
+            options_to_all = ['-i', '1', '10', '-e']
 
-            indexes = [
-                index
-                for index, name in enumerate(scripts)
-                if name == "--all"
-                or config.Path(name).exists()
-                or config.Path(name + ".py").exists()
-            ]
-            indexes.sort()
-            indexes.append(None)
-            it_indexes= iter(indexes)
-            next(it_indexes)
             to_execute = {
-                scripts[cur]: scripts[cur + 1:nex]
-                for cur, nex in zip(indexes, it_indexes)
+                script: []
+                for script in ORDER
             }
-            options_to_all = []
-            if "--all" in to_execute:
-                options_to_all = to_execute["--all"]
-                del to_execute["--all"]
-
-            if not to_execute:
-                to_execute = {
-                    script: []
-                    for script in ORDER
-                }
 
             for script, args in to_execute.items():
                 if check_exit({"all", "main", "main.py"}):

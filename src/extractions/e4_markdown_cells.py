@@ -84,12 +84,13 @@ def process_markdown_cell(session, repository_id, notebook_id, cell, retry=False
         session.add(cell)
 
 
-def apply(session, status, retry,
+def apply(session, status, selected_repositories, retry,
           count, interval, reverse, check):
     """Extract markdown features"""
 
     query = filter_markdown_cells(
         session=session,
+        selected_repositories=selected_repositories,
         count=count,
         interval=interval,
         reverse=reverse,
@@ -145,6 +146,7 @@ def main():
         apply(
             session=session,
             status=status,
+            selected_repositories=args.repositories,
             retry=True if args.retry_errors else False,
             count=args.count,
             interval=args.interval,

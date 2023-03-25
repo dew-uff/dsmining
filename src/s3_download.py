@@ -156,36 +156,35 @@ def process_repository(session, repository, branch=None, commit=None, retry=Fals
 
 def apply(session, status, selected_repositories, retry, count,
           interval, reverse, check, branch, commit):
-    while selected_repositories:
 
-        selected_repositories, query = filter_repositories(
+    query = filter_repositories(
+        session=session,
+        selected_repositories=selected_repositories,
+        count=count,
+        interval=interval, reverse=reverse
+    )
+
+    for repository in query:
+
+        if check_exit(check):
+            vprint(0, "Found .exit file. Exiting")
+            return
+
+        status.report()
+        vprint(0, f"Downloading repository {repository} from {repository.domain}.")
+
+        result = process_repository(
             session=session,
-            selected_repositories=selected_repositories,
-            count=count,
-            interval=interval, reverse=reverse
+            repository=repository,
+            branch=branch,
+            commit=commit,
+            retry=retry
         )
 
-        for repository in query:
+        vprint(0, result)
 
-            if check_exit(check):
-                vprint(0, "Found .exit file. Exiting")
-                return
-
-            status.report()
-            vprint(0, f"Downloading repository {repository} from {repository.domain}.")
-
-            result = process_repository(
-                session=session,
-                repository=repository,
-                branch=branch,
-                commit=commit,
-                retry=retry
-            )
-
-            vprint(0, result)
-
-            status.count += 1
-            session.commit()
+        status.count += 1
+        session.commit()
 
 
 def main():
@@ -212,7 +211,7 @@ def main():
         apply(
             session=SafeSession(session, interrupted=REP_STOPPED),
             status=status,
-            selected_repositories=args.repositories or True,
+            selected_repositories=args.repositories,
             retry=True if args.retry_errors else False,
             count=args.count,
             interval=args.interval,

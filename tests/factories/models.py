@@ -86,7 +86,7 @@ def MarkdownCellFactory(session):
             model = Cell
             sqlalchemy_session = session
 
-        cell_type = 'code'
+        cell_type = 'markdown'
         execution_count = None
         lines = 2
         output_formats = None

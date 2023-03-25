@@ -155,7 +155,7 @@ def main():
         apply(
             session=session,
             status=status,
-            selected_repositories=args.repositories or True,
+            selected_repositories=args.repositories,
             retry=True if args.retry_errors else False,
             count=args.count,
             interval=args.interval,

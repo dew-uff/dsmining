@@ -45,7 +45,8 @@ def format_commit(line, commit_type):
 
 
 def remove_repo_and_prepare(session, repository):
-    shutil.rmtree(str(repository.dir_path), ignore_errors=True)
+    if repository.dir_path:
+        shutil.rmtree(str(repository.dir_path), ignore_errors=True)
     repository.state = REP_FILTERED
     session.commit()
     return repository.commit

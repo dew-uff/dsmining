@@ -6,16 +6,14 @@ def filter_repositories(session, selected_repositories,
                         count, interval, reverse):
     filters = []
 
-    if selected_repositories is not True:
-        filters += [Repository.id.in_(selected_repositories[:30])]
-        selected_repositories = selected_repositories[30:]
-    else:
-        selected_repositories = False
-        if interval:
-            filters += [
-                Repository.id >= interval[0],
-                Repository.id <= interval[1],
-            ]
+    if selected_repositories:
+        filters += [Repository.id.in_(selected_repositories)]
+
+    if interval:
+        filters += [
+            Repository.id >= interval[0],
+            Repository.id <= interval[1],
+        ]
 
     query = session.query(Repository).filter(*filters)
     if count:
@@ -26,13 +24,17 @@ def filter_repositories(session, selected_repositories,
         query = query.order_by(Repository.id.desc())
     else:
         query = query.order_by(Repository.id.asc())
-    return selected_repositories, query
+    return query
 
 
-def filter_markdown_cells(session, count, interval, reverse):
+def filter_markdown_cells(session, count, selected_repositories,
+                          interval, reverse):
     filters = [
         Cell.cell_type == 'markdown',
     ]
+
+    if selected_repositories:
+        filters += [Cell.repository_id.in_(selected_repositories)]
 
     if interval:
         filters += [
@@ -62,25 +64,22 @@ def filter_markdown_cells(session, count, interval, reverse):
     return query
 
 
-def filter_code_cells(session, selected_notebooks,
+def filter_code_cells(session, selected_repositories,
                       count, interval, reverse):
     filters = [
-        Cell.state is not CELL_UNKNOWN_VERSION,  # known version
+        Cell.state != CELL_UNKNOWN_VERSION,  # known version
         Cell.cell_type == 'code',
         Cell.python.is_(True),
     ]
-    if selected_notebooks is not True:
+
+    if selected_repositories:
+        filters += [Cell.repository_id.in_(selected_repositories)]
+
+    if interval:
         filters += [
-            Cell.notebook_id.in_(selected_notebooks[:30])
+            Cell.repository_id >= interval[0],
+            Cell.repository_id <= interval[1],
         ]
-        selected_notebooks = selected_notebooks[30:]
-    else:
-        selected_notebooks = False
-        if interval:
-            filters += [
-                Cell.repository_id >= interval[0],
-                Cell.repository_id <= interval[1],
-            ]
 
     query = (session.query(Cell).filter(*filters))
 
@@ -101,27 +100,22 @@ def filter_code_cells(session, selected_notebooks,
             Cell.index.asc(),
         )
 
-    return selected_notebooks, query
+    return query
 
 
-def filter_python_files(session, selected_python_files,
+def filter_python_files(session, selected_repositories,
                         count, interval, reverse):
     filters = [
-        PythonFile.processed.op('&')(PF_EMPTY) == 0,
+        PythonFile.state != PF_EMPTY
     ]
 
-    if selected_python_files is not True:
+    if selected_repositories:
+        filters += [PythonFile.repository_id.in_(selected_repositories)]
+    if interval:
         filters += [
-            PythonFile.notebook_id.in_(selected_python_files[:30])
+            PythonFile.repository_id >= interval[0],
+            PythonFile.repository_id <= interval[1],
         ]
-        selected_python_files = selected_python_files[30:]
-    else:
-        selected_python_files = False
-        if interval:
-            filters += [
-                PythonFile.repository_id >= interval[0],
-                PythonFile.repository_id <= interval[1],
-            ]
 
     query = (
         session.query(PythonFile)
@@ -141,4 +135,4 @@ def filter_python_files(session, selected_python_files,
             PythonFile.repository_id.asc()
         )
 
-    return selected_python_files, query
+    return query

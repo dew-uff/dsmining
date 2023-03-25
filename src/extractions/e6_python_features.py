@@ -96,59 +96,58 @@ def process_python_file(
 
 
 def apply(
-    session, status, selected_python_files,
+    session, status, selected_repositories,
     retry_error, retry_syntax_error, retry_timeout,
     count, interval, reverse, check
 ):
     """ Extracts python files' features"""
-    while selected_python_files:
 
-        selected_python_files, query = filter_python_files(
-            session=session, selected_python_files=selected_python_files,
-            count=count, interval=interval, reverse=reverse
+    query = filter_python_files(
+        session=session, selected_repositories=selected_repositories,
+        count=count, interval=interval, reverse=reverse
+    )
+
+    skip_repo = False
+    repository_id = None
+    repository = None
+    archives = None
+
+    skip_python_file = False
+    checker = None
+
+    for python_file in query:
+
+        if check_exit(check):
+            session.commit()
+            vprint(0, 'Found .exit file. Exiting')
+            return
+        status.report()
+
+        skip_repo, repository_id, repository, archives = load_repository(
+            session, python_file, skip_repo, repository_id, repository, archives
+        )
+        if skip_repo:
+            continue
+
+        skip_repo, skip_python_file, python_file_id, archives, checker = load_files(
+            session, python_file, repository,
+            skip_repo, skip_python_file, archives, checker
         )
 
-        skip_repo = False
-        repository_id = None
-        repository = None
-        archives = None
+        if skip_repo or skip_python_file:
+            continue
 
-        skip_python_file = False
-        checker = None
+        vprint(2, 'Processing Python File: {}'.format(python_file))
 
-        for python_file in query:
+        result = process_python_file(
+            session, repository_id, python_file, checker,
+            retry_error, retry_syntax_error, retry_timeout
+        )
 
-            if check_exit(check):
-                session.commit()
-                vprint(0, 'Found .exit file. Exiting')
-                return
-            status.report()
+        vprint(2, result)
 
-            skip_repo, repository_id, repository, archives = load_repository(
-                session, python_file, skip_repo, repository_id, repository, archives
-            )
-            if skip_repo:
-                continue
-
-            skip_repo, skip_python_file, python_file_id, archives, checker = load_files(
-                session, python_file, repository,
-                skip_repo, skip_python_file, archives, checker
-            )
-
-            if skip_repo or skip_python_file:
-                continue
-
-            vprint(2, 'Processing Python File: {}'.format(python_file))
-
-            result = process_python_file(
-                session, repository_id, python_file, checker,
-                retry_error, retry_syntax_error, retry_timeout
-            )
-
-            vprint(2, result)
-
-            status.count += 1
-        session.commit()
+        status.count += 1
+    session.commit()
 
 
 def main():
@@ -171,7 +170,7 @@ def main():
             apply(
                 session=SafeSession(session),
                 status=status,
-                selected_python_files=args.python_files or True,
+                selected_repositories=args.repositories,
                 retry_error=True if args.retry_errors else False,
                 retry_syntax_error=0 if args.retry_syntaxerrors else False,
                 retry_timeout=0 if args.retry_timeout else False,
