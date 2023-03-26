@@ -4,7 +4,6 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.consts as consts
 import src.extractions.e5_code_cells as e5
 
 from src.helpers.h3_utils import TimeoutError

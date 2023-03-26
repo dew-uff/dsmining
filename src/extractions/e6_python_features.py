@@ -100,7 +100,7 @@ def apply(
     retry_error, retry_syntax_error, retry_timeout,
     count, interval, reverse, check
 ):
-    """ Extracts python files' features"""
+    """Aggregate Python Files' features"""
 
     query = filter_python_files(
         session=session, selected_repositories=selected_repositories,

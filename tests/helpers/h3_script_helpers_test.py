@@ -1,6 +1,8 @@
 import os
 import sys
 
+from src.states import REP_UNAVAILABLE_FILES
+
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
@@ -8,7 +10,6 @@ if src not in sys.path:
 import ast
 import pytest
 import tarfile
-import src.consts as consts
 import src.extras.e8_extract_files as e8
 import src.helpers.h5_loaders as h5
 
@@ -443,7 +444,7 @@ class TestH3ScriptHelpersLoadArchives:
 
     def test_load_archives_zip_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
-        repository = RepositoryFactory(safe_session).create(processed=consts.R_COMPRESS_ERROR)
+        repository = RepositoryFactory(safe_session).create()
 
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
@@ -464,7 +465,7 @@ class TestH3ScriptHelpersLoadArchives:
 
     def test_load_archives_zip_error(self, session, monkeypatch):
         safe_session = SafeSession(session)
-        repository = RepositoryFactory(safe_session).create(processed=consts.R_COMPRESS_ERROR)
+        repository = RepositoryFactory(safe_session).create()
 
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
@@ -483,7 +484,6 @@ class TestH3ScriptHelpersLoadArchives:
 
         assert skip_repo is True
         assert archives is None
-        assert repository.processed == consts.R_COMPRESS_ERROR
 
     def test_load_archives_path_error(self, session, monkeypatch):
         safe_session = SafeSession(session)
@@ -497,7 +497,7 @@ class TestH3ScriptHelpersLoadArchives:
         skip_repo, archives = h5.load_archives(session, repository)
         assert skip_repo is True
         assert archives is None
-        assert repository.processed == consts.R_UNAVAILABLE_FILES
+        assert repository.state == REP_UNAVAILABLE_FILES
 
 
 class TestH3ScriptHelpersExtractFeatures:

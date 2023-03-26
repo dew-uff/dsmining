@@ -1,9 +1,10 @@
 from collections import Counter, OrderedDict
-from src.db.database import CellModule, CellMarkdownFeature
+from src.db.database import CellModule, CellMarkdownFeature, PythonFileModule
+from src.helpers.h3_utils import vprint
 
 IGNORE_COLUMNS = {
     "id", "repository_id", "notebook_id", "cell_id", "index",
-    "skip", "processed",
+    "skip", "processed", 'state', 'created_at', 'updated_at'
 }
 
 MARKDOWN_COLUMNS = [
@@ -29,7 +30,7 @@ def calculate_markdown(notebook):
     markdown_languages = Counter()
     query = (
         notebook.cell_markdown_features_objs
-        # .order_by(CellMarkdownFeature.index.asc())
+        .order_by(CellMarkdownFeature.index.asc())
     )
     for feature in query:
         agg_markdown["cell_count"] += 1
@@ -62,15 +63,9 @@ def calculate_modules(file, file_type):
             others.append("{}:{}".format(key_, module_.module_name))
 
     if file_type == 'notebook':
-        query = (
-            file.cell_modules_objs
-            .order_by(CellModule.index.asc())
-        )
+        query = (file.cell_modules_objs.order_by(CellModule.index.asc()))
     elif file_type == 'python_file':
-        query = (
-            file.python_file_modules_objs
-            # .order_by(PythonModule.id.asc())
-        )
+        query = (file.python_file_modules_objs.order_by(PythonFileModule.id.asc()))
     else:
         return "invalid file type. Unable to aggregate it"
 
@@ -101,3 +96,18 @@ def calculate_modules(file, file_type):
     agg[f"{file_type}_id"] = file.id
     agg["type"] = file_type
     return agg
+
+
+def load_repository(session, file, repository_id):
+    if repository_id != file.repository_id:
+        try:
+            session.commit()
+        except Exception as err:
+            vprint(0, 'Failed to save modules from repository {} due to {}'.format(
+                repository_id, err
+            ))
+
+        vprint(0, 'Processing repository: {}'.format(repository_id))
+        return file.repository_id
+
+    return repository_id

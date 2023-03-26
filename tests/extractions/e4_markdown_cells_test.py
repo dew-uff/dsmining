@@ -6,7 +6,6 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.consts as consts
 import src.extractions.e4_markdown_cells as e4
 
 from src.states import *

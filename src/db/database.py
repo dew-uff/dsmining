@@ -260,7 +260,7 @@ class PythonFile(Base):
     repository_id = Column(Integer)
     state = Column(Enum(PF_LOADED, PF_EMPTY, PF_L_ERROR,
                         PF_PROCESSED, PF_PROCESS_ERROR, PF_PROCESS_TIMEOUT,
-                        PF_SYNTAX_ERROR,
+                        PF_SYNTAX_ERROR, PF_AGGREGATED,
                         name='python_files_states',
                         validate_strings=True), default=PF_LOADED)
     name = Column(String)
@@ -391,6 +391,11 @@ class Notebook(Base):
                         NB_LOAD_TIMEOUT,
                         NB_STOPPED,
                         NB_GENERIC_LOAD_ERROR,
+                        NB_AGGREGATED,
+                        NB_AGGREGATE_ERROR,
+                        NB_INVALID,
+                        NB_SYNTAX_ERROR,
+                        NB_AGGR_MARKDOWN,
                         name='notebook_states',
                         validate_strings=True), default=NB_LOADED)
     name = Column(String)

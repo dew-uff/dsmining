@@ -7,7 +7,6 @@ if src not in sys.path:
 import src.extractions.e1_notebooks_and_cells as e1
 
 from IPython.core.inputtransformer2 import TransformerManager
-from src.consts import C_OK, C_UNKNOWN_VERSION, C_SYNTAX_ERROR
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.test_helpers.h1_stubs import get_notebook_nbrow, stub_KeyError

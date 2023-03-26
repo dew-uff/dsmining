@@ -115,47 +115,45 @@ def get_stop():
 
 def main():
     """Main function"""
-    with connect() as session:
-        with savepid():
-            global stop
-            iteration = 0
-            to_execute = {script: [] for script in ORDER}
+    with connect() as session, savepid():
+        global stop
+        iteration = 0
+        to_execute = {script: [] for script in ORDER}
+        selected_repositories, selected_output = select_repositories(session)
+
+        if not selected_repositories:
+            vprint(2, "\033[92mThere are no filtered repositories to process.\033[0m")
+            exit(0)
+
+        input_thread = threading.Thread(target=get_stop)
+        input_thread.start()
+        vprint(0, f"Starting main...\n")
+
+        while filtered_repositories(session) > 0 and selected_repositories and not stop:
+            try:
+                iteration = iteration + 1
+                inform(session, iteration, selected_output)
+                for script, args in to_execute.items():
+                    if check_exit({"all", "main", "main.py"}):
+                        print("Found .exit file. Exiting")
+                        return
+
+                    if script.endswith(".py"):
+                        script = script[:-3]
+
+                    args = args + selected_repositories
+                    execute_script(script, args, iteration)
+
+            except Exception as err:
+                print(err)
+
             selected_repositories, selected_output = select_repositories(session)
 
-            if not selected_repositories:
-                vprint(2, "\033[92mThere are no filtered repositories to process.\033[0m")
-                exit(0)
+        stop = True
+        vprint(4, "\033[92mDone!\033[0m")
 
-            input_thread = threading.Thread(target=get_stop)
-            input_thread.start()
-            vprint(0, f"Starting main...\n")
-
-            while filtered_repositories(session) > 0 and selected_repositories and not stop:
-                try:
-                    iteration = iteration + 1
-                    inform(session, iteration, selected_output)
-                    for script, args in to_execute.items():
-                        if check_exit({"all", "main", "main.py"}):
-                            print("Found .exit file. Exiting")
-                            return
-
-                        if script.endswith(".py"):
-                            script = script[:-3]
-
-                        args = args + selected_repositories
-                        execute_script(script, args, iteration)
-
-                except Exception as err:
-                    print(err)
-
-                selected_repositories, selected_output = select_repositories(session)
-
-            input_thread = None
-            stop = True
-            vprint(4, "\033[92mDone!\033[0m")
-
-            status = StatusLogger("main closed")
-            status.report()
+        status = StatusLogger("main closed")
+        status.report()
 
 
 if __name__ == "__main__":

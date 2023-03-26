@@ -1,48 +1,43 @@
 import os
 import tarfile
 
-from src import consts
+
 from src.classes.c4_local_checkers import SetLocalChecker, CompressedLocalChecker, PathLocalChecker
 from src.db.database import RepositoryFile
 from src.extras import e8_extract_files as e8
 from src.helpers.h3_utils import vprint, to_unicode
+from src.states import REP_UNAVAILABLE_FILES
 
 
 def load_archives(session, repository):
-    if not repository.processed & consts.R_EXTRACTED_FILES:
 
-        if repository.zip_path.exists():
-            vprint(1, 'Extracting files')
-            result = e8.process_repository(session, repository, skip_if_error=0)
+    if repository.zip_path.exists():
+        vprint(1, 'Extracting files')
+        result = e8.process_repository(session, repository, skip_if_error=0)
 
+        try:
+            session.commit()
+            if result != "done":
+                raise Exception("Extraction failure. Fallback")
+            vprint(1, result)
+
+        except Exception as err:
+            vprint(1, 'Failed: {}'.format(err))
             try:
-                session.commit()
-                if result != "done":
-                    raise Exception("Extraction failure. Fallback")
-                vprint(1, result)
+                tarzip = tarfile.open(str(repository.zip_path))
+            except tarfile.ReadError:
+                return True, None
+            zip_path = to_unicode(repository.hash_dir2)
+            return False, (tarzip, zip_path)
 
-            except Exception as err:
-                vprint(1, 'Failed: {}'.format(err))
-                try:
-                    tarzip = tarfile.open(str(repository.zip_path))
-                    if repository.processed & consts.R_COMPRESS_ERROR:
-                        repository.processed -= consts.R_COMPRESS_ERROR
-                    session.add(repository)
-                except tarfile.ReadError:
-                    repository.processed |= consts.R_COMPRESS_ERROR
-                    session.add(repository)
-                    return True, None
-                zip_path = to_unicode(repository.hash_dir2)
-                return False, (tarzip, zip_path)
-
-        elif repository.path.exists():
-            repo_path = to_unicode(repository.path)
-            return False, (None, repo_path)
-        else:
-            repository.processed |= consts.R_UNAVAILABLE_FILES
-            session.add(repository)
-            vprint(1, "Failed to load repository. Skipping")
-            return True, None
+    elif repository.path.exists():
+        repo_path = to_unicode(repository.path)
+        return False, (None, repo_path)
+    else:
+        repository.state = REP_UNAVAILABLE_FILES
+        session.add(repository)
+        vprint(1, "Failed to load repository. Skipping")
+        return True, None
 
     tarzip = {
         fil.path for fil in session.query(RepositoryFile).filter(

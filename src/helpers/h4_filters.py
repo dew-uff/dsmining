@@ -1,5 +1,5 @@
-from src.db.database import Repository, Cell, PythonFile
-from src.states import CELL_UNKNOWN_VERSION, PF_EMPTY
+from src.db.database import Repository, Cell, PythonFile, Notebook
+from src.states import CELL_UNKNOWN_VERSION, PF_EMPTY, NB_GENERIC_LOAD_ERROR
 
 
 def filter_repositories(session, selected_repositories,
@@ -133,6 +133,37 @@ def filter_python_files(session, selected_repositories,
     else:
         query = query.order_by(
             PythonFile.repository_id.asc()
+        )
+
+    return query
+
+
+def filter_notebooks(session, count, interval, reverse):
+    filters = [
+        Notebook.state != NB_GENERIC_LOAD_ERROR
+    ]
+
+    if interval:
+        filters += [
+            Notebook.repository_id >= interval[0],
+            Notebook.repository_id <= interval[1],
+        ]
+
+    query = (session.query(Notebook).filter(*filters))
+
+    if count:
+        print(query.count())
+        return
+
+    if reverse:
+        query = query.order_by(
+            Notebook.repository_id.desc(),
+            Notebook.id.desc(),
+        )
+    else:
+        query = query.order_by(
+            Notebook.repository_id.asc(),
+            Notebook.id.asc(),
         )
 
     return query

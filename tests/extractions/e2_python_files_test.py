@@ -5,7 +5,7 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.consts as consts
+
 import src.extractions.e2_python_files as e2
 
 from unittest.mock import mock_open

@@ -25,6 +25,16 @@ NB_LOAD_SYNTAX_ERROR = "syntax_error_loading_notebook"
 NB_LOAD_TIMEOUT = "time_out_error_loading_notebook"
 NB_STOPPED = "loading_notebook_stopped"
 NB_GENERIC_LOAD_ERROR = "generic_error_loading_notebook"
+NB_AGGREGATED = "notebook_aggregated"
+NB_AGGREGATE_ERROR = "error_aggregating_notebook"
+NB_SYNTAX_ERROR = "syntax_error_aggregating_notebook"
+NB_INVALID = 'invalid_notebook'
+NB_AGGR_MARKDOWN = 'only_markdown_aggregated_notebook'
+
+NB_ORDER = [NB_LOADED, NB_AGGREGATED, NB_AGGR_MARKDOWN]
+NB_ERRORS = [NB_LOAD_ERROR, NB_LOAD_FORMAT_ERROR, NB_LOAD_SYNTAX_ERROR,
+             NB_LOAD_TIMEOUT, NB_STOPPED, NB_SYNTAX_ERROR, NB_AGGREGATE_ERROR,
+             NB_INVALID]
 
 # Cells
 CELL_LOADED = "cell_loaded"
@@ -46,6 +56,7 @@ PF_EMPTY = "empty_python_file"
 PF_PROCESSED = "python_file_processed"
 PF_PROCESS_ERROR = "error_processing_python_file"
 PF_PROCESS_TIMEOUT = "time_out_processing_python_file"
+PF_AGGREGATED = 'python_file_aggregated'
 
 PF_ORDER = [PF_LOADED, PF_PROCESSED]
 PF_ERRORS = [PF_PROCESS_TIMEOUT, PF_SYNTAX_ERROR, PF_PROCESS_ERROR, PF_EMPTY]
@@ -68,13 +79,9 @@ def states_after(state, order):
 
 
 # stand-by processed
-N_SYNTAX_ERROR = 16                  # 2 ** 4
-N_AGGREGATE_OK = 32                  # 2 ** 5
-N_AGGREGATE_ERROR = 64
 
 
-PF_AGGREGATE_OK = 64                  # 2 ** 6
-PF_AGGREGATE_ERROR = 128              # 2 ** 7
+
 
 R_COMMIT_MISMATCH = 128              # 2 ** 7
 R_TROUBLESOME = 512                  # 2 ** 9

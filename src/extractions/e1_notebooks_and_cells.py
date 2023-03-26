@@ -237,10 +237,10 @@ def process_repository(session, repository, retry=False):
     """ Processes repository """
 
     if retry and repository.state == REP_N_ERROR:
-        session.add(repository)
         vprint(3, "retrying to process {}".format(repository))
         repository.state = REP_LOADED
-    elif repository.state == REP_N_EXTRACTED \
+        session.add(repository)
+    elif repository.state == REP_N_EXTRACTED\
             or repository.state in REP_ERRORS\
             or repository.state in states_after(REP_N_EXTRACTED, REP_ORDER):
         return "already processed"

@@ -5,7 +5,6 @@ import ast
 from contextlib import contextmanager
 from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
 
-from src import consts as consts
 from src.classes.c5_cell_visitor import CellVisitor
 from src.config import Path
 
@@ -170,8 +169,6 @@ def unzip_repository(session, repository):
     """Process repository"""
     if not repository.path.exists():
         if not repository.zip_path.exists():
-            repository.processed |= consts.R_UNAVAILABLE_FILES
-            session.add(repository)
             return "Failed to load due <repository not found>"
         uncompressed = subprocess.call([
             "tar", "-xjf", str(repository.zip_path),
@@ -179,10 +176,6 @@ def unzip_repository(session, repository):
         ])
         if uncompressed != 0:
             return "Extraction failed with code {}".format(uncompressed)
-    if repository.processed & consts.R_COMPRESS_OK:
-        repository.processed -= consts.R_COMPRESS_OK
-        session.add(repository)
-
     return "done"
 
 

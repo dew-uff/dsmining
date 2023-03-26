@@ -1,7 +1,5 @@
 # noqa: E501
 from datetime import datetime
-
-from src import consts
 import nbformat
 from src.states import *
 
