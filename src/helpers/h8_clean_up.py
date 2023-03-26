@@ -18,8 +18,5 @@ if DATABASE:
 
 if LOGS:
     if os.path.exists(LOGS_DIR):
-        for file_name in os.listdir(LOGS_DIR):
-            if file_name.endswith('.outerr'):
-                file_path = os.path.join(LOGS_DIR, file_name)
-                os.remove(file_path)
+        shutil.rmtree(LOGS_DIR)
         print("Deleted logs")
