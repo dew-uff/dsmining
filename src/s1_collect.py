@@ -8,8 +8,8 @@ from src.db.database import connect, Query
 from src.helpers.h3_utils import savepid
 from datetime import datetime, timedelta
 
-
-SELECTED_WORDS = ['"Data Science"', '"Ciência de Dados"', '"Science des Données"', '"Ciencia de los Datos"']
+SELECTED_WORDS = ['"Data Science"', '"Ciência de Dados"',
+                  '"Science des Données"', '"Ciencia de los Datos"']
 
 
 def query_filter(min_pushed=None):
@@ -31,29 +31,36 @@ def query_filter(min_pushed=None):
 
 def process_repositories(session, count, some_repositories, page_info):
     for repo in some_repositories:
+
         # Flattening fields
         for key, value in repo.items():
             while isinstance(value, dict):
                 value = next(iter(value.values()))
             repo[key] = value
 
-        git_created_at = datetime.strptime(repo["createdAt"], '%Y-%m-%dT%H:%M:%SZ')
-        git_created_at = git_created_at.astimezone(pytz.timezone('GMT'))
-        git_pushed_at = datetime.strptime(repo["createdAt"], '%Y-%m-%dT%H:%M:%SZ')
-        git_pushed_at = git_pushed_at.astimezone(pytz.timezone('GMT'))
+        query_rep = session.query(Query).filter(
+            Query.repo == str(repo["owner"] + '/' + repo["name"])
+        ).first()
+        if query_rep is not None:
+            print(f">> Query Repository already exists: ID={query_rep.id}")
+        else:
+            git_created_at = datetime.strptime(repo["createdAt"], '%Y-%m-%dT%H:%M:%SZ')
+            git_created_at = git_created_at.astimezone(pytz.timezone('GMT'))
+            git_pushed_at = datetime.strptime(repo["createdAt"], '%Y-%m-%dT%H:%M:%SZ')
+            git_pushed_at = git_pushed_at.astimezone(pytz.timezone('GMT'))
 
-        query_row = Query(
-            end_cursor=page_info["endCursor"], has_next_page=page_info["hasNextPage"],
-            repo=str(repo["owner"] + '/' + repo["name"]), primary_language=repo["primaryLanguage"],
-            disk_usage=repo["diskUsage"], is_mirror=repo["isMirror"],
-            git_created_at=git_created_at, git_pushed_at=git_pushed_at,
-            languages=repo["languages"], contributors=repo["contributors"], commits=repo["commits"],
-            pull_requests=repo["pullRequests"], branches=repo["branches"], watchers=repo["watchers"],
-            issues=repo["issues"], stargazers=repo["stargazers"], forks=repo["forks"],
-            description=repo["description"], tags=repo["tags"], releases=repo["releases"]
-        )
-        count = count + 1
-        session.add(query_row)
+            query_row = Query(
+                end_cursor=page_info["endCursor"], has_next_page=page_info["hasNextPage"],
+                repo=str(repo["owner"] + '/' + repo["name"]), primary_language=repo["primaryLanguage"],
+                disk_usage=repo["diskUsage"], is_mirror=repo["isMirror"],
+                git_created_at=git_created_at, git_pushed_at=git_pushed_at,
+                languages=repo["languages"], contributors=repo["contributors"], commits=repo["commits"],
+                pull_requests=repo["pullRequests"], branches=repo["branches"], watchers=repo["watchers"],
+                issues=repo["issues"], stargazers=repo["stargazers"], forks=repo["forks"],
+                description=repo["description"], tags=repo["tags"], releases=repo["releases"]
+            )
+            count = count + 1
+            session.add(query_row)
     session.commit()
     return count
 
@@ -61,7 +68,11 @@ def process_repositories(session, count, some_repositories, page_info):
 def apply(session):
     min_pushed = None
 
+    if min_pushed:
+        min_pushed = datetime.strptime(min_pushed, '%Y-%m-%d')
+
     token = os.getenv('GITHUB_TOKEN')
+
     if not token:
         print(
             'Please, set the GITHUB_TOKEN environment variable with your OAuth token'
@@ -72,8 +83,8 @@ def apply(session):
     }
 
     variables = {
-        'filter': query_filter(),
-        'repositoriesPerPage': 1,  # from 1 to 100
+        'filter': query_filter(min_pushed),
+        'repositoriesPerPage': 10,  # from 1 to 100
         'cursor': None
     }
     current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -83,17 +94,18 @@ def apply(session):
         'variables': variables
     }
 
-    # AIMD parameters for auto-tuning the page size
-    ai = 8  # slow start: 1, 2, 4, 8 (max)
+    # AIMD (Additive Increase Multiplicative Decrease)
+    # parameters for auto-tuning the page size
+    ai = 8    # slow start: 1, 2, 4, 8 (max)
     md = 0.5
 
     try:
         repository_count = -1
         has_next_page = True
-        toprocess_repositories = -1
+        to_process_repositories = -1
         processed_repositories = 0
 
-        while has_next_page and toprocess_repositories != 0:
+        while has_next_page and to_process_repositories != 0:
             print(f'Trying to retrieve the next {variables["repositoriesPerPage"]}'
                   f' repositories (pushedAt >= {min_pushed})...')
             try:
@@ -123,21 +135,17 @@ def apply(session):
                     variables['cursor'] = page_info['endCursor']
                     variables['repositoriesPerPage'] = min(100, variables['repositoriesPerPage'] + ai)  # using AIMD
 
-                    processed_repositories = process_repositories(session, processed_repositories, some_repositories, page_info)
+                    processed_repositories = process_repositories(session, processed_repositories,
+                                                                  some_repositories, page_info)
 
-                    """
-                    toprocess_repositories: number of repositories whose data were not collected yet
-                    """
-
-                    toprocess_repositories = repository_count - processed_repositories
+                    to_process_repositories = repository_count - processed_repositories
 
                     print(
                         f'Processed {processed_repositories} of {repository_count} repositories '
                         f'at {datetime.now():%H:%M:%S}.', end=' '
                     )
 
-                    # Keeps the number of stars already processed to restart the process
-                    # when reaching 1,000 repositories limit.
+                    # Gets last repository's pushedAt field from response for the next iteration
                     if some_repositories:
                         min_pushed = datetime.strptime(some_repositories[-1]['pushedAt'], "%Y-%m-%dT%H:%M:%SZ")
 
@@ -145,14 +153,21 @@ def apply(session):
 
                     if not page_info['hasNextPage']:
                         # We may have finished all repositories or reached the 1,000 limit.
-                        if result["data"]["search"]["repositoryCount"] > 1000:
+
+                        if process_repositories == repository_count:
+                            # We have finished all repositories
+                            print(f'Finished.')
+                            has_next_page = False
+                        elif result["data"]["search"]["repositoryCount"] > 1000:
                             # We reached the 1,000 repositories limit
                             print(f'We reached the limit of 1,000 repositories.', end=' ')
+
                             # some overlap to accommodate changes in date pushed
-                            min_pushed = min_pushed - timedelta(days=1)
+                            min_pushed = min_pushed - timedelta(hours=12)
+
                             variables['filter'] = query_filter(min_pushed)
                             variables['cursor'] = None
-                        else:  # We have finished all repositories
+                        else:
                             print(f'Finished.')
                             has_next_page = False
             except Exception: # noqa
