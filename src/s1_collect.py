@@ -1,8 +1,11 @@
+""" Collects Repositories from GitHub """
+
 import os
 import time
 import traceback
 import pytz
 import requests
+
 from pprint import pprint
 from src.db.database import connect, Query
 from src.helpers.h3_utils import savepid
@@ -10,6 +13,51 @@ from datetime import datetime, timedelta
 
 SELECTED_WORDS = ['"Data Science"', '"Ciência de Dados"',
                   '"Science des Données"', '"Ciencia de los Datos"']
+
+MIN_PUSHED = None  # YYYY-MM-DD
+
+
+def add_repository(session, repo, page_info, count):
+    git_created_at = datetime.strptime(repo["createdAt"], '%Y-%m-%dT%H:%M:%SZ')
+    git_created_at = git_created_at.astimezone(pytz.timezone('GMT'))
+    git_pushed_at = datetime.strptime(repo["pushedAt"], '%Y-%m-%dT%H:%M:%SZ')
+    git_pushed_at = git_pushed_at.astimezone(pytz.timezone('GMT'))
+
+    query_row = Query(
+        end_cursor=page_info["endCursor"], has_next_page=page_info["hasNextPage"],
+        repo=str(repo["owner"] + '/' + repo["name"]), primary_language=repo["primaryLanguage"],
+        disk_usage=repo["diskUsage"], is_mirror=repo["isMirror"],
+        git_created_at=git_created_at, git_pushed_at=git_pushed_at,
+        languages=repo["languages"], contributors=repo["contributors"], commits=repo["commits"],
+        pull_requests=repo["pullRequests"], branches=repo["branches"], watchers=repo["watchers"],
+        issues=repo["issues"], stargazers=repo["stargazers"], forks=repo["forks"],
+        description=repo["description"], tags=repo["tags"], releases=repo["releases"]
+    )
+    count = count + 1
+    session.add(query_row)
+    return count
+
+
+def process_repositories(session, count, some_repositories, page_info):
+    for repo in some_repositories:
+
+        # Flattening fields
+        for key, value in repo.items():
+            while isinstance(value, dict):
+                value = next(iter(value.values()))
+            repo[key] = value
+
+        query_rep = session.query(Query).filter(
+            Query.repo == str(repo["owner"] + '/' + repo["name"])
+        ).first()
+
+        if query_rep is not None:
+            print(f">> Query Repository already exists: ID={query_rep.id}")
+        else:
+            count = add_repository(session, repo, page_info, count)
+
+    session.commit()
+    return count
 
 
 def query_filter(min_pushed=None):
@@ -29,45 +77,7 @@ def query_filter(min_pushed=None):
     return query
 
 
-def process_repositories(session, count, some_repositories, page_info):
-    for repo in some_repositories:
-
-        # Flattening fields
-        for key, value in repo.items():
-            while isinstance(value, dict):
-                value = next(iter(value.values()))
-            repo[key] = value
-
-        query_rep = session.query(Query).filter(
-            Query.repo == str(repo["owner"] + '/' + repo["name"])
-        ).first()
-        if query_rep is not None:
-            print(f">> Query Repository already exists: ID={query_rep.id}")
-        else:
-            git_created_at = datetime.strptime(repo["createdAt"], '%Y-%m-%dT%H:%M:%SZ')
-            git_created_at = git_created_at.astimezone(pytz.timezone('GMT'))
-            git_pushed_at = datetime.strptime(repo["createdAt"], '%Y-%m-%dT%H:%M:%SZ')
-            git_pushed_at = git_pushed_at.astimezone(pytz.timezone('GMT'))
-
-            query_row = Query(
-                end_cursor=page_info["endCursor"], has_next_page=page_info["hasNextPage"],
-                repo=str(repo["owner"] + '/' + repo["name"]), primary_language=repo["primaryLanguage"],
-                disk_usage=repo["diskUsage"], is_mirror=repo["isMirror"],
-                git_created_at=git_created_at, git_pushed_at=git_pushed_at,
-                languages=repo["languages"], contributors=repo["contributors"], commits=repo["commits"],
-                pull_requests=repo["pullRequests"], branches=repo["branches"], watchers=repo["watchers"],
-                issues=repo["issues"], stargazers=repo["stargazers"], forks=repo["forks"],
-                description=repo["description"], tags=repo["tags"], releases=repo["releases"]
-            )
-            count = count + 1
-            session.add(query_row)
-    session.commit()
-    return count
-
-
-def apply(session):
-    min_pushed = None
-
+def set_up_query_params(min_pushed):
     if min_pushed:
         min_pushed = datetime.strptime(min_pushed, '%Y-%m-%d')
 
@@ -78,6 +88,7 @@ def apply(session):
             'Please, set the GITHUB_TOKEN environment variable with your OAuth token'
             '(https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line)')
         exit(1)
+
     headers = {
         'Authorization': f'bearer {token}'
     }
@@ -98,6 +109,13 @@ def apply(session):
     # parameters for auto-tuning the page size
     ai = 8    # slow start: 1, 2, 4, 8 (max)
     md = 0.5
+
+    return variables, request, headers, ai, md
+
+
+def apply(session, min_pushed):
+
+    variables, request, headers, ai, md = set_up_query_params(min_pushed)
 
     try:
         repository_count = -1
@@ -182,7 +200,7 @@ def apply(session):
 
 def main():
     with connect() as session, savepid():
-        apply(session)
+        apply(session, MIN_PUSHED)
 
 
 if __name__ == "__main__":
