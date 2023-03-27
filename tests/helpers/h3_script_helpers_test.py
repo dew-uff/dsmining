@@ -2,6 +2,7 @@ import os
 import sys
 
 from src.states import REP_UNAVAILABLE_FILES
+from tests.test_helpers.h1_stubs import stub_unzip
 
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
@@ -10,12 +11,10 @@ if src not in sys.path:
 import ast
 import pytest
 import tarfile
-import src.extras.e8_extract_files as e8
 import src.helpers.h5_loaders as h5
 
 from src.config import Path
-from src.classes.c4_local_checkers import PathLocalChecker, SetLocalChecker, CompressedLocalChecker
-from src.db.database import RepositoryFile
+from src.classes.c4_local_checkers import PathLocalChecker,  CompressedLocalChecker
 from src.helpers.h3_utils import to_unicode, extract_features
 from src.classes.c1_safe_session import SafeSession
 from tests.database_config import connection, session  # noqa: F401
@@ -23,7 +22,7 @@ from tests.factories.models import RepositoryFactory, CodeCellFactory, NotebookF
 from src.helpers.h5_loaders import load_files, load_notebook, load_repository
 
 
-class TestH3ScriptHelpersLoadRepository:
+class TestLoadRepository:
     def test_load_repository_notebook_first_success(self, session, capsys):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
@@ -140,7 +139,7 @@ class TestH3ScriptHelpersLoadRepository:
         assert captured.out == ""
 
 
-class TestH3ScriptHelpersLoadNotebook:
+class TestLoadNotebook:
     def test_load_notebook_first_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
@@ -205,7 +204,7 @@ class TestH3ScriptHelpersLoadNotebook:
         assert result_checker == checker
 
 
-class TestH3ScriptHelpersLoadFile:
+class TestLoadFile:
     def test_load_file_notebook_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
@@ -275,33 +274,6 @@ class TestH3ScriptHelpersLoadFile:
         assert archives is None
         assert checker is None
 
-    def test_load_file_notebook_set_tarzip_success(self, session, monkeypatch):
-        safe_session = SafeSession(session)
-        repository = RepositoryFactory(safe_session).create()
-        notebook = NotebookFactory(safe_session).create(repository_id=repository.id)
-
-        skip_repo = False
-        skip_notebook = False
-        archives = "todo"
-        checker = None
-        repo_path = to_unicode(repository.path)
-        tarzip = ['path1', 'path2']
-
-        monkeypatch.setattr(h5, 'load_archives',
-                            lambda _session, _repository: (False, (set(tarzip), repo_path)))
-        monkeypatch.setattr(SetLocalChecker, 'exists',
-                            lambda _path, _other: True)
-
-        skip_repo, skip_notebook, notebook_id, archives, checker = \
-            load_files(session, notebook, repository, skip_repo, skip_notebook, archives, checker)
-
-        assert skip_repo is False
-        assert skip_notebook is False
-        assert notebook_id == notebook.id
-        assert archives == (set(tarzip), repo_path)
-        assert isinstance(checker, SetLocalChecker)
-        assert checker.base == repo_path
-
     def test_load_file_notebook_tarzip_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
@@ -311,10 +283,10 @@ class TestH3ScriptHelpersLoadFile:
         skip_notebook = False
         archives = "todo"
         checker = None
-        repo_path = to_unicode(repository.path)
+        zip_path = to_unicode(repository.hash_dir2)
 
         monkeypatch.setattr(h5, 'load_archives',
-                            lambda _session, _repository: (False, ('test.tar.gz', repo_path)))
+                            lambda _session, _repository: (False, ('test.tar.gz', zip_path)))
         monkeypatch.setattr(CompressedLocalChecker, 'exists',
                             lambda _path, _other: True)
 
@@ -324,9 +296,9 @@ class TestH3ScriptHelpersLoadFile:
         assert skip_repo is False
         assert skip_notebook is False
         assert notebook_id == notebook.id
-        assert archives == ('test.tar.gz', repo_path)
+        assert archives == ('test.tar.gz', zip_path)
         assert isinstance(checker, CompressedLocalChecker)
-        assert checker.base == repo_path
+        assert checker.base == zip_path
 
     def test_load_file_notebook_not_exist_error(self, session, monkeypatch, capsys):
         safe_session = SafeSession(session)
@@ -383,7 +355,7 @@ class TestH3ScriptHelpersLoadFile:
         assert checker.base == repo_path
 
 
-class TestH3ScriptHelpersLoadArchives:
+class TestLoadArchives:
     def test_load_archives_path_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
@@ -400,48 +372,6 @@ class TestH3ScriptHelpersLoadArchives:
         assert tarzip is None
         assert repo_path == to_unicode(repository.path)
 
-    def test_load_archives_set_zip_success(self, session, monkeypatch):
-        safe_session = SafeSession(session)
-        repository = RepositoryFactory(safe_session).create()
-
-        def mock_exists(path):
-            return str(path) == str(repository.zip_path)
-
-        def mock_process(session_, repository_, skip_if_error=0):   # noqa: F841
-            rf = RepositoryFile(repository_id=repository.id,
-                                path=str(repository.path))
-            safe_session.add(rf)
-            safe_session.commit()
-            return "done"
-
-        monkeypatch.setattr(Path, 'exists', mock_exists)
-        monkeypatch.setattr(e8, 'process_repository', mock_process)
-
-        skip_repo, archives = h5.load_archives(session, repository)
-        tarzip, zip_path = archives
-
-        assert skip_repo is False
-        assert str(repository.path) in tarzip
-        assert zip_path == ""
-
-    def test_load_archives_set_zip_error(self, session, monkeypatch):
-        safe_session = SafeSession(session)
-        repository = RepositoryFactory(safe_session).create()
-
-        def mock_exists(path):
-            return str(path) == str(repository.zip_path)
-
-        def mock_process(session_, repository_, skip_if_error=0):  # noqa: F841
-            return "done"
-
-        monkeypatch.setattr(Path, 'exists', mock_exists)
-        monkeypatch.setattr(e8, 'process_repository', mock_process)
-
-        skip_repo, archives = h5.load_archives(session, repository)
-
-        assert skip_repo is True
-        assert archives is None
-
     def test_load_archives_zip_success(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
@@ -449,11 +379,26 @@ class TestH3ScriptHelpersLoadArchives:
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
-        def mock_process(session_, repository_, skip_if_error=0):  # noqa: F841
-            return "error"
+        monkeypatch.setattr(Path, 'exists', mock_exists)
+        monkeypatch.setattr(tarfile, 'open', lambda path: "Ok")
+        monkeypatch.setattr(h5, 'unzip_repository', stub_unzip)
+        monkeypatch.setattr(Path, 'exists', lambda path: True)
+
+        skip_repo, archives = h5.load_archives(session, repository)
+        tarzip, repo_path = archives
+
+        assert skip_repo is False
+        assert tarzip is None
+        assert repo_path == to_unicode(repository.path)
+
+    def test_load_archives_error_zip_success(self, session, monkeypatch):
+        safe_session = SafeSession(session)
+        repository = RepositoryFactory(safe_session).create()
+
+        def mock_exists(path):
+            return str(path) == str(repository.zip_path)
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
-        monkeypatch.setattr(e8, 'process_repository', mock_process)
         monkeypatch.setattr(tarfile, 'open', lambda path: "Ok")
 
         skip_repo, archives = h5.load_archives(session, repository)
@@ -463,21 +408,17 @@ class TestH3ScriptHelpersLoadArchives:
         assert tarzip == 'Ok'
         assert zip_path == to_unicode(repository.hash_dir2)
 
-    def test_load_archives_zip_error(self, session, monkeypatch):
+    def test_load_archives_error_zip_error(self, session, monkeypatch):
         safe_session = SafeSession(session)
         repository = RepositoryFactory(safe_session).create()
 
         def mock_exists(path):
             return str(path) == str(repository.zip_path)
 
-        def mock_process(session_, repository_, skip_if_error=0):  # noqa: F841
-            return "error"
-
         def mock_open(path):  # noqa: F841
             raise tarfile.ReadError()
 
         monkeypatch.setattr(Path, 'exists', mock_exists)
-        monkeypatch.setattr(e8, 'process_repository', mock_process)
         monkeypatch.setattr(tarfile, 'open', mock_open)
 
         skip_repo, archives = h5.load_archives(session, repository)

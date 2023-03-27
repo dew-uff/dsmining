@@ -28,21 +28,6 @@ class PathLocalChecker(object):
         return True
 
 
-class SetLocalChecker(PathLocalChecker):
-    """ Check if module is local by looking at a set. """
-
-    def __init__(self, dirset, notebook_path):
-        path = to_unicode(notebook_path)
-        self.base = os.path.dirname(path)
-        self.dirset = dirset
-
-    def exists(self, path):
-        path, _ = ignore_surrogates(path)
-        if path[0] == "/":
-            path = path[1:]
-        return path in self.dirset or (path + "/") in self.dirset
-
-
 class CompressedLocalChecker(PathLocalChecker):
     """ Checks module locality by looking at the zip file. """
 

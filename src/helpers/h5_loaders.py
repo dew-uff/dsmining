@@ -2,35 +2,33 @@ import os
 import tarfile
 
 
-from src.classes.c4_local_checkers import SetLocalChecker, CompressedLocalChecker, PathLocalChecker
-from src.db.database import RepositoryFile
-from src.extras import e8_extract_files as e8
-from src.helpers.h3_utils import vprint, to_unicode
 from src.states import REP_UNAVAILABLE_FILES
+from src.helpers.h3_utils import vprint, to_unicode, unzip_repository
+from src.classes.c4_local_checkers import CompressedLocalChecker, PathLocalChecker
 
 
 def load_archives(session, repository):
 
     if repository.zip_path.exists():
-        vprint(1, 'Extracting files')
-        result = e8.process_repository(session, repository, skip_if_error=0)
+        vprint(1, 'Unzipping repository')
 
         try:
-            session.commit()
-            if result != "done":
+            msg = unzip_repository(session, repository)
+            if msg != "done":
+                vprint(2, "repository not found")
                 raise Exception("Extraction failure. Fallback")
-            vprint(1, result)
 
         except Exception as err:
             vprint(1, 'Failed: {}'.format(err))
             try:
                 tarzip = tarfile.open(str(repository.zip_path))
-            except tarfile.ReadError:
+            except Exception as err:  # pylint: disable=broad-except
+                vprint(1, err)
                 return True, None
             zip_path = to_unicode(repository.hash_dir2)
             return False, (tarzip, zip_path)
 
-    elif repository.path.exists():
+    if repository.path.exists():
         repo_path = to_unicode(repository.path)
         return False, (None, repo_path)
     else:
@@ -38,17 +36,6 @@ def load_archives(session, repository):
         session.add(repository)
         vprint(1, "Failed to load repository. Skipping")
         return True, None
-
-    tarzip = {
-        fil.path for fil in session.query(RepositoryFile).filter(
-            RepositoryFile.repository_id == repository.id
-        )
-    }
-    zip_path = ""
-    if tarzip:
-        return False, (tarzip, zip_path)
-
-    return True, None
 
 
 def load_files(
@@ -71,9 +58,7 @@ def load_files(
 
     try:
 
-        if isinstance(tarzip, set):
-            checker = SetLocalChecker(tarzip, file_path)
-        elif tarzip:
+        if tarzip:
             checker = CompressedLocalChecker(tarzip, file_path)
         else:
             checker = PathLocalChecker(file_path)
