@@ -3,7 +3,7 @@ import os
 src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path: sys.path.append(src)
 
-from src.helpers.h3_utils import to_unicode, ignore_surrogates
+from src.helpers.h3_utils import to_unicode
 
 
 class PathLocalChecker(object):

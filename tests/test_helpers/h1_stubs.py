@@ -743,11 +743,11 @@ def get_notebook_nbrow(repository_id, name):  # noqa: F841
     return __nbrow
 
 
-def stub_unzip(session_, repository_):  # noqa: F841
+def stub_unzip(repository_):  # noqa: F841
     return "done"
 
 
-def stub_unzip_failed(session_, repository_):  # noqa: F841
+def stub_unzip_failed(repository_):  # noqa: F841
     return "failed"
 
 

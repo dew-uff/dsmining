@@ -1,26 +1,24 @@
-import csv
 import os
 import re
+import csv
+import matplotlib
+import src.config as config
+import matplotlib.ticker as ticker
+
 from collections import Counter, defaultdict
 from IPython.display import display
 from contextlib import contextmanager
-
-import matplotlib
-from matplotlib import pyplot as plt
-import matplotlib.ticker as ticker
-import numpy as np
-
-import seaborn as sns
-import pandas as pd
-import dask.dataframe as dd
-import src.config as config
-
 from dask.dataframe.core import Series as DaskSeries
 from dask.array.core import Array as DaskArray
 from dask.array import histogram as _dask_histogram
-
-
 from collections import namedtuple
+
+import numpy as np
+import seaborn as sns
+import pandas as pd
+import dask.dataframe as dd
+from matplotlib import pyplot as plt
+
 
 Distribution = namedtuple("Distribution", "min q1 median q3 max")
 

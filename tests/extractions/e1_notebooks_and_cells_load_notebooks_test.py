@@ -5,11 +5,11 @@ if src not in sys.path:
     sys.path.append(src)
 
 import nbformat as nbf
-import src.helpers.h3_utils as h3
 import src.extractions.e1_notebooks_and_cells as e1
 
+from src.states import REP_LOADED, NB_LOADED, NB_LOAD_ERROR, NB_LOAD_FORMAT_ERROR
+
 from unittest.mock import mock_open
-from src.states import *
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.test_helpers.h1_stubs import stub_nbf_read, get_empty_nbrow
@@ -62,8 +62,6 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         monkeypatch.setattr('builtins.open', mock_open())
         monkeypatch.setattr(nbf, 'read', stub_nbf_readOSError)
         monkeypatch.setattr('os.path.islink', lambda path: True)
-        monkeypatch.setattr(h3, 'broken_link',
-                            lambda path: "Notebook is broken link. Use the following SQL to fix:")
 
         nbrow, cells_info = e1.load_notebook(repository.id, repository.path, name, nbrow)
 
@@ -71,7 +69,7 @@ class TestE1NotebooksAndCellsLoadNotebooks:
         assert nbrow["state"] == NB_LOAD_ERROR
 
         ''' capsys does not receive ouput if timeout is enabled
-        and an Exception is thrown comment timeout 
+        and an Exception is thrown comment timeout
         if you want to test output '''
 
         # captured = capsys.readouterr()

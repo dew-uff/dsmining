@@ -1,25 +1,22 @@
 import os
 import sys
-
-from src.states import REP_UNAVAILABLE_FILES
-from tests.test_helpers.h1_stubs import stub_unzip
-
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import ast
-import pytest
 import tarfile
 import src.helpers.h5_loaders as h5
 
 from src.config import Path
-from src.classes.c4_local_checkers import PathLocalChecker,  CompressedLocalChecker
-from src.helpers.h3_utils import to_unicode, extract_features
+from src.helpers.h3_utils import to_unicode
+from src.states import REP_UNAVAILABLE_FILES
+from tests.test_helpers.h1_stubs import stub_unzip
 from src.classes.c1_safe_session import SafeSession
-from tests.database_config import connection, session  # noqa: F401
-from tests.factories.models import RepositoryFactory, CodeCellFactory, NotebookFactory, PythonFileFactory
 from src.helpers.h5_loaders import load_files, load_notebook, load_repository
+from src.classes.c4_local_checkers import PathLocalChecker,  CompressedLocalChecker
+from tests.database_config import connection, session  # noqa: F401
+from tests.factories.models import RepositoryFactory, CodeCellFactory
+from tests.factories.models import NotebookFactory, PythonFileFactory
 
 
 class TestLoadRepository:
@@ -440,23 +437,3 @@ class TestLoadArchives:
         assert archives is None
         assert repository.state == REP_UNAVAILABLE_FILES
 
-
-class TestH3ScriptHelpersExtractFeatures:
-    def test_extract_features(self, session):
-        text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"
-        checker = PathLocalChecker("")
-        modules, data_ios = extract_features(text, checker)
-
-        assert modules[0] == (1, "import", "pandas", False)
-        assert data_ios[0] == (2, 'input', 'pd', 'read_excel', 'Attribute', "'data.xlsx'", 'Constant')
-
-    def test_extract_features_error(self, session, monkeypatch):
-        text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"
-        checker = PathLocalChecker("")
-
-        def mock_parse(text_): raise ValueError  # noqa: F841
-
-        monkeypatch.setattr(ast, 'parse', mock_parse)
-
-        with pytest.raises(SyntaxError):
-            extract_features(text, checker)

@@ -7,7 +7,7 @@ import src.config as config
 
 from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect
-from src.helpers.h3_utils import savepid, unzip_repository, cell_output_formats, broken_link
+from src.helpers.h3_utils import savepid, unzip_repository, cell_output_formats
 from src.classes.c1_safe_session import SafeSession
 from src.helpers.h3_utils import find_files, timeout, TimeoutError, vprint
 from src.classes.c2_status_logger import StatusLogger
@@ -110,7 +110,7 @@ def load_notebook(repository_id, path, notebook_file, nbrow):
 
         nbrow["state"] = NB_LOAD_ERROR
         if os.path.islink(str(path / notebook_file)):
-            broken_link(notebook_file, repository_id)
+            vprint(3, 'Notebook is broken link')
 
         return nbrow, []
 
@@ -165,7 +165,7 @@ def process_notebooks(session, repository, repository_notebooks_names):
 
         if not repository.path.exists():
             vprint(2, "Unzipping repository: {}".format(repository.zip_path))
-            msg = unzip_repository(session, repository)
+            msg = unzip_repository(repository)
             if msg != "done":
                 vprint(2, msg)
                 return "failed"
@@ -215,7 +215,7 @@ def find_notebooks(session, repository):
     notebooks = []
 
     if not repository.path.exists():
-        msg = unzip_repository(session, repository)
+        msg = unzip_repository(repository)
         if msg != "done":
             vprint(2, "repository not found")
             repository.state = REP_UNAVAILABLE_FILES

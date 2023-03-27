@@ -4,7 +4,7 @@ import argparse
 import os
 import src.config as config
 
-from src.helpers.h3_utils import mount_basedir, extract_features
+from src.helpers.h3_utils import extract_features
 from src.classes.c1_safe_session import SafeSession
 from src.helpers.h3_utils import TimeoutError
 from src.helpers.h3_utils import vprint, check_exit, savepid

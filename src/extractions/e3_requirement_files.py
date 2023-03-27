@@ -16,7 +16,7 @@ def find_requirements(session, repository):
     setups, requirements, pipfiles, pipfile_locks = [], [], [], []
 
     if not repository.path.exists():
-        msg = unzip_repository(session, repository)
+        msg = unzip_repository(repository)
         if msg != "done":
             vprint(2, "repository not found")
             repository.state = REP_UNAVAILABLE_FILES

@@ -22,3 +22,7 @@ def session(connection):
     session = Session(bind=connection)
     yield session
     session.close()
+
+
+# To create test database run this script
+Base.metadata.create_all(engine)

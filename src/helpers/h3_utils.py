@@ -1,40 +1,23 @@
 """ Util functions """
 from __future__ import print_function
 
-import ast
-from contextlib import contextmanager
-from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
-
-from src.classes.c5_cell_visitor import CellVisitor
-from src.config import Path
-
-import subprocess
 import os
-import fnmatch
 import sys
+import ast
+import fnmatch
+import subprocess
 import src.config as config
 
-
-def ignore_surrogates(original):
-    new = original.encode('utf8', 'ignore').decode('utf8', 'ignore')
-    return new, new != original
+from src.config import Path
+from contextlib import contextmanager
+from src.classes.c5_cell_visitor import CellVisitor
+from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
 
 
 def to_unicode(text):
     if isinstance(text, str):
         return text
     return bytes(text).decode("utf-8")
-
-
-def ext_split(values, ext):
-    split = values.split(ext + ";")
-    result = []
-    for i, name in enumerate(split):
-        if i != len(split) - 1:
-            result.append(name + ext)
-        else:
-            result.append(name)
-    return result
 
 
 def vprint(verbose, *args):
@@ -64,49 +47,6 @@ def savepid():
                 if p.strip()
                 if int(p) != pid
             ) + "\n")
-
-
-def base_dir_exists(out=None, err=None):
-    exists = True
-    if config.MOUNT_BASE:
-        try:
-            exists = config.SELECTED_REPOS_FILE.exists()
-        except OSError as e:
-            if e.errno == 107 and config.UMOUNT_BASE:
-                subprocess.call(
-                    config.UMOUNT_BASE, shell=True, stdout=out, stderr=err
-                )
-            exists = config.SELECTED_REPOS_FILE.exists()
-    return exists
-
-
-@contextmanager
-def mount_umount(out=None, err=None):
-    try:
-        if not base_dir_exists(out, err) and config.MOUNT_BASE:
-            subprocess.call(
-                config.MOUNT_BASE, shell=True, stdout=out, stderr=err
-            )
-        yield
-    finally:
-        if config.SELECTED_REPOS_FILE.exists() and config.UMOUNT_BASE:
-            subprocess.call(
-                config.UMOUNT_BASE, shell=True, stdout=out, stderr=err
-            )
-
-
-@contextmanager
-def mount_basedir(out=None, err=None):
-    if not base_dir_exists(out, err) and config.MOUNT_BASE:
-        subprocess.call(
-            config.MOUNT_BASE, shell=True, stdout=out, stderr=err
-        )
-    yield
-
-
-def invoke(program, *args):
-    """Invoke program"""
-    return subprocess.check_call([program] + list(map(str, args)))
 
 
 def find_files(path, pattern):
@@ -146,7 +86,7 @@ def _target(queue, function, *args, **kwargs):
     """
     try:
         queue.put((True, function(*args, **kwargs)))
-    except:
+    except:  # noqa
         # traceback.print_exc()
         queue.put((False, sys.exc_info()[1]))
 
@@ -165,7 +105,7 @@ def check_exit(matches):
 timeout_decorator._target = _target
 
 
-def unzip_repository(session, repository):
+def unzip_repository(repository):
     """Process repository"""
     if not repository.path.exists():
         if not repository.zip_path.exists():
@@ -202,34 +142,3 @@ def cell_output_formats(cell):
                 yield data_type
         elif output.get("output_type") == "error":
             yield "error"
-
-
-def broken_link(notebook_file, repository_id):
-    import textwrap
-    vprint(3, "Notebook is broken link. Use the following SQL to fix:")
-    text = (textwrap.dedent("""\
-                select notebooks_count, (char_length(newtext) - char_length(replace(newtext, '''', ''))), concat(
-                    'update repositories ',
-                    'set notebooks_count = ',
-                    (char_length(newtext) - char_length(replace(newtext, ';', ''))) + 1,
-                    ', notebooks = ''',
-                    newtext,
-                    ''' where id = ',
-                    id,
-                    ';'
-                ) from (
-                    select id, notebooks_count, replace(
-                        replace(
-                            replace(
-                                notebooks,
-                                '{0};', ''
-                            ),
-                            ';{0}', ''
-                        ),
-                        '''', ''''''
-                    ) as newtext
-                    from repositories where id = {1}
-                ) as foo;
-                """.format(notebook_file, repository_id)))
-    text = " ".join(x.strip() for x in text.split("\n"))
-    print(text)

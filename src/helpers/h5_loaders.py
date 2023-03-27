@@ -13,7 +13,7 @@ def load_archives(session, repository):
         vprint(1, 'Unzipping repository')
 
         try:
-            msg = unzip_repository(session, repository)
+            msg = unzip_repository(repository)
             if msg != "done":
                 vprint(2, "repository not found")
                 raise Exception("Extraction failure. Fallback")

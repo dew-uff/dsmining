@@ -17,7 +17,7 @@ def find_python_files(session, repository):
     python_files = []
 
     if not repository.path.exists():
-        msg = unzip_repository(session, repository)
+        msg = unzip_repository(repository)
         if msg != "done":
             vprint(2, "repository not found")
             repository.state = REP_UNAVAILABLE_FILES
