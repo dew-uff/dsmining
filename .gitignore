@@ -1,7 +1,7 @@
-.sqlite
+
 
 .idea/
-.pid
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -48,15 +48,16 @@ venv.bak/
 
 # User-specific stuff
 src/jupyter
-src/mnt
-src/logs/*
 
 ## Temp excel files
 ~$*.xlsx
 
 ## Log files
-src/extractions/log.txt
+*.pid
 dblp.xml
 .DS_Store
+*.outerr
+## Database
 dbmining.sqlite
 dbmining.sqlite_test
+*.sqlite
