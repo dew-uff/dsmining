@@ -12,9 +12,9 @@ from src.states import REP_LOADED, NB_LOADED, NB_LOAD_ERROR, NB_LOAD_FORMAT_ERRO
 from unittest.mock import mock_open
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
-from tests.test_helpers.h1_stubs import stub_nbf_read, get_empty_nbrow
-from tests.test_helpers.h1_stubs import stub_load_cells, stub_nbf_readOSError, stub_nbf_readException
-from tests.test_helpers.h1_stubs import stub_load_no_cells
+from tests.stubs.notebook_dict import get_empty_nbrow
+from tests.stubs.nbf_read import stub_nbf_read, stub_nbf_readOSError, stub_nbf_readException
+from tests.stubs.load_cells import stub_load_cells, stub_load_no_cells
 
 
 class TestE1NotebooksAndCellsLoadNotebooks:

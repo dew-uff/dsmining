@@ -12,7 +12,7 @@ from src.states import *
 from nltk.corpus import stopwords
 from src.db.database import CellMarkdownFeature
 from src.extractions.e4_markdown_cells import process_markdown_cell
-from tests.test_helpers.h1_stubs import stub_extract_features
+from tests.stubs.extract_features import stub_extract_features
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, NotebookFactory, MarkdownCellFactory, CellMarkdownFeatureFactory
 

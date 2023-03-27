@@ -10,7 +10,7 @@ import src.helpers.h5_loaders as h5
 from src.config import Path
 from src.helpers.h3_utils import to_unicode
 from src.states import REP_UNAVAILABLE_FILES
-from tests.test_helpers.h1_stubs import stub_unzip
+from tests.stubs.others import stub_unzip
 from src.classes.c1_safe_session import SafeSession
 from src.helpers.h5_loaders import load_files, load_notebook, load_repository
 from src.classes.c4_local_checkers import PathLocalChecker,  CompressedLocalChecker

@@ -15,7 +15,7 @@ if src not in sys.path:
 
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
-from tests.test_helpers.h1_stubs import mock_load_rep_and_commits, stub_repo_commits
+from tests.stubs.commits import stub_repo_commits, mock_load_rep_and_commits
 from src.states import *
 import src.s3_download as s3
 

@@ -9,8 +9,9 @@ import src.extractions.e1_notebooks_and_cells as e1
 from IPython.core.inputtransformer2 import TransformerManager
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
-from tests.test_helpers.h1_stubs import get_notebook_nbrow, stub_KeyError
-from tests.test_helpers.h1_stubs import stub_IndentationError, get_notebook_node
+from tests.stubs.others import stub_KeyError
+from tests.stubs.notebook_dict import get_notebook_node, get_notebook_nbrow
+from tests.stubs.nbf_read import stub_IndentationError
 from src.states import *
 
 

@@ -11,7 +11,8 @@ from src.config import LOGS_DIR, Path
 from src.classes.c1_safe_session import SafeSession
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, NotebookFactory
-from tests.test_helpers.h1_stubs import stub_load_notebook, stub_load_notebook_error, stub_unzip
+from tests.stubs.others import stub_unzip
+from tests.stubs.load_notebook import stub_load_notebook, stub_load_notebook_error
 from src.states import *
 
 

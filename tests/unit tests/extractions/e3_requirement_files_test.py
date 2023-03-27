@@ -15,7 +15,7 @@ from src.config import Path
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.factories.models import RequirementFileFactory
-from tests.test_helpers.h1_stubs import stub_unzip, stub_unzip_failed, REQUIREMENTS_TXT
+from tests.stubs.others import stub_unzip, stub_unzip_failed, REQUIREMENTS_TXT
 
 
 class TestE3RequiremtFilesFindRequirements:
