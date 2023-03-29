@@ -40,10 +40,12 @@ The projects that had the following requirements were collected from Github:
 ## Requirements
 The project uses Python 3.7+.  For managing packages and libraries it uses Pipenv and Pipfile.
 
+
+
+
 To install Pipenv run (if it is not already installed): ``~/dsmining$ python -m pip install pipenv``.
 And then run ``~/dsmining$ python -m pip install pipenv`` to prepare the environment.
 
-For compressing files install lbzip2 ``sudo apt-get install -y lbzip2``
 
 ## References
 - [DB Mining](https://github.com/gems-uff/db-mining)

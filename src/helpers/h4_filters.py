@@ -64,13 +64,15 @@ def filter_markdown_cells(session, count, selected_repositories,
     return query
 
 
-def filter_code_cells(session, selected_repositories,
+def filter_code_cells(session, selected_notebooks, selected_repositories,
                       count, interval, reverse):
     filters = [
-        Cell.state != CELL_UNKNOWN_VERSION,  # known version
         Cell.cell_type == 'code',
         Cell.python.is_(True),
     ]
+
+    if selected_notebooks:
+        filters += [Cell.notebook_id.in_(selected_notebooks)]
 
     if selected_repositories:
         filters += [Cell.repository_id.in_(selected_repositories)]

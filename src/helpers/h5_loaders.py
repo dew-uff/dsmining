@@ -1,9 +1,10 @@
 import os
+import sys
 import tarfile
 
-
+from src import config
 from src.states import REP_UNAVAILABLE_FILES
-from src.helpers.h3_utils import vprint, to_unicode, unzip_repository
+from src.helpers.h3_utils import vprint, to_unicode, unzip_repository, get_pyexec
 from src.classes.c4_local_checkers import CompressedLocalChecker, PathLocalChecker
 
 
@@ -74,11 +75,17 @@ def load_files(
 
 
 def load_notebook(
-    session, cell, repository,
+    session, cell, dispatches, repository,
     skip_repo, skip_notebook, notebook_id, archives, checker
 ):
     if notebook_id != cell.notebook_id:
         notebook = cell.notebook_obj
+
+        if not notebook.compatible_version:
+            pyexec = get_pyexec(notebook.py_version, config.VERSIONS)
+            if sys.executable != pyexec:
+                dispatches.add((notebook.id, pyexec))
+                return skip_repo, True, cell.notebook_id, archives, None
 
         skip_repo, skip_notebook, notebook_id, archives, checker = \
             load_files(session, notebook, repository, skip_repo, skip_notebook, archives, checker)

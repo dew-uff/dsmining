@@ -23,12 +23,12 @@ EXTRACTION_DIR = SRC_DIR + os.sep + "extractions"
 DB_DIR = SRC_DIR + os.sep + "db"
 DB_FILE = DB_DIR + os.sep + "dbmining.sqlite"
 DB_FILE_TEST = DB_DIR + os.sep + "dbmining_test.sqlite"
-DB_CONNECTION = f"sqlite:////{DB_FILE}"
-DB_CONNECTION_TEST = f"sqlite:////{DB_FILE_TEST}"
+DB_CONNECTION = "sqlite:////{}".format(DB_FILE)
+DB_CONNECTION_TEST = "sqlite:////{}".format(DB_FILE_TEST)
 
 
 LOGS_DIR = Path(SRC_DIR + os.sep + "logs").expanduser()
-QUERY_GRAPHQL_FILE = f"{LOGS_DIR}/query.graphql"
+QUERY_GRAPHQL_FILE = "{}/query.graphql".format(LOGS_DIR)
 
 REPOS_DIR = ROOT + os.sep + "repos"
 SELECTED_REPOS_DIR = Path(REPOS_DIR + os.sep + "selected").expanduser()
@@ -48,8 +48,7 @@ MAX_SIZE = 10.0
 FIRST_DATE = dateutil.parser.parse("2022-10-20")
 COMPRESSION = "lbzip2"
 PYTHON_PATH = "usr"
-MOUNT_BASE = os.environ.get("JUP_MOUNT_BASE", "")
-UMOUNT_BASE = os.environ.get("JUP_UMOUNT_BASE", "")
+ANACONDA_PATH = Path.home().joinpath("anaconda3")
 
 
 def read_interval(var, default=None):
@@ -72,3 +71,15 @@ STATUS_FREQUENCY = {
     "execute_repositories": 1,
 }
 
+VERSIONS = {
+    2: {
+        7: {
+            15: "dsm27",
+        },
+    },
+    3: {
+        8: {
+            16: "dsm38",
+        },
+    },
+}

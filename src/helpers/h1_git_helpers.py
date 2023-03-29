@@ -41,7 +41,7 @@ def format_commit(line, commit_type):
         }
         return commit_row
     except Exception as err:
-        raise EnvironmentError(f"Invalid commit.")
+        raise EnvironmentError("Invalid commit.")
 
 
 def remove_repo_and_prepare(session, repository):

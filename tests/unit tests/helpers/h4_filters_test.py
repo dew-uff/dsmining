@@ -231,6 +231,7 @@ class TestFilterCodeCells:
 
         query = filter_code_cells(
             session=session,
+            selected_notebooks=None,
             selected_repositories=None,
             count=False,
             interval=None,
@@ -252,6 +253,7 @@ class TestFilterCodeCells:
 
         filter_code_cells(
             session=session,
+            selected_notebooks=None,
             selected_repositories=None,
             count=True,
             interval=None,
@@ -274,6 +276,7 @@ class TestFilterCodeCells:
 
         query = filter_code_cells(
             session=session,
+            selected_notebooks=None,
             selected_repositories=None,
             count=False,
             interval=None,
@@ -299,6 +302,7 @@ class TestFilterCodeCells:
 
         query = filter_code_cells(
             session=session,
+            selected_notebooks=None,
             selected_repositories=None,
             count=False,
             interval=[1, 2],
@@ -308,6 +312,29 @@ class TestFilterCodeCells:
         assert query.count() == 2
         assert cell1, cell2 in query.all()
         assert cell3 not in query.all()
+
+    def test_filter_selected_notebooks(self, session):
+        repo1 = RepositoryFactory(session).create()
+        notebook1 = NotebookFactory(session).create(repository_id=repo1.id)
+        notebook2 = NotebookFactory(session).create(repository_id=repo1.id)
+        CodeCellFactory(session).create(repository_id=repo1.id, notebook_id=notebook1.id)
+        CodeCellFactory(session).create(repository_id=repo1.id, notebook_id=notebook1.id)
+        CodeCellFactory(session).create(repository_id=repo1.id, notebook_id=notebook2.id)
+
+        assert len(session.query(Cell).all()) == 3
+
+        query = filter_code_cells(
+            session=session,
+            selected_notebooks=[2],
+            selected_repositories=None,
+            count=False,
+            interval=None,
+            reverse=False
+        )
+
+        assert query.count() == 1
+        assert query.first().id ==3
+        assert session.query(Cell).filter(Cell.id in [1, 2]) not in query
 
     def test_filter_selected_repositories(self, session):
         repo1, repo2, repo3 = RepositoryFactory(session).create_batch(3)
@@ -322,6 +349,7 @@ class TestFilterCodeCells:
 
         query = filter_code_cells(
             session=session,
+            selected_notebooks=None,
             selected_repositories=[2],
             count=False,
             interval=None,
@@ -342,27 +370,7 @@ class TestFilterCodeCells:
 
         query = filter_code_cells(
             session=session,
-            selected_repositories=None,
-            count=False,
-            interval=None,
-            reverse=False,
-        )
-
-        assert query.count() == 1
-        assert cell1 in query.all()
-        assert cell2 not in query.all()
-
-    def test_filter_unknown_cell(self, session):
-        repository = RepositoryFactory(session).create()
-        notebook = NotebookFactory(session).create(repository_id=repository.id)
-        cell1 = CodeCellFactory(session).create(repository_id=repository.id,
-                                                notebook_id=notebook.id)
-        cell2 = CodeCellFactory(session).create(repository_id=repository.id,
-                                                notebook_id=notebook.id,
-                                                state=CELL_UNKNOWN_VERSION)
-
-        query = filter_code_cells(
-            session=session,
+            selected_notebooks=None,
             selected_repositories=None,
             count=False,
             interval=None,

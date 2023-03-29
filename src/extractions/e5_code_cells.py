@@ -2,9 +2,11 @@
 
 import argparse
 import os
+from itertools import groupby
+
 import src.config as config
 
-from src.helpers.h3_utils import extract_features
+from src.helpers.h3_utils import extract_features, invoke
 from src.classes.c1_safe_session import SafeSession
 from src.helpers.h3_utils import TimeoutError
 from src.helpers.h3_utils import vprint, check_exit, savepid
@@ -19,11 +21,11 @@ from src.states import *
 
 
 def process_code_cell(
-    session, repository_id, notebook_id, cell, checker,
-    retry_error=False, retry_syntax_error=False, retry_timeout=False
+        session, repository_id, notebook_id, cell, checker,
+        retry_error=False, retry_syntax_error=False, retry_timeout=False
 ):
     """ Processes Code Cells to collect features"""
-    if (retry_error and cell.state == CELL_PROCESS_ERROR) or\
+    if (retry_error and cell.state == CELL_PROCESS_ERROR) or \
             (retry_syntax_error and cell.state == CELL_SYNTAX_ERROR) or \
             (retry_timeout and cell.state == CELL_PROCESS_TIMEOUT):
 
@@ -67,10 +69,9 @@ def process_code_cell(
                 )
             )
 
-        for line, type_, caller,\
-                function_name, function_type,\
+        for line, type_, caller, \
+                function_name, function_type, \
                 source, source_type in data_ios:
-
             session.add(
                 CellDataIO(
                     repository_id=repository_id,
@@ -102,14 +103,15 @@ def process_code_cell(
 
 
 def apply(
-    session, status, selected_repositories,
-    retry_error, retry_syntax_error, retry_timeout,
-    count, interval, reverse, check
+        session, status, dispatches, selected_notebooks, selected_repositories,
+        retry_error, retry_syntax_error, retry_timeout,
+        count, interval, reverse, check
 ):
     """ Extracts code cells features """
 
     query = filter_code_cells(
-        session=session, selected_repositories=selected_repositories,
+        session=session, selected_notebooks=selected_notebooks,
+        selected_repositories=selected_repositories,
         count=count, interval=interval, reverse=reverse
     )
 
@@ -137,7 +139,7 @@ def apply(
             continue
 
         skip_repo, skip_notebook, notebook_id, archives, checker = load_notebook(
-            session, cell, repository,
+            session, cell, dispatches, repository,
             skip_repo, skip_notebook, notebook_id, archives, checker
         )
 
@@ -157,6 +159,27 @@ def apply(
     session.commit()
 
 
+def pos_apply(dispatches, retry_errors, retry_timeout, verbose):
+    """Dispatch execution to other python versions"""
+    key = lambda x: x[1]
+    dispatches = sorted(list(dispatches), key=key)
+    for pyexec, disp in groupby(dispatches, key=key):
+        vprint(0, "Dispatching to {}".format(pyexec))
+        extra = []
+        if retry_errors:
+            extra.append("-e")
+        if retry_timeout:
+            extra.append("-t")
+        extra.append("-n")
+
+        notebook_ids = [x[0] for x in disp]
+        while notebook_ids:
+            ids = notebook_ids[:20000]
+            args = extra + ids
+            invoke(pyexec, "-u", __file__, "-v", verbose, *args)
+            notebook_ids = notebook_ids[20000:]
+
+
 def main():
     """Main function"""
     register_surrogateescape()
@@ -164,6 +187,8 @@ def main():
 
     parser = argparse.ArgumentParser(description='Execute repositories')
     parser = set_up_argument_parser(parser, script_name, "code_cells")
+    parser.add_argument("-n", "--notebooks", type=int, default=None,
+                        nargs="*", help="notebooks ids")
     args = parser.parse_args()
 
     config.VERBOSE = args.verbose
@@ -172,11 +197,14 @@ def main():
         status = StatusLogger(script_name)
         status.report()
 
+    dispatches = set()
     with savepid():
         with connect() as session:
             apply(
                 session=SafeSession(session),
                 status=status,
+                dispatches=dispatches,
+                selected_notebooks=args.notebooks,
                 selected_repositories=args.repositories,
                 retry_error=False if args.retry_errors else False,
                 retry_syntax_error=False if args.retry_syntaxerrors else False,
@@ -185,6 +213,14 @@ def main():
                 interval=args.interval,
                 reverse=args.reverse,
                 check=set(args.check)
+            )
+
+        if bool(dispatches):
+            pos_apply(
+                dispatches,
+                args.retry_errors,
+                args.retry_timeout,
+                args.verbose
             )
 
 

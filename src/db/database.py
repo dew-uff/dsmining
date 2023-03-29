@@ -13,6 +13,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, Interval
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from sqlalchemy import ForeignKeyConstraint
 
+from src.helpers.h3_utils import version_string_to_list
 from src.states import *
 
 BigInt = Integer
@@ -429,6 +430,25 @@ class Notebook(Base):
     def path(self):
         """Return notebook path"""
         return self.repository_obj.path / self.name
+
+    @property
+    def py_version(self):
+        """Return python version of notebook"""
+        note_version = self.language_version or "0"
+        if note_version == "unknown":
+            note_version = ".".join(map(str, sys.version_info[:3]))
+        return version_string_to_list(note_version)
+
+    @property
+    def compatible_version(self):
+        """Check if the running python version is compatible to the notebook"""
+        note_version = self.py_version
+        py_version = sys.version_info
+        if note_version[0] != py_version[0]:
+            return False
+        if len(note_version) > 1 and note_version[1] > py_version[1]:
+            return False
+        return True
 
     @force_encoded_string_output
     def __repr__(self):

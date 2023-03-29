@@ -2,8 +2,10 @@
 from __future__ import print_function
 
 import os
+import re
 import sys
 import ast
+import bisect
 import fnmatch
 import subprocess
 import src.config as config
@@ -142,3 +144,54 @@ def cell_output_formats(cell):
                 yield data_type
         elif output.get("output_type") == "error":
             yield "error"
+
+
+def version_string_to_list(version):
+    """Split version"""
+    return [
+        int(x) for x in re.findall(r"(\d+)\.?(\d*)\.?(\d*)", version)[0]
+        if x
+    ]
+
+def specific_match(versions, position=0):
+    """Matches a specific position in a trie dict ordered by its keys
+    Recurse on the trie until it finds an end node (i.e. a non dict node)
+    Position = 0 indicates it will follow the first element
+    Position = -1 indicates it will follow the last element
+    """
+    if not isinstance(versions, dict):
+        return versions
+    keys = sorted(list(versions.keys()))
+    return specific_match(versions[keys[position]], position)
+
+
+def best_match(version, versions):
+    """Get the closest version in a versions trie that matches the version
+    in a list format"""
+
+    if not isinstance(versions, dict):
+        return versions
+    if not version:
+        return specific_match(versions, -1)
+    if version[0] in versions:
+        return best_match(version[1:], versions[version[0]])
+    keys = sorted(list(versions.keys()))
+    index = bisect.bisect_right(keys, version[0])
+    position = 0
+    if index == len(keys):
+        index -= 1
+        position = -1
+    return specific_match(versions[keys[index]], position)
+
+
+def get_pyexec(version, versions):
+    return str(
+        config.ANACONDA_PATH / "envs"
+        / best_match(version, versions)
+        / "bin" / "python"
+    )
+
+
+def invoke(program, *args):
+    """Invoke program"""
+    return subprocess.check_call([program] + list(map(str, args)))

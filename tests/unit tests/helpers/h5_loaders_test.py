@@ -150,6 +150,7 @@ class TestLoadNotebook:
         path = to_unicode(repository.path)
         archives = (None, path)
         checker = PathLocalChecker(path)
+        dispatches = set()
 
         def mock_load_files(_session, _notebook, _repository,
                             _skip_repo, _skip_notebook, _archives, _checker):
@@ -160,7 +161,7 @@ class TestLoadNotebook:
         result_skip_repo, result_skip_notebook, \
             result_notebook_id, result_archives, result_checker = \
             load_notebook(
-                safe_session, cell, repository, skip_repo, skip_notebook,
+                safe_session, cell, dispatches, repository, skip_repo, skip_notebook,
                 notebook_id, archives, checker)
 
         assert result_skip_repo is False
@@ -181,7 +182,7 @@ class TestLoadNotebook:
         path = to_unicode(repository.path)
         archives = (None, path)
         checker = PathLocalChecker(path)
-
+        dispatches = set()
         def mock_load_files(_session, _notebook, _repository,
                             _skip_repo, _skip_notebook, _archives, _checker):
             return False, False, notebook.id, archives, checker
@@ -190,7 +191,7 @@ class TestLoadNotebook:
 
         result_skip_repo, result_skip_notebook, \
             result_notebook_id, result_archives, result_checker = load_notebook(
-                safe_session, cell, repository, skip_repo, skip_notebook,
+                safe_session, cell, dispatches, repository, skip_repo, skip_notebook,
                 notebook_id, archives, checker
             )
 
@@ -199,6 +200,40 @@ class TestLoadNotebook:
         assert result_notebook_id == notebook_id
         assert result_archives == archives
         assert result_checker == checker
+
+    def test_load_notebook_not_compatible(self, session, monkeypatch):
+        safe_session = SafeSession(session)
+        repository = RepositoryFactory(safe_session).create()
+        notebook = NotebookFactory(safe_session).create(repository_id=repository.id, language_version="2.7.15")
+        cell = CodeCellFactory(safe_session).create(repository_id=repository.id, notebook_id=notebook.id)
+
+        skip_repo = False
+        skip_notebook = False
+        notebook_id = None
+        path = to_unicode(repository.path)
+        archives = (None, path)
+        checker = PathLocalChecker(path)
+        dispatches = set()
+
+        def mock_load_files(_session, _notebook, _repository,
+                            _skip_repo, _skip_notebook, _archives, _checker):
+            return False, False, notebook.id, archives, checker
+
+        monkeypatch.setattr(h5, 'load_files', mock_load_files)
+
+        result_skip_repo, result_skip_notebook, \
+            result_notebook_id, result_archives, result_checker = \
+            load_notebook(
+                safe_session, cell, dispatches, repository, skip_repo, skip_notebook,
+                notebook_id, archives, checker)
+
+        dispatches = list(dispatches)
+
+        assert result_skip_repo is False
+        assert result_skip_notebook is True
+        assert len(dispatches) == 1
+        assert dispatches[0][0] == notebook.id
+        assert "dsm27" in dispatches[0][1]
 
 
 class TestLoadFile:

@@ -50,7 +50,7 @@ def apply(session, status, selected_repositories, retry,
             vprint(0, "Found .exit file. Exiting")
             return
         status.report()
-        vprint(0, f"Extracting {model_type} from {repository}")
+        vprint(0, "Extracting {} from {}".format(model_type, repository))
 
         result = ''
         if params == 3:
