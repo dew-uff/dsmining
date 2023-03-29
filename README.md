@@ -26,7 +26,7 @@ Mining Data Science projects from public repositories to identify patterns and b
 | a2_filtered_repositories_and_git.py | Analyzes filtered repositories and git-related features      |
 | a3_languages.py                     | Analyzes language-related features                           |
 | a4_modules.py                       | Analyzes modules extracted                                   |
-| a5_data.py                          | Analyzes data inputs/outputs
+| a5_data.py                          | Analyzes data inputs/outputs                                 |
 
 
 
@@ -38,8 +38,34 @@ The projects that had the following requirements were collected from Github:
 - Is not a course project
 
 ## Requirements
+Running all the scripts requires you to download and set up 3 conda enviroments. 
+After that you will need to download the requirements listed on ```requirements.txt```
 
-For compressing files install lbzip2 ``sudo apt-get install -y lbzip2``
+
+### Conda 2.7
+```
+conda create -n dsm27 python=2.7 -y
+conda activate dsm27
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Conda 3.5
+```
+conda create -n dsm35 python=3.5 -y
+conda activate dsm35
+pip install --upgrade pip
+pip install -r requirements.txt
+conda install sqlalchemy
+```
+
+### Conda 3.8
+```
+conda create -n dsm38 python=3.8 -y
+conda activate dsm38
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
 ## References
 - [DB Mining](https://github.com/gems-uff/db-mining)

@@ -44,10 +44,6 @@ SELECTED_REPOS_FILE = RESOURCE_DIR + os.sep + "selected_repositories.xlsx"
 
 # Configs
 VERBOSE = 5
-MAX_SIZE = 10.0
-FIRST_DATE = dateutil.parser.parse("2022-10-20")
-COMPRESSION = "lbzip2"
-PYTHON_PATH = "usr"
 ANACONDA_PATH = Path.home().joinpath("anaconda3")
 
 
@@ -78,6 +74,9 @@ VERSIONS = {
         },
     },
     3: {
+        5: {
+            5: "dsm35",
+        },
         8: {
             16: "dsm38",
         },
