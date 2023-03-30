@@ -30,23 +30,26 @@ ORDER = [
 
 def inform(session, iteration, selected_output):
     query = session.query(Repository)
-    vprint(1, f"Processed Repositories: {query.filter(Repository.state == REP_REQ_FILE_EXTRACTED).count()}")
-    vprint(1, f"Failed Repositories: {query.filter(Repository.state in REP_ERRORS).count()}")
-    vprint(1, f"Filtered Repositories: {query.filter(Repository.state == REP_FILTERED).count()}"
-              f" (yet to process)\n\n")
-    vprint(2, f"Iteration {iteration}")
+    vprint(1, "Processed Repositories: {}"
+           .format(query.filter(Repository.state == REP_REQ_FILE_EXTRACTED).count()))
+    vprint(1, "Failed Repositories: {}"
+           .format(query.filter(Repository.state in REP_ERRORS).count()))
+    vprint(1, "Filtered Repositories: {} (yet to process)\n\n"
+           .format(query.filter(Repository.state == REP_FILTERED).count()))
+    vprint(2, "Iteration {}".format(iteration))
     vprint(2, selected_output + "\n\n")
 
 
 def execute_script(script, args, iteration):
     """ Execute script and save log """
     start = datetime.now()
-    print(f"\033[93m[{start.strftime('%Y-%m-%d %H:%M:%S')}]\033[0m Executing {script}.py")
+    vprint(0, "\033[93m[{}]\033[0m Executing {}.py"
+           .format(start.strftime('%Y-%m-%d %H:%M:%S'), script))
     path = config.LOGS_DIR / script
     if not os.path.exists(path):
         os.makedirs(path)
 
-    out = path / f"{str(iteration)}_{script}_{start}.outerr"
+    out = path / "{}_{}_{}.outerr".format(str(iteration), script, start)
     if out.exists():
         out = str(out) + ".2"
 
@@ -58,8 +61,9 @@ def execute_script(script, args, iteration):
 
         status = subprocess.call(options, stdout=outf, stderr=outf)
         end = datetime.now()
-        print(f"\033[93m[{end.strftime('%Y-%m-%d %H:%M:%S')}]\033[0m Done - Status: {status} "
-              f"- Runtime: { str(end-start)}\n")
+
+        vprint(0, "\033[93m[{}]\033[0m Done - Status: {} - Runtime: {}\n"
+               .format(end.strftime('%Y-%m-%d %H:%M:%S'), status, str(end - start)))
         return status
 
 
@@ -84,10 +88,8 @@ def select_repositories(session):
 
     ids = [repo.id for repo in iteration_repositories]
 
-    selected_output = f"Selected Repositories:"\
-                      f"{ids} ({iteration_size}KB /"\
-                      f" {(iteration_size / (10 ** 3)):.2f}MB /"\
-                      f" {(iteration_size / (10 ** 6)):.2f}GB)"
+    selected_output = "Selected Repositories:{} ({:.2f}KB / {:.2f}MB / {:.2f}GB)"\
+        .format(ids, iteration_size, iteration_size / (10 ** 3), iteration_size / (10 ** 6))
 
     for id_ in ids:
         options_to_all.append(str(id_))
@@ -127,7 +129,7 @@ def main():
 
         input_thread = threading.Thread(target=get_stop)
         input_thread.start()
-        vprint(0, f"Starting main...\n")
+        vprint(0, "Starting main...\n")
 
         while filtered_repositories(session) > 0 and selected_repositories and not stop:
             try:
@@ -135,7 +137,7 @@ def main():
                 inform(session, iteration, selected_output)
                 for script, args in to_execute.items():
                     if check_exit({"all", "main", "main.py"}):
-                        print("Found .exit file. Exiting")
+                        vprint(0, "Found .exit file. Exiting")
                         return
 
                     if script.endswith(".py"):
@@ -145,7 +147,7 @@ def main():
                     execute_script(script, args, iteration)
 
             except Exception as err:
-                print(err)
+                vprint(0, err)
 
             selected_repositories, selected_output = select_repositories(session)
 

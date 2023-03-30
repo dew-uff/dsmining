@@ -57,6 +57,7 @@ src/jupyter
 dblp.xml
 .DS_Store
 *.outerr
+src/logs/*.csv
 ## Database
 dbmining.sqlite
 dbmining.sqlite_test
