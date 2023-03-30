@@ -6,7 +6,7 @@ if src not in sys.path:
     sys.path.append(src)
 
 import chardet
-import src.extractions.e3_requirement_files as e3
+import src.extractions.e4_requirement_files as e4
 
 from unittest.mock import mock_open
 from src.states import *
@@ -18,7 +18,7 @@ from tests.factories.models import RequirementFileFactory
 from tests.stubs.others import stub_unzip, stub_unzip_failed, REQUIREMENTS_TXT
 
 
-class TestE3RequiremtFilesFindRequirements:
+class TestRequiremtFilesFindRequirements:
     def test_find_requirements(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
 
@@ -33,10 +33,10 @@ class TestE3RequiremtFilesFindRequirements:
                     [Path(f'{file3_relative_path}')],
                     [Path(f'{file4_relative_path}')]]
 
-        monkeypatch.setattr(e3, 'find_files_in_path', mock_find_requirement_files)
+        monkeypatch.setattr(e4, 'find_files_in_path', mock_find_requirement_files)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
-        setups, requirements, pipfiles, pipfile_locks = e3.find_requirements(session, repository)
+        setups, requirements, pipfiles, pipfile_locks = e4.find_requirements(session, repository)
 
         assert file1_relative_path == str(setups[0])
         assert file2_relative_path == str(requirements[0])
@@ -63,10 +63,10 @@ class TestE3RequiremtFilesFindRequirements:
                     [Path(f'{file4_relative_path}')]]
 
         monkeypatch.setattr(Path, 'exists', lambda path: False)
-        monkeypatch.setattr(e3, 'unzip_repository', stub_unzip)
-        monkeypatch.setattr(e3, 'find_files_in_path', mock_find_requirement_files)
+        monkeypatch.setattr(e4, 'unzip_repository', stub_unzip)
+        monkeypatch.setattr(e4, 'find_files_in_path', mock_find_requirement_files)
 
-        setups, requirements, pipfiles, pipfile_locks = e3.find_requirements(session, repository)
+        setups, requirements, pipfiles, pipfile_locks = e4.find_requirements(session, repository)
 
         assert file1_relative_path == str(setups[0])
         assert file2_relative_path == str(requirements[0])
@@ -82,9 +82,9 @@ class TestE3RequiremtFilesFindRequirements:
         repository = RepositoryFactory(session).create()
 
         monkeypatch.setattr(Path, 'exists', lambda path: False)
-        monkeypatch.setattr(e3, 'unzip_repository', stub_unzip_failed)
+        monkeypatch.setattr(e4, 'unzip_repository', stub_unzip_failed)
 
-        setups, requirements, pipfiles, pipfile_locks = e3.find_requirements(session, repository)
+        setups, requirements, pipfiles, pipfile_locks = e4.find_requirements(session, repository)
         assert setups == []
         assert requirements == []
         assert pipfiles == []
@@ -92,18 +92,18 @@ class TestE3RequiremtFilesFindRequirements:
         assert repository.state == REP_UNAVAILABLE_FILES
 
 
-class TestE3RequiremtFilesProcessRepository:
+class TestRequiremtFilesProcessRepository:
     def test_process_repository_success(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
         assert repository.python_files_count is None
 
         file = [Path('setup.py')]
-        monkeypatch.setattr(e3, 'find_requirements',
+        monkeypatch.setattr(e4, 'find_requirements',
                             lambda _session, _repository: [[file], [], [], []])
-        monkeypatch.setattr(e3, 'process_requirement_files',
+        monkeypatch.setattr(e4, 'process_requirement_files',
                             lambda _session, _repository, _python_files_names, count: True)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
-        output = e3.process_repository(session, repository)
+        output = e4.process_repository(session, repository)
 
         assert output == "done"
         assert repository.state == REP_REQ_FILE_EXTRACTED
@@ -112,7 +112,7 @@ class TestE3RequiremtFilesProcessRepository:
         repository = RepositoryFactory(session).create(
             state=REP_REQ_FILE_EXTRACTED)
 
-        output = e3.process_repository(session, repository)
+        output = e4.process_repository(session, repository)
 
         assert output == "already processed"
 
@@ -120,7 +120,7 @@ class TestE3RequiremtFilesProcessRepository:
         repository = RepositoryFactory(session).create(
             state=REP_FINISHED)
 
-        output = e3.process_repository(session, repository)
+        output = e4.process_repository(session, repository)
 
         assert output == "already processed"
 
@@ -128,12 +128,12 @@ class TestE3RequiremtFilesProcessRepository:
         repository = RepositoryFactory(session).create(
             state=REP_N_EXTRACTED)
 
-        output = e3.process_repository(session, repository)
+        output = e4.process_repository(session, repository)
 
         assert "wrong script order" in output
 
 
-class TestE3RequiremtFilesProcessRequirementFiles:
+class TestRequiremtFilesProcessRequirementFiles:
     def test_process_requirement_files_sucess(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(state=REP_PF_EXTRACTED)
 
@@ -142,7 +142,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
 
-        e3.process_requirement_files(session, repository, req_names, reqformat)
+        e4.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
 
         requirement_file = session.query(RequirementFile).first()
@@ -158,11 +158,11 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         def unavailable_files(_session, _repository):
             _repository.state = REP_UNAVAILABLE_FILES
             return [[], [], [], []]
-        monkeypatch.setattr(e3, 'find_requirements', unavailable_files)
-        monkeypatch.setattr(e3, 'process_requirement_files',
+        monkeypatch.setattr(e4, 'find_requirements', unavailable_files)
+        monkeypatch.setattr(e4, 'process_requirement_files',
                             lambda _session, _repository, _python_files_names, count: True)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
-        output = e3.process_repository(session, repository)
+        output = e4.process_repository(session, repository)
         query = session.query(RequirementFile).count()
         captured = capsys.readouterr()
 
@@ -177,7 +177,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         req_names = ['']
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
-        e3.process_requirement_files(session, repository, req_names, reqformat)
+        e4.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
         query = session.query(RequirementFile).all()
 
@@ -196,7 +196,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
 
-        e3.process_requirement_files(session, repository, req_names, reqformat)
+        e4.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
 
         requirement_file_result = session.query(RequirementFile).first()
@@ -218,7 +218,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
 
-        e3.process_requirement_files(session, repository, req_names, reqformat)
+        e4.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
         captured = capsys.readouterr()
         requirement_file_result = session.query(RequirementFile).first()
@@ -236,7 +236,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         monkeypatch.setattr('builtins.open', mock_open(read_data=REQUIREMENTS_TXT))
         monkeypatch.setattr(chardet, 'detect', lambda content: {'encoding': None, 'confidence': 0.0, 'language': None})
 
-        e3.process_requirement_files(session, repository, req_names, reqformat)
+        e4.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
         requirement_file = session.query(RequirementFile).first()
         captured = capsys.readouterr()
@@ -254,7 +254,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         monkeypatch.setattr(chardet, 'detect',
                             lambda content: {'encoding': 'error', 'confidence': 0.0, 'language': None})
 
-        e3.process_requirement_files(session, repository, req_names, reqformat)
+        e4.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
         requirement_file = session.query(RequirementFile).first()
         captured = capsys.readouterr()
@@ -271,7 +271,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
 
-        e3.process_requirement_files(session, repository, req_names, reqformat)
+        e4.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
 
         requirement_file = session.query(RequirementFile).first()
@@ -288,7 +288,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         reqformat = 'requirements.txt'
         req_names = [Path('requirements.txt')]
 
-        e3.process_requirement_files(session, repository, req_names, reqformat)
+        e4.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
         captured = capsys.readouterr()
         requirement_file = session.query(RequirementFile).first()
@@ -311,7 +311,7 @@ class TestE3RequiremtFilesProcessRequirementFiles:
         m.side_effect = raise_error
         monkeypatch.setattr('builtins.open', m)
 
-        e3.process_requirement_files(session, repository, req_names, reqformat)
+        e4.process_requirement_files(session, repository, req_names, reqformat)
         session.commit()
         captured = capsys.readouterr()
         requirement_file = session.query(RequirementFile).first()

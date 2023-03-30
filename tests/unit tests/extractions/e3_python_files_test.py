@@ -6,7 +6,7 @@ if src not in sys.path:
     sys.path.append(src)
 
 
-import src.extractions.e2_python_files as e2
+import src.extractions.e3_python_files as e3
 
 from unittest.mock import mock_open
 from src.db.database import Repository, PythonFile
@@ -18,7 +18,7 @@ from tests.stubs.others import stub_unzip, stub_unzip_failed
 from src.states import *
 
 
-class TestE2PythonFilesFindPythonFiles:
+class TestPythonFilesFindPythonFiles:
     def test_find_python_files(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
 
@@ -33,10 +33,10 @@ class TestE2PythonFilesFindPythonFiles:
                     Path(f'{repository.path}/{file3_relative_path}'),
                     Path(f'{repository.path}/{file4_relative_path}')]
 
-        monkeypatch.setattr(e2, 'find_files', mock_find_python_files)
+        monkeypatch.setattr(e3, 'find_files', mock_find_python_files)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
-        python_files = e2.find_python_files(session, repository)
+        python_files = e3.find_python_files(session, repository)
         assert file1_relative_path in python_files
         assert file2_relative_path in python_files
         assert file3_relative_path not in python_files
@@ -56,11 +56,11 @@ class TestE2PythonFilesFindPythonFiles:
                     Path(f'{repository.path}/{file3_relative_path}'),
                     Path(f'{repository.path}/{file4_relative_path}')]
 
-        monkeypatch.setattr(e2, 'find_files', mock_find_python_files)
+        monkeypatch.setattr(e3, 'find_files', mock_find_python_files)
         monkeypatch.setattr(Path, 'exists', lambda path: False)
-        monkeypatch.setattr(e2, 'unzip_repository', stub_unzip)
+        monkeypatch.setattr(e3, 'unzip_repository', stub_unzip)
 
-        python_files = e2.find_python_files(session, repository)
+        python_files = e3.find_python_files(session, repository)
         assert file1_relative_path in python_files
         assert file2_relative_path in python_files
         assert file3_relative_path not in python_files
@@ -70,23 +70,23 @@ class TestE2PythonFilesFindPythonFiles:
         repository = RepositoryFactory(session).create()
 
         monkeypatch.setattr(Path, 'exists', lambda path: False)
-        monkeypatch.setattr(e2, 'unzip_repository', stub_unzip_failed)
+        monkeypatch.setattr(e3, 'unzip_repository', stub_unzip_failed)
 
-        python_files = e2.find_python_files(session, repository)
+        python_files = e3.find_python_files(session, repository)
         assert python_files == []
         assert repository.state == REP_UNAVAILABLE_FILES
 
 
-class TestE2PythonFilesProcessRepository:
+class TestPythonFilesProcessRepository:
     def test_process_repository_success(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(state=REP_N_EXTRACTED)
         assert repository.python_files_count is None
 
-        monkeypatch.setattr(e2, 'find_python_files', lambda _session, _repository: ['test.py'])
-        monkeypatch.setattr(e2, 'process_python_files',
+        monkeypatch.setattr(e3, 'find_python_files', lambda _session, _repository: ['test.py'])
+        monkeypatch.setattr(e3, 'process_python_files',
                             lambda _session, _repository, _python_files_names, count: 1)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
-        output = e2.process_repository(session, repository)
+        output = e3.process_repository(session, repository)
 
         assert output == "done"
         assert repository.state == REP_PF_EXTRACTED
@@ -100,11 +100,11 @@ class TestE2PythonFilesProcessRepository:
             _repository.state = REP_UNAVAILABLE_FILES
             return []
 
-        monkeypatch.setattr(e2, 'find_python_files', unavailable_files)
-        monkeypatch.setattr(e2, 'process_python_files',
+        monkeypatch.setattr(e3, 'find_python_files', unavailable_files)
+        monkeypatch.setattr(e3, 'process_python_files',
                             lambda _session, _repository, _python_files_names, count: 1)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
-        output = e2.process_repository(session, repository)
+        output = e3.process_repository(session, repository)
 
         assert output == "done"
         assert repository.state == REP_UNAVAILABLE_FILES
@@ -114,7 +114,7 @@ class TestE2PythonFilesProcessRepository:
         repository = RepositoryFactory(session).create(
             state=REP_PF_EXTRACTED)
 
-        output = e2.process_repository(session, repository)
+        output = e3.process_repository(session, repository)
 
         assert output == "already processed"
 
@@ -122,7 +122,7 @@ class TestE2PythonFilesProcessRepository:
         repository = RepositoryFactory(session).create(
             state=REP_REQ_FILE_EXTRACTED)
 
-        output = e2.process_repository(session, repository)
+        output = e3.process_repository(session, repository)
 
         assert output == "already processed"
 
@@ -130,12 +130,12 @@ class TestE2PythonFilesProcessRepository:
         repository = RepositoryFactory(session).create(
             state=REP_LOADED)
 
-        output = e2.process_repository(session, repository)
+        output = e3.process_repository(session, repository)
 
         assert "wrong script order" in output
 
 
-class TestE2PythonFilesProcessPythonFiles:
+class TestPythonFilesProcessPythonFiles:
     def test_process_python_files_sucess(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(state=REP_N_EXTRACTED)
         python_files_names = ['test.py']
@@ -144,7 +144,7 @@ class TestE2PythonFilesProcessPythonFiles:
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=source))
 
-        count = e2.process_python_files(session, repository, python_files_names, count)
+        count = e3.process_python_files(session, repository, python_files_names, count)
         session.commit()
         python_file = session.query(PythonFile).first()
 
@@ -160,7 +160,7 @@ class TestE2PythonFilesProcessPythonFiles:
         count = 0
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
-        count = e2.process_python_files(session, repository, python_files_names, count)
+        count = e3.process_python_files(session, repository, python_files_names, count)
         session.commit()
         query = session.query(PythonFile).all()
 
@@ -182,7 +182,7 @@ class TestE2PythonFilesProcessPythonFiles:
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data="import matplotlib\n"))
 
-        count = e2.process_python_files(session, repository, python_files_names, count)
+        count = e3.process_python_files(session, repository, python_files_names, count)
         session.commit()
 
         python_file_result = session.query(PythonFile).first()
@@ -206,7 +206,7 @@ class TestE2PythonFilesProcessPythonFiles:
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data="import matplotlib\n"))
 
-        count = e2.process_python_files(session, repository, python_files_names, count)
+        count = e3.process_python_files(session, repository, python_files_names, count)
         session.commit()
         captured = capsys.readouterr()
         python_file_result = session.query(PythonFile).first()
@@ -224,7 +224,7 @@ class TestE2PythonFilesProcessPythonFiles:
         monkeypatch.setattr(Path, 'exists', lambda path: True)
         monkeypatch.setattr('builtins.open', mock_open(read_data=source))
 
-        count = e2.process_python_files(session, repository, python_files_names, count)
+        count = e3.process_python_files(session, repository, python_files_names, count)
         session.commit()
         python_file = session.query(PythonFile).first()
 
@@ -245,7 +245,7 @@ class TestE2PythonFilesProcessPythonFiles:
         m.side_effect = raise_error
         monkeypatch.setattr('builtins.open', m)
 
-        count = e2.process_python_files(session, repository, python_files_names, count)
+        count = e3.process_python_files(session, repository, python_files_names, count)
         session.commit()
         python_file = session.query(PythonFile).first()
 

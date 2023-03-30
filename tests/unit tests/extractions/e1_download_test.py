@@ -17,16 +17,16 @@ from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.stubs.commits import stub_repo_commits, mock_load_rep_and_commits
 from src.states import *
-import src.s3_download as s3
+import src.extractions.e1_download as e1
 
 
-class TestS3DownloadProcessRepository:
+class TestDownloadProcessRepository:
     def test_process_repository_success(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(state=REP_FILTERED)
 
-        monkeypatch.setattr(s3, 'load_repository_and_commits', mock_load_rep_and_commits)
+        monkeypatch.setattr(e1, 'load_repository_and_commits', mock_load_rep_and_commits)
 
-        output = s3.process_repository(session=session, repository=repository)
+        output = e1.process_repository(session=session, repository=repository)
 
         assert output == 'done'
         assert repository.state == REP_LOADED
@@ -34,7 +34,7 @@ class TestS3DownloadProcessRepository:
     def test_process_repository_already_processed(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(state=REP_LOADED)
 
-        output = s3.process_repository(session=session, repository=repository)
+        output = e1.process_repository(session=session, repository=repository)
 
         assert output == "already downloaded"
 
@@ -42,16 +42,16 @@ class TestS3DownloadProcessRepository:
         repository = RepositoryFactory(session).create(
             state=REP_N_EXTRACTED)
 
-        output = s3.process_repository(session=session, repository=repository)
+        output = e1.process_repository(session=session, repository=repository)
 
         assert output == "already downloaded"
 
     def test_process_repository_retry_unavailable_success(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(state=REP_UNAVAILABLE_FILES, commit="1")
 
-        monkeypatch.setattr(s3, 'load_repository_and_commits', mock_load_rep_and_commits)
+        monkeypatch.setattr(e1, 'load_repository_and_commits', mock_load_rep_and_commits)
         os.makedirs(repository.path, exist_ok=True)
-        output = s3.process_repository(session=session, repository=repository, retry=True)
+        output = e1.process_repository(session=session, repository=repository, retry=True)
 
         assert repository.state == REP_LOADED
         captured = capsys.readouterr()
@@ -63,9 +63,9 @@ class TestS3DownloadProcessRepository:
     def test_process_repository_retry_failed_to_clone(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(state=REP_FAILED_TO_CLONE)
 
-        monkeypatch.setattr(s3, 'load_repository_and_commits', mock_load_rep_and_commits)
+        monkeypatch.setattr(e1, 'load_repository_and_commits', mock_load_rep_and_commits)
         os.makedirs(repository.path, exist_ok=True)
-        output = s3.process_repository(session=session, repository=repository, retry=True)
+        output = e1.process_repository(session=session, repository=repository, retry=True)
 
         assert repository.state == REP_LOADED
         captured = capsys.readouterr()
@@ -74,7 +74,7 @@ class TestS3DownloadProcessRepository:
         shutil.rmtree(TEST_REPOS_DIR, ignore_errors=True)
 
 
-class TestS3DownloadLoadRepositoryAndCommits:
+class TestDownloadLoadRepositoryAndCommits:
     def test_load_repository_commits_success(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(state=REP_FILTERED, commit=None)
         safe_session = SafeSession(session, interrupted=REP_STOPPED)
@@ -83,10 +83,10 @@ class TestS3DownloadLoadRepositoryAndCommits:
         def stub_clone(_part, _end, _repo, _remote, _branch, _commit):
             return repository.path, stub_repo_commits(), False
 
-        monkeypatch.setattr(s3, 'clone', stub_clone)
-        monkeypatch.setattr(s3, 'git_output', lambda *args, cwd: commit_hash)
+        monkeypatch.setattr(e1, 'clone', stub_clone)
+        monkeypatch.setattr(e1, 'git_output', lambda *args, cwd: commit_hash)
 
-        s3.load_repository_and_commits(safe_session, repository)
+        e1.load_repository_and_commits(safe_session, repository)
         safe_session.commit()
         commit = safe_session.query(Commit).first()
 
@@ -100,10 +100,10 @@ class TestS3DownloadLoadRepositoryAndCommits:
 
         def stub_clone(_part, _end, _repo, _remote, _branch, _commit):
             return repository.path, None, False
-        monkeypatch.setattr(s3, 'clone', stub_clone)
-        monkeypatch.setattr(s3, 'git_output', lambda *args, cwd: b'')
+        monkeypatch.setattr(e1, 'clone', stub_clone)
+        monkeypatch.setattr(e1, 'git_output', lambda *args, cwd: b'')
 
-        s3.load_repository_and_commits(safe_session, repository)
+        e1.load_repository_and_commits(safe_session, repository)
         safe_session.commit()
 
         assert safe_session.query(Commit).count() == 0
@@ -116,10 +116,10 @@ class TestS3DownloadLoadRepositoryAndCommits:
         def stub_clone(_part, _end, _repo, _remote, _branch, _commit):
             return repository.path, None, True
 
-        monkeypatch.setattr(s3, 'clone', stub_clone)
-        monkeypatch.setattr(s3, 'git_output', lambda *args, cwd: b'')
+        monkeypatch.setattr(e1, 'clone', stub_clone)
+        monkeypatch.setattr(e1, 'git_output', lambda *args, cwd: b'')
 
-        s3.load_repository_and_commits(safe_session, repository)
+        e1.load_repository_and_commits(safe_session, repository)
         safe_session.commit()
 
         assert safe_session.query(Commit).count() == 0
@@ -129,7 +129,7 @@ class TestS3DownloadLoadRepositoryAndCommits:
         repository = RepositoryFactory(session).create(state=REP_LOADED)
         safe_session = SafeSession(session, interrupted=REP_STOPPED)
 
-        s3.load_repository_and_commits(safe_session, repository)
+        e1.load_repository_and_commits(safe_session, repository)
         safe_session.commit()
         captured = capsys.readouterr()
 
@@ -145,9 +145,9 @@ class TestS3DownloadLoadRepositoryAndCommits:
         def stub_clone(_part, _end, _repo, _remote, _branch, _commit):
             raise EnvironmentError(f"Clone failed for {repository}")
 
-        monkeypatch.setattr(s3, 'clone', stub_clone)
+        monkeypatch.setattr(e1, 'clone', stub_clone)
 
-        s3.load_repository_and_commits(safe_session, repository)
+        e1.load_repository_and_commits(safe_session, repository)
         safe_session.commit()
         captured = capsys.readouterr()
 
@@ -156,7 +156,7 @@ class TestS3DownloadLoadRepositoryAndCommits:
         assert "Failed to download" in captured.out
 
 
-class TestS3DownloadClone:
+class TestDownloadClone:
     def test_load_repository_commits_success(self, session, monkeypatch):
         part = "test"
         end = "test1"
@@ -166,9 +166,9 @@ class TestS3DownloadClone:
         def stub_load_commits(_full_dir):
             return stub_repo_commits()
 
-        monkeypatch.setattr(s3, 'load_commits', stub_load_commits)
+        monkeypatch.setattr(e1, 'load_commits', stub_load_commits)
 
-        full_dir, commits, already_exists = s3.clone(part, end, repo, remote,
+        full_dir, commits, already_exists = e1.clone(part, end, repo, remote,
                                                      branch=None, commit=None)
 
         assert already_exists is False
@@ -187,10 +187,10 @@ class TestS3DownloadClone:
         def stub_load_commits(_full_dir):
             return stub_repo_commits()
 
-        monkeypatch.setattr(s3, 'load_commits', stub_load_commits)
+        monkeypatch.setattr(e1, 'load_commits', stub_load_commits)
 
-        full_dir, commits, already_exists = s3.clone(part, end, repo, remote, branch=None, commit=None)
-        full_dir2, commits2, already_exists2 = s3.clone(part, end, repo, remote, branch=None, commit=None)
+        full_dir, commits, already_exists = e1.clone(part, end, repo, remote, branch=None, commit=None)
+        full_dir2, commits2, already_exists2 = e1.clone(part, end, repo, remote, branch=None, commit=None)
         captured = capsys.readouterr()
 
         assert already_exists is False
@@ -209,7 +209,7 @@ class TestS3DownloadClone:
         repo = "luamz/save-marine"
         commit = "ab142cf"
 
-        full_dir, commits, already_exists = s3.clone(part, end, repo, remote,
+        full_dir, commits, already_exists = e1.clone(part, end, repo, remote,
                                                      branch=None, commit=commit)
         last_commit = commits[5]
 
@@ -228,7 +228,7 @@ class TestS3DownloadClone:
         repo = "luamz/save-marine"
         branch = "test"
 
-        full_dir, commits, already_exists = s3.clone(part, end, repo, remote,
+        full_dir, commits, already_exists = e1.clone(part, end, repo, remote,
                                                      branch=branch, commit=None)
 
         assert already_exists is False
@@ -250,9 +250,9 @@ class TestS3DownloadClone:
             else:
                 return 0
 
-        monkeypatch.setattr(s3, 'git', stub_git)
+        monkeypatch.setattr(e1, 'git', stub_git)
         with pytest.raises(EnvironmentError):
-            s3.clone(part, end, repo, remote, branch=None, commit=None)
+            e1.clone(part, end, repo, remote, branch=None, commit=None)
 
     def test_load_repository_commits_checkout_error(self, session, monkeypatch):
         part = "test"
@@ -266,14 +266,14 @@ class TestS3DownloadClone:
                 return -1
             else:
                 return 0
-        monkeypatch.setattr(s3, 'git', stub_git)
+        monkeypatch.setattr(e1, 'git', stub_git)
         with pytest.raises(EnvironmentError):
-            s3.clone(part, end, repo, remote, branch=None, commit=commit)
+            e1.clone(part, end, repo, remote, branch=None, commit=commit)
 
         shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
 
 
-class TestS3DownloadLoadCommits:
+class TestDownloadLoadCommits:
     def test_load_commits(self, session, monkeypatch):
         part = "test"
         end = "test1"
@@ -288,9 +288,9 @@ class TestS3DownloadLoadCommits:
                 return commit
             elif "--merges" in args:
                 return merge
-        monkeypatch.setattr(s3, 'git_output', stub_git)
+        monkeypatch.setattr(e1, 'git_output', stub_git)
 
-        full_dir, commits, already_exists = s3.clone(part, end, repo, remote,
+        full_dir, commits, already_exists = e1.clone(part, end, repo, remote,
                                                      branch=None, commit=None)
 
         assert full_dir.exists() is True
@@ -312,10 +312,10 @@ class TestS3DownloadLoadCommits:
         def stub_git(*args):
             if "--no-merges" in args:
                 return invalid_commit
-        monkeypatch.setattr(s3, 'git_output', stub_git)
+        monkeypatch.setattr(e1, 'git_output', stub_git)
 
         with pytest.raises(EnvironmentError):
-            s3.clone(part, end, repo, remote, branch=None, commit=None)
+            e1.clone(part, end, repo, remote, branch=None, commit=None)
 
         shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
 

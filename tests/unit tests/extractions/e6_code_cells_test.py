@@ -4,11 +4,11 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.extractions.e5_code_cells as e5
+import src.extractions.e6_code_cells as e6
 
 from src.helpers.h3_utils import TimeoutError
 from src.classes.c4_local_checkers import PathLocalChecker
-from src.extractions.e5_code_cells import process_code_cell
+from src.extractions.e6_code_cells import process_code_cell
 from src.db.database import CellModule, CellDataIO
 from tests.factories.models import RepositoryFactory
 from tests.factories.models import NotebookFactory, CodeCellFactory
@@ -17,7 +17,7 @@ from tests.database_config import connection, session  # noqa: F401
 from src.states import *
 
 
-class TestE5CodeCellsProcessCodeCell:
+class TestCodeCellsProcessCodeCell:
     def test_process_code_cell(self, session):
         module_name = 'pandas'
         caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
@@ -72,7 +72,7 @@ class TestE5CodeCellsProcessCodeCell:
 
         def mock_extract(_source, _checker):
             raise TimeoutError
-        monkeypatch.setattr(e5, 'extract_features', mock_extract)
+        monkeypatch.setattr(e6, 'extract_features', mock_extract)
 
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker)
@@ -91,7 +91,7 @@ class TestE5CodeCellsProcessCodeCell:
 
         def mock_extract(_source, _checker):
             raise SyntaxError
-        monkeypatch.setattr(e5, 'extract_features', mock_extract)
+        monkeypatch.setattr(e6, 'extract_features', mock_extract)
 
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker)
@@ -110,7 +110,7 @@ class TestE5CodeCellsProcessCodeCell:
 
         def mock_extract(_source, _checker):
             raise ValueError
-        monkeypatch.setattr(e5, 'extract_features', mock_extract)
+        monkeypatch.setattr(e6, 'extract_features', mock_extract)
 
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker)

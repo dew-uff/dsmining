@@ -4,7 +4,7 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.extractions.e1_notebooks_and_cells as e1
+import src.extractions.e2_notebooks_and_cells as e2
 
 from IPython.core.inputtransformer2 import TransformerManager
 from tests.database_config import connection, session  # noqa: F401
@@ -15,7 +15,7 @@ from tests.stubs.nbf_read import stub_IndentationError
 from src.states import *
 
 
-class TestE1NotebooksAndCellsLoadCells:
+class TestNotebooksAndCellsLoadCells:
 
     def test_load_cells(self, session):
         repository = RepositoryFactory(session).create(state=REP_LOADED)
@@ -24,7 +24,7 @@ class TestE1NotebooksAndCellsLoadCells:
         notebook = get_notebook_node()
         status = 0
 
-        nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
+        nbrow, cells_info, exec_count, status = e2.load_cells(repository.id, nbrow, notebook, status)
         assert len(cells_info) == 28
         assert status == 0
 
@@ -50,7 +50,7 @@ class TestE1NotebooksAndCellsLoadCells:
         status = 0
         nbrow["language_version"] = 'unknown'
 
-        nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
+        nbrow, cells_info, exec_count, status = e2.load_cells(repository.id, nbrow, notebook, status)
         assert len(cells_info) == 28
         assert status == 0
 
@@ -69,7 +69,7 @@ class TestE1NotebooksAndCellsLoadCells:
 
         monkeypatch.setattr(TransformerManager, "transform_cell", stub_IndentationError)
 
-        nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
+        nbrow, cells_info, exec_count, status = e2.load_cells(repository.id, nbrow, notebook, status)
         captured = capsys.readouterr()
         cell = cells_info[0]
 
@@ -87,7 +87,7 @@ class TestE1NotebooksAndCellsLoadCells:
         status = 0
         notebook["cells"][0]["source"] = 'import matplotlib\0'
 
-        nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
+        nbrow, cells_info, exec_count, status = e2.load_cells(repository.id, nbrow, notebook, status)
         assert len(cells_info) == 1
         assert status == 0
 
@@ -108,7 +108,7 @@ class TestE1NotebooksAndCellsLoadCells:
         status = 0
         notebook["cells"][0]["source"] = 'import matplotlib\0'
 
-        nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
+        nbrow, cells_info, exec_count, status = e2.load_cells(repository.id, nbrow, notebook, status)
         assert len(cells_info) == 1
         assert status == 0
         assert nbrow["code_cells_with_output"] == 1
@@ -128,7 +128,7 @@ class TestE1NotebooksAndCellsLoadCells:
         status = 0
         notebook["cells"][0]["cell_type"] = 'raw'
 
-        nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
+        nbrow, cells_info, exec_count, status = e2.load_cells(repository.id, nbrow, notebook, status)
         assert len(cells_info) == 1
         assert status == 0
 
@@ -147,7 +147,7 @@ class TestE1NotebooksAndCellsLoadCells:
         status = 0
         notebook["cells"][0]["cell_type"] = 'unknown'
 
-        nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
+        nbrow, cells_info, exec_count, status = e2.load_cells(repository.id, nbrow, notebook, status)
         assert len(cells_info) == 1
         assert status == 0
 
@@ -166,7 +166,7 @@ class TestE1NotebooksAndCellsLoadCells:
         status = 0
         notebook["cells"][0]["source"] = ''
 
-        nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
+        nbrow, cells_info, exec_count, status = e2.load_cells(repository.id, nbrow, notebook, status)
         assert len(cells_info) == 1
         assert status == 0
 
@@ -186,7 +186,7 @@ class TestE1NotebooksAndCellsLoadCells:
 
         monkeypatch.setattr(TransformerManager, "transform_cell", stub_KeyError)
 
-        nbrow, cells_info, exec_count, status = e1.load_cells(repository.id, nbrow, notebook, status)
+        nbrow, cells_info, exec_count, status = e2.load_cells(repository.id, nbrow, notebook, status)
         captured = capsys.readouterr()
 
         assert status == NB_LOAD_FORMAT_ERROR

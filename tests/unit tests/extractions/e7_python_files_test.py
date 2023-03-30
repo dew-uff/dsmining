@@ -5,12 +5,12 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.extractions.e6_python_features as e6
+import src.extractions.e7_python_features as e7
 
 from src.states import *
 from src.helpers.h3_utils import TimeoutError
 from src.classes.c4_local_checkers import PathLocalChecker
-from src.extractions.e6_python_features import process_python_file
+from src.extractions.e7_python_features import process_python_file
 from src.db.database import PythonFileModule, PythonFileDataIO
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, PythonFileFactory
@@ -80,7 +80,7 @@ class TestPythonFilesExtract:
         def mock_extract(_source, _checker):
             raise TimeoutError
 
-        monkeypatch.setattr(e6, 'extract_features', mock_extract)
+        monkeypatch.setattr(e7, 'extract_features', mock_extract)
 
         result = process_python_file(session=session, dispatches=dispatches,
                                      repository_id=repository.id, python_file=python_file,
@@ -102,7 +102,7 @@ class TestPythonFilesExtract:
         def mock_extract(_source, _checker):
             raise SyntaxError
 
-        monkeypatch.setattr(e6, 'extract_features', mock_extract)
+        monkeypatch.setattr(e7, 'extract_features', mock_extract)
 
         result = process_python_file(session=session, dispatches=dispatches,
                                      repository_id=repository.id, python_file=python_file,
@@ -128,7 +128,7 @@ class TestPythonFilesExtract:
         def mock_extract(_source, _checker):
             raise ValueError
 
-        monkeypatch.setattr(e6, 'extract_features', mock_extract)
+        monkeypatch.setattr(e7, 'extract_features', mock_extract)
 
         result = process_python_file(session=session, dispatches=dispatches,
                                      repository_id=repository.id, python_file=python_file,

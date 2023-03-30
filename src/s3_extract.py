@@ -18,13 +18,13 @@ stop = False
 SIZE_LIMIT = 100 * (10 ** 3)  # 100 MB (since disk usage already comes in KB)
 
 ORDER = [
-    "s3_download",
-    "e1_notebooks_and_cells",
-    "e2_python_files",
-    "e3_requirement_files",
-    "e4_markdown_cells",
-    "e5_code_cells",
-    "e6_python_features",
+    "e1_download",
+    "e2_notebooks_and_cells",
+    "e3_python_files",
+    "e4_requirement_files",
+    "e5_markdown_cells",
+    "e6_code_cells",
+    "e7_python_features",
 ]
 
 

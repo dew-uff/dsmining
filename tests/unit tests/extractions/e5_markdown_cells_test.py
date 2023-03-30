@@ -6,18 +6,18 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.extractions.e4_markdown_cells as e4
+import src.extractions.e5_markdown_cells as e5
 
 from src.states import *
 from nltk.corpus import stopwords
 from src.db.database import CellMarkdownFeature
-from src.extractions.e4_markdown_cells import process_markdown_cell
+from src.extractions.e5_markdown_cells import process_markdown_cell
 from tests.stubs.extract_features import stub_extract_features
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, NotebookFactory, MarkdownCellFactory, CellMarkdownFeatureFactory
 
 
-class TestE4MarkdownCellsProcessMarkdownCell:
+class TestMarkdownCellsProcessMarkdownCell:
     def test_process_markdown_cell_sucess(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
@@ -25,7 +25,7 @@ class TestE4MarkdownCellsProcessMarkdownCell:
                                                    notebook_id=notebook.id,
                                                    state=CELL_LOADED)
 
-        monkeypatch.setattr(e4, 'extract_features', stub_extract_features)
+        monkeypatch.setattr(e5, 'extract_features', stub_extract_features)
 
         result = process_markdown_cell(session, repository.id, notebook.id, cell)
         session.commit()
@@ -51,7 +51,7 @@ class TestE4MarkdownCellsProcessMarkdownCell:
         cell = MarkdownCellFactory(session).create(repository_id=repository.id,
                                                    notebook_id=notebook.id,
                                                    state=CELL_PROCESS_ERROR)
-        monkeypatch.setattr(e4, 'extract_features', stub_extract_features)
+        monkeypatch.setattr(e5, 'extract_features', stub_extract_features)
 
         result = process_markdown_cell(session, repository.id, notebook.id, cell, True)
         session.commit()
@@ -73,7 +73,7 @@ class TestE4MarkdownCellsProcessMarkdownCell:
                                                                    cell_id=cell.id)
         created_at = cell_markdown.created_at
 
-        monkeypatch.setattr(e4, 'extract_features', stub_extract_features)
+        monkeypatch.setattr(e5, 'extract_features', stub_extract_features)
 
         result = process_markdown_cell(session, repository.id, notebook.id, cell, True)
         session.commit()
@@ -91,7 +91,7 @@ class TestE4MarkdownCellsProcessMarkdownCell:
         cell = MarkdownCellFactory(session).create(repository_id=repository.id,
                                                    notebook_id=notebook.id,
                                                    state=CELL_PROCESS_ERROR)
-        monkeypatch.setattr(e4, 'extract_features', stub_extract_features)
+        monkeypatch.setattr(e5, 'extract_features', stub_extract_features)
 
         result = process_markdown_cell(session, repository.id, notebook.id, cell)
         session.commit()
@@ -110,7 +110,7 @@ class TestE4MarkdownCellsProcessMarkdownCell:
         def stub_extract_features_error(cell_source):  # noqa: F841
             raise Exception
 
-        monkeypatch.setattr(e4, 'extract_features', stub_extract_features_error)
+        monkeypatch.setattr(e5, 'extract_features', stub_extract_features_error)
 
         result = process_markdown_cell(session, repository.id, notebook.id, cell)
         session.commit()
@@ -122,7 +122,7 @@ class TestE4MarkdownCellsProcessMarkdownCell:
         assert cell_markdown_features is None
 
 
-class TestE4MarkdownCellsExtractFeatures:
+class TestMarkdownCellsExtractFeatures:
     def test_process_markdown_extract_features(self, session):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
@@ -131,7 +131,7 @@ class TestE4MarkdownCellsExtractFeatures:
                                                    source='Este notebook tem o propósito de analisar\n'
                                                           'o nível de escolaridade brasileiro no ano de 2022\n\n')
 
-        data = e4.extract_features(cell.source)
+        data = e5.extract_features(cell.source)
 
         assert data["language"] == "portuguese"
         assert data["lines"] == 4
@@ -151,7 +151,7 @@ class TestE4MarkdownCellsExtractFeatures:
             raise LookupError
 
         monkeypatch.setattr(stopwords, 'words', stub_stopwords_error)
-        data = e4.extract_features(cell.source)
+        data = e5.extract_features(cell.source)
 
         assert data["language"] == "portuguese"
         assert data["lines"] == 4

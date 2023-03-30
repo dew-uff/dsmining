@@ -4,7 +4,7 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.extractions.e1_notebooks_and_cells as e1
+import src.extractions.e2_notebooks_and_cells as e2
 from src.db.database import Repository, Notebook, Cell
 
 from src.config import LOGS_DIR, Path
@@ -16,7 +16,7 @@ from tests.stubs.load_notebook import stub_load_notebook, stub_load_notebook_err
 from src.states import *
 
 
-class TestE1NotebooksAndCellsFindNotebooks:
+class TestNotebooksAndCellsFindNotebooks:
     def test_find_notebooks(self, session, monkeypatch):
         repository = RepositoryFactory(session).create(state=REP_LOADED)
         assert len(session.query(Repository).all()) == 1
@@ -29,10 +29,10 @@ class TestE1NotebooksAndCellsFindNotebooks:
             return [Path(f'{repository.path}/{file1_relative_path}'),
                     Path(f'{repository.path}/{file2_relative_path}'),
                     Path(f'{repository.path}/{file3_relative_path}')]
-        monkeypatch.setattr(e1, 'find_files', mock_find_files)
+        monkeypatch.setattr(e2, 'find_files', mock_find_files)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
-        notebooks = e1.find_notebooks(session, repository)
+        notebooks = e2.find_notebooks(session, repository)
         assert file1_relative_path in notebooks
         assert file2_relative_path in notebooks
         assert file3_relative_path not in notebooks
@@ -44,7 +44,7 @@ class TestE1NotebooksAndCellsFindNotebooks:
         assert len(session.query(Repository).all()) == 1
         monkeypatch.setattr(Path, 'exists', lambda path: False)
 
-        notebooks = e1.find_notebooks(session, repository)
+        notebooks = e2.find_notebooks(session, repository)
         captured = capsys.readouterr()
 
         assert notebooks == []
@@ -53,16 +53,16 @@ class TestE1NotebooksAndCellsFindNotebooks:
         assert repository.state == REP_UNAVAILABLE_FILES
 
 
-class TestE1NotebooksAndCellsProcessNotebook:
+class TestNotebooksAndCellsProcessNotebook:
     def test_process_notebooks(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(session).create(state=REP_LOADED, notebooks_count=2)
         repository_notebooks_names = ['file.ipynb']
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
-        monkeypatch.setattr(e1, 'load_notebook', stub_load_notebook)
+        monkeypatch.setattr(e2, 'load_notebook', stub_load_notebook)
 
-        count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
+        count, repository = e2.process_notebooks(safe_session, repository, repository_notebooks_names)
         safe_session.commit()
         assert count == 1
         assert (session.query(Notebook).count()) == 1
@@ -79,7 +79,7 @@ class TestE1NotebooksAndCellsProcessNotebook:
         repository = RepositoryFactory(session).create(state=REP_LOADED, notebooks_count=2)
         assert len(session.query(Repository).all()) == 1
         repository_notebooks_names = ['']
-        count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
+        count, repository = e2.process_notebooks(safe_session, repository, repository_notebooks_names)
 
         assert count == 0
         assert (session.query(Notebook).count()) == 0
@@ -93,7 +93,7 @@ class TestE1NotebooksAndCellsProcessNotebook:
         created = notebook.created_at
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 
-        e1.process_notebooks(safe_session, repository, [notebook.name])
+        e2.process_notebooks(safe_session, repository, [notebook.name])
         safe_session.commit()
 
         assert created != session.query(Notebook).first().created_at
@@ -104,7 +104,7 @@ class TestE1NotebooksAndCellsProcessNotebook:
         notebook = NotebookFactory(session).create(repository_id=repository.id,
                                                    state=NB_GENERIC_LOAD_ERROR)
 
-        e1.process_notebooks(safe_session, repository, [notebook.name])
+        e2.process_notebooks(safe_session, repository, [notebook.name])
         captured = capsys.readouterr()
         assert "Notebook already exists. Delete from DB" in captured.out
         assert os.path.exists(str(LOGS_DIR)+"/todo_delete")
@@ -116,7 +116,7 @@ class TestE1NotebooksAndCellsProcessNotebook:
         notebook = NotebookFactory(session).create(repository_id=repository.id,
                                                    state=NB_LOADED)
 
-        e1.process_notebooks(safe_session, repository, [notebook.name])
+        e2.process_notebooks(safe_session, repository, [notebook.name])
         captured = capsys.readouterr()
         assert "Notebook already processed" in captured.out
 
@@ -125,9 +125,9 @@ class TestE1NotebooksAndCellsProcessNotebook:
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(session).create(state=REP_LOADED, notebooks_count=2)
         repository_notebooks_names = ['file.ipynb']
-        monkeypatch.setattr(e1, 'load_notebook', stub_load_notebook)
-        monkeypatch.setattr(e1, 'unzip_repository', stub_unzip)
-        count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
+        monkeypatch.setattr(e2, 'load_notebook', stub_load_notebook)
+        monkeypatch.setattr(e2, 'unzip_repository', stub_unzip)
+        count, repository = e2.process_notebooks(safe_session, repository, repository_notebooks_names)
 
         safe_session.commit()
         assert count == 1
@@ -138,9 +138,9 @@ class TestE1NotebooksAndCellsProcessNotebook:
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(session).create(state=REP_LOADED, notebooks_count=2)
         repository_notebooks_names = ['file.ipynb']
-        monkeypatch.setattr(e1, 'load_notebook', stub_load_notebook)
+        monkeypatch.setattr(e2, 'load_notebook', stub_load_notebook)
 
-        e1.process_notebooks(safe_session, repository, repository_notebooks_names)
+        e2.process_notebooks(safe_session, repository, repository_notebooks_names)
         captured = capsys.readouterr()
         assert "Failed to load" in captured.out
 
@@ -150,26 +150,26 @@ class TestE1NotebooksAndCellsProcessNotebook:
         repository_notebooks_names = ['file.ipynb']
 
         monkeypatch.setattr(Path, 'exists', lambda path: True)
-        monkeypatch.setattr(e1, 'load_notebook', stub_load_notebook_error)
+        monkeypatch.setattr(e2, 'load_notebook', stub_load_notebook_error)
 
-        count, repository = e1.process_notebooks(safe_session, repository, repository_notebooks_names)
+        count, repository = e2.process_notebooks(safe_session, repository, repository_notebooks_names)
 
         captured = capsys.readouterr()
         assert "Failed to load notebook" in captured.out
         assert repository.state == REP_N_ERROR
 
 
-class Test1NotebooksAndCellsProcessRepository:
+class TestNotebooksAndCellsProcessRepository:
     def test_process_repository_success(self, session, monkeypatch):
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_LOADED)
         assert repository.notebooks_count is None
 
         repository.notebooks_count = 1
-        monkeypatch.setattr(e1, 'find_notebooks', lambda _session, _repository: [])
-        monkeypatch.setattr(e1, 'process_notebooks',
+        monkeypatch.setattr(e2, 'find_notebooks', lambda _session, _repository: [])
+        monkeypatch.setattr(e2, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
-        output = e1.process_repository(safe_session, repository)
+        output = e2.process_repository(safe_session, repository)
 
         assert output == "done"
         assert safe_session.query(Repository).first().notebooks_count == 1
@@ -179,10 +179,10 @@ class Test1NotebooksAndCellsProcessRepository:
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_LOADED)
 
-        monkeypatch.setattr(e1, 'find_notebooks', lambda _session, _repository: [])
-        monkeypatch.setattr(e1, 'process_notebooks',
+        monkeypatch.setattr(e2, 'find_notebooks', lambda _session, _repository: [])
+        monkeypatch.setattr(e2, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
-        output = e1.process_repository(safe_session, repository)
+        output = e2.process_repository(safe_session, repository)
 
         assert output == "done"
         assert repository.notebooks_count is None
@@ -196,10 +196,10 @@ class Test1NotebooksAndCellsProcessRepository:
             _repository.state = REP_UNAVAILABLE_FILES
             return []
 
-        monkeypatch.setattr(e1, 'find_notebooks', mock_unavailable_files)
-        monkeypatch.setattr(e1, 'process_notebooks',
+        monkeypatch.setattr(e2, 'find_notebooks', mock_unavailable_files)
+        monkeypatch.setattr(e2, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
-        output = e1.process_repository(safe_session, repository)
+        output = e2.process_repository(safe_session, repository)
 
         assert output == "done"
         assert repository.notebooks_count is None
@@ -210,12 +210,12 @@ class Test1NotebooksAndCellsProcessRepository:
         repository = RepositoryFactory(safe_session).create(state=REP_N_ERROR,
                                                             notebooks_count=1)
 
-        monkeypatch.setattr(e1, 'find_notebooks', lambda _session, _repository: [])
-        monkeypatch.setattr(e1, 'process_notebooks',
+        monkeypatch.setattr(e2, 'find_notebooks', lambda _session, _repository: [])
+        monkeypatch.setattr(e2, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
         monkeypatch.setattr(safe_session, 'commit', lambda: (None, 'error 1'))
 
-        output = e1.process_repository(safe_session, repository, retry=True)
+        output = e2.process_repository(safe_session, repository, retry=True)
         repository = safe_session.query(Repository).first()
         assert "failed due 'error 1'" in output
         assert repository.state == REP_N_ERROR
@@ -225,10 +225,10 @@ class Test1NotebooksAndCellsProcessRepository:
         repository = RepositoryFactory(safe_session).create(state=REP_N_ERROR,
                                                             notebooks_count=1)
 
-        monkeypatch.setattr(e1, 'find_notebooks', lambda _session, _repository: [])
-        monkeypatch.setattr(e1, 'process_notebooks',
+        monkeypatch.setattr(e2, 'find_notebooks', lambda _session, _repository: [])
+        monkeypatch.setattr(e2, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
-        output = e1.process_repository(safe_session, repository, retry=True)
+        output = e2.process_repository(safe_session, repository, retry=True)
         repository = safe_session.query(Repository).first()
 
         assert repository.state == REP_N_EXTRACTED
@@ -240,10 +240,10 @@ class Test1NotebooksAndCellsProcessRepository:
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_N_ERROR)
 
-        monkeypatch.setattr(e1, 'find_notebooks', lambda _session, _repository: [])
-        monkeypatch.setattr(e1, 'process_notebooks',
+        monkeypatch.setattr(e2, 'find_notebooks', lambda _session, _repository: [])
+        monkeypatch.setattr(e2, 'process_notebooks',
                             lambda _session, _repository, _repository_notebooks_names: (1, repository))
-        output = e1.process_repository(safe_session, repository, retry=True)
+        output = e2.process_repository(safe_session, repository, retry=True)
         repository = safe_session.query(Repository).first()
 
         captured = capsys.readouterr()
@@ -256,7 +256,7 @@ class Test1NotebooksAndCellsProcessRepository:
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_N_ERROR)
 
-        output = e1.process_repository(safe_session, repository)
+        output = e2.process_repository(safe_session, repository)
 
         assert output == "already processed"
 
@@ -265,7 +265,7 @@ class Test1NotebooksAndCellsProcessRepository:
         repository = RepositoryFactory(safe_session).create(
             state=REP_N_EXTRACTED)
 
-        output = e1.process_repository(safe_session, repository)
+        output = e2.process_repository(safe_session, repository)
 
         assert output == "already processed"
 
@@ -273,7 +273,7 @@ class Test1NotebooksAndCellsProcessRepository:
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_PF_EXTRACTED)
 
-        output = e1.process_repository(safe_session, repository)
+        output = e2.process_repository(safe_session, repository)
 
         assert output == "already processed"
 
@@ -281,6 +281,6 @@ class Test1NotebooksAndCellsProcessRepository:
         safe_session = SafeSession(session, interrupted=NB_STOPPED)
         repository = RepositoryFactory(safe_session).create(state=REP_FILTERED)
 
-        output = e1.process_repository(safe_session, repository)
+        output = e2.process_repository(safe_session, repository)
 
         assert "wrong script order" in output
