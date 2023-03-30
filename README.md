@@ -4,29 +4,93 @@
 Mining Data Science projects from public repositories to identify patterns and behaviors
 
 ### Script Workflow   
+<p align="center">
+  <table>
+    <tr>
+      <th width="230px" style="text-align:center">Script</th>
+      <th width="450px" style="text-align:center">Description</th>
+    </tr>
+    <tr>
+      <td align="center">s1_collect.py</td>
+      <td>Queries projects' metadata from GitHub API</td>
+    </tr>
+    <tr>
+      <td align="center">s2_filter.ipynb</td>
+      <td>Filters and selects repositories for further extractions</td>
+    </tr>
+    <tr>
+      <td align="center">s3_extract.py</td>
+      <td>Extracts data from selected repositories</td>
+    </tr>
+  </table>
 
-| Main Scripts                 | Goal                                                     |
-| -----------------------------|--------------------------------------------------------- |  
-| s1_collect.py                | Queries projects' metadata from GitHub API               | 
-| s2_filter.ipynb              | Filters and selects repositories for futher extractions  |
-| s3_download.py               | Downloads selected repositories from GitHub              |
 
-| Extraction Scripts           | Goal                                                     |
-| -----------------------------|--------------------------------------------------------- |  
-| e1_notebooks_and_cells.py    | Extracts Notebooks and Cells from repositories           |
-| e2_python_files.py           | Extracts Python Files from repositores                   |  
-| e3_requirement_files.py      | Extracts Requirement Files from repositories             |
-| e4_markdown_cells.py         | Extracts features from markdown cells                    |
-| e5_code_cells.py             | Extracts features from code cells                        |
-| e6_python_features.py        | Extracts features from python files                      |
 
-| Analysis Scripts                    | Goal                                                         |
-| ------------------------------------|------------------------------------------------------------- |  
-| a1_collected_repositories.ipynb     | Analyzes collected repositories' features                    |
-| a2_filtered_repositories_and_git.py | Analyzes filtered repositories and git-related features      |
-| a3_languages.py                     | Analyzes language-related features                           |
-| a4_modules.py                       | Analyzes modules extracted                                   |
-| a5_data.py                          | Analyzes data inputs/outputs                                 |
+  <table>
+    <tr>
+      <th width="230px" style="text-align:center">Script</th>
+      <th width="450px" style="text-align:center">Description</th>
+    </tr>
+    <tr>
+      <td align="center">e1_download.py</td>
+      <td>Downloads selected repositories from GitHub</td>
+    </tr>
+    <tr>
+      <td align="center">e2_notebooks_and_cells.py</td>
+      <td>Extracts Notebooks and Cells from repositories</td>
+    </tr>
+    <tr>
+      <td align="center">e3_python_files.py</td>
+      <td>Extracts Python Files from repositories</td>
+    </tr>
+    <tr>
+      <td align="center">e4_requirement_files.py</td>
+      <td>Extracts Requirement Files from repositories</td>
+    </tr>
+    <tr>
+      <td align="center">e5_markdown_cells.py</td>
+      <td>Extracts features from markdown cells</td>
+    </tr>
+    <tr>
+      <td align="center">e6_code_cells.py</td>
+      <td>Extracts features from code cells</td>
+    </tr>
+    <tr>
+      <td align="center">e7_python_features.py</td>
+      <td>Extracts features from python files</td>
+    </tr>
+  </table>
+
+
+  <table>
+    <tr>
+      <th width="230px" style="text-align:center">Script</th>
+      <th width="450px" style="text-align:center">Description</th>
+    </tr>
+    <tr>
+      <td align="center">a1_collected.ipynb</td>
+      <td>Analyzes collected repositories' features</td>
+    </tr>
+    <tr>
+      <td align="center">a2_repositories_and_git.py</td>
+      <td>Analyzes filtered repositories and git-related features</td>
+    </tr>
+    <tr>
+      <td  align="center">a3_languages.py</td>
+      <td>Analyzes language-related features</td>
+    </tr>
+    <tr>
+      <td align="center">a4_modules.py</td>
+      <td>Analyzes modules extracted</td>
+    </tr>
+    <tr>
+      <td align="center">a5_data.py</td>
+      <td>Analyzes data inputs/outputs</td>
+    </tr>
+  </table>
+</p>
+
+
 
 
 
