@@ -3,7 +3,7 @@
 import os
 import argparse
 from itertools import groupby
-import src.consts as consts
+import src.config.consts as consts
 
 from future.utils.surrogateescape import register_surrogateescape
 from src.db.database import PythonFileModule, connect, PythonFileDataIO

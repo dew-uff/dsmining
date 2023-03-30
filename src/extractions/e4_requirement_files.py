@@ -2,7 +2,7 @@
 import os
 import argparse
 import chardet
-import src.consts as consts
+import src.config.consts as consts
 
 from src.db.database import RequirementFile, connect
 from src.helpers.h3_utils import vprint, savepid

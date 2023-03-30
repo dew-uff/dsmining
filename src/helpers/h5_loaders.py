@@ -1,7 +1,7 @@
 import os
 import sys
 import tarfile
-import src.consts as consts
+import src.config.consts as consts
 
 from src.config.states import REP_UNAVAILABLE_FILES
 from src.helpers.h3_utils import vprint, to_unicode, unzip_repository, get_pyexec

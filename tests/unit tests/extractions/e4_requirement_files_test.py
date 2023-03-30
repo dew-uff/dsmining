@@ -9,7 +9,7 @@ from unittest.mock import mock_open  # noqa
 
 from src.config.states import *
 from src.db.database import RequirementFile
-from src.consts import Path
+from src.config.consts import Path
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.factories.models import RequirementFileFactory

@@ -2,7 +2,7 @@
 
 import os
 import argparse
-import src.consts as consts
+import src.config.consts as consts
 
 from src.db.database import PythonFile, connect
 from src.helpers.h3_utils import vprint, savepid

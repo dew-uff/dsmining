@@ -2,7 +2,7 @@
 
 import argparse
 import os
-import src.consts as consts
+import src.config.consts as consts
 
 
 from itertools import groupby

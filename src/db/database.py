@@ -1,7 +1,7 @@
 """H andles database model and connection """
 import sys
 import subprocess
-import src.consts as consts
+import src.config.consts as consts
 
 from datetime import datetime
 from contextlib import contextmanager
@@ -12,7 +12,7 @@ from sqlalchemy import ForeignKeyConstraint, DateTime
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 
 from src.config.states import *
-from src.consts import DB_CONNECTION
+from src.config.consts import DB_CONNECTION
 from src.helpers.h3_utils import version_string_to_list
 
 BigInt = Integer
@@ -155,8 +155,8 @@ class Repository(Base):
         """Return notebook path"""
         if self.hash_dir1 and self.hash_dir2:
             return (
-                consts.Path(consts.SELECTED_REPOS_DIR) / "content" /
-                self.hash_dir1 / self.hash_dir2
+                    consts.Path(consts.SELECTED_REPOS_DIR) / "content" /
+                    self.hash_dir1 / self.hash_dir2
             )
 
     @property

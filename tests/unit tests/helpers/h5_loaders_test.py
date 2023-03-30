@@ -7,7 +7,7 @@ if src not in sys.path:
 import tarfile
 import src.helpers.h5_loaders as h5
 
-from src.consts import Path
+from src.config.consts import Path
 from src.helpers.h3_utils import to_unicode
 from src.config.states import REP_UNAVAILABLE_FILES
 from tests.stubs.others import stub_unzip

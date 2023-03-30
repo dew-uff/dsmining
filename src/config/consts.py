@@ -13,7 +13,8 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 MACHINE = os.environ.get("GITHUB_USERNAME")
 
 # Directories
-SRC_DIR = os.path.dirname(os.path.realpath(__file__))
+CONFIG_DIR = os.path.dirname(os.path.realpath(__file__))
+SRC_DIR = os.path.dirname(CONFIG_DIR)
 BASE = os.path.dirname(SRC_DIR)
 ROOT = os.path.dirname(BASE)
 EXTRACTION_DIR = SRC_DIR + os.sep + "extractions"
@@ -27,7 +28,8 @@ DB_CONNECTION_TEST = "sqlite:////{}".format(DB_FILE_TEST)
 
 
 LOGS_DIR = Path(SRC_DIR + os.sep + "logs").expanduser()
-QUERY_GRAPHQL_FILE = "{}/query.graphql".format(LOGS_DIR)
+
+QUERY_GRAPHQL_FILE = "{}/query.graphql".format(CONFIG_DIR)
 
 REPOS_DIR = ROOT + os.sep + "repos"
 SELECTED_REPOS_DIR = Path(REPOS_DIR + os.sep + "selected").expanduser()

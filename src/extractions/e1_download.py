@@ -7,7 +7,7 @@ if src not in sys.path:
     sys.path.append(src)
 
 import argparse
-import src.consts as consts
+import src.config.consts as consts
 
 from src.db.database import Commit, connect
 from src.helpers.h1_git_helpers import git, extract_hash_parts, git_output, format_commit, remove_repo_and_prepare

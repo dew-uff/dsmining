@@ -1,6 +1,6 @@
 import os
 import shutil
-from src.consts import REPOS_DIR, DB_FILE, LOGS_DIR
+from src.config.consts import REPOS_DIR, DB_FILE, LOGS_DIR
 
 REPOS = True
 DATABASE = True
@@ -18,5 +18,7 @@ if DATABASE:
 
 if LOGS:
     if os.path.exists(LOGS_DIR):
-        shutil.rmtree(LOGS_DIR)
+        for root, dirs, files in os.walk(LOGS_DIR, topdown=False):
+            for folder in dirs:
+                shutil.rmtree(os.path.join(root, folder))
         print("Deleted logs")

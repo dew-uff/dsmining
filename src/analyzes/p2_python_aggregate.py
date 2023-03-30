@@ -1,7 +1,7 @@
 """Load markdown features"""
 import argparse
 import os
-import src.config as config
+import src.config.consts as consts
 
 from src.db.database import connect
 from src.db.database import Module
@@ -36,7 +36,8 @@ def apply(
     """Extract code cell features"""
 
     query = filter_python_files(
-        session=session, selected_repositories=False,
+        session=session, selected_python_files=False,
+        selected_repositories=False,
         count=count, interval=interval, reverse=reverse
     )
 
@@ -65,7 +66,7 @@ def main():
     parser = set_up_argument_parser(parser, script_name)
     args = parser.parse_args()
 
-    config.VERBOSE = args.verbose
+    consts.VERBOSE = args.verbose
     status = None
     if not args.count:
         status = StatusLogger(script_name)

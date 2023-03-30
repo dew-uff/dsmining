@@ -5,7 +5,7 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-from src.consts import TEST_REPOS_DIR
+from src.config.consts import TEST_REPOS_DIR
 from src.db.database import Commit
 from src.classes.c1_safe_session import SafeSession
 from src.config.states import *
@@ -16,7 +16,7 @@ from tests.stubs.commits import stub_repo_commits, mock_load_rep_and_commits
 
 import shutil
 import pytest
-import src.consts as consts
+import src.config.consts as consts
 import src.extractions.e1_download as e1
 
 

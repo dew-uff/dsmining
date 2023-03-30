@@ -7,7 +7,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import dask.dataframe as dd
-import src.consts as consts
+import src.config.consts as consts
 import matplotlib.ticker as ticker
 
 from contextlib import contextmanager

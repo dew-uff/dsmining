@@ -6,7 +6,7 @@ from datetime import datetime
 import select
 import sys
 
-from src.consts import EXTRACTION_DIR, SRC_DIR, LOGS_DIR
+from src.config.consts import EXTRACTION_DIR, SRC_DIR, LOGS_DIR
 from src.db.database import connect, Repository
 from src.helpers.h3_utils import check_exit, savepid, vprint
 from src.classes.c2_status_logger import StatusLogger

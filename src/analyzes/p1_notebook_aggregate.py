@@ -1,7 +1,7 @@
 """Load markdown features"""
 import argparse
 import os
-import src.config as config
+import src.config.consts as consts
 
 from src.db.database import connect, NotebookMarkdown, Cell
 from src.db.database import Module
@@ -100,7 +100,7 @@ def main():
     parser = set_up_argument_parser(parser, script_name)
 
     args = parser.parse_args()
-    config.VERBOSE = args.verbose
+    consts.VERBOSE = args.verbose
 
     status = None
     if not args.count:

@@ -3,7 +3,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.consts import DB_CONNECTION_TEST
+from src.config.consts import DB_CONNECTION_TEST
 from src.db.database import Base
 
 engine = create_engine(DB_CONNECTION_TEST, convert_unicode=True, echo=False)

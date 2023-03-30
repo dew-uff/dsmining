@@ -2,7 +2,7 @@
 
 import os
 import argparse
-import src.consts as consts
+import src.config.consts as consts
 
 from langdetect import detect
 from nltk.corpus import stopwords

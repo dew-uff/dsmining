@@ -3,7 +3,7 @@
 import os
 import argparse
 import nbformat as nbf
-import src.consts as consts
+import src.config.consts as consts
 
 from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect

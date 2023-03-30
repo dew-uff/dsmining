@@ -5,7 +5,7 @@ if src not in sys.path:
     sys.path.append(src)
 
 from src.config.states import *
-from src.consts import LOGS_DIR, Path
+from src.config.consts import LOGS_DIR, Path
 from src.classes.c1_safe_session import SafeSession
 from src.db.database import Repository, Notebook, Cell
 from tests.database_config import connection, session  # noqa: F401

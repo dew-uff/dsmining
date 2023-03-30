@@ -3,7 +3,7 @@ from __future__ import print_function
 import csv
 import os
 import time
-import src.consts as consts
+import src.config.consts as consts
 
 
 class StatusLogger(object):

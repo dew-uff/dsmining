@@ -7,7 +7,7 @@ if src not in sys.path:
 
 from unittest.mock import mock_open  # noqa
 
-from src.consts import Path
+from src.config.consts import Path
 from src.config.states import *
 from src.db.database import Repository, PythonFile
 from tests.database_config import connection, session  # noqa: F401

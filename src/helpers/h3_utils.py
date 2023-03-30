@@ -8,9 +8,9 @@ import ast
 import bisect
 import fnmatch
 import subprocess
-import src.consts as consts
+import src.config.consts as consts
 
-from src.consts import Path
+from src.config.consts import Path, LOGS_DIR
 from contextlib import contextmanager
 from src.classes.c5_cell_visitor import CellVisitor
 from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
@@ -35,14 +35,14 @@ def savepid():
     pid = None
     try:
         pid = os.getpid()
-        with open("../.pid", "a") as fil:
+        with open("{}/.pid".format(LOGS_DIR), "a") as fil:
             fil.write("{}\n".format(pid))
         yield pid
     finally:
-        with open("../.pid", "r") as fil:
+        with open("{}/.pid".format(LOGS_DIR), "r") as fil:
             pids = fil.readlines()
 
-        with open("../.pid", "w") as fil:
+        with open("{}/.pid".format(LOGS_DIR), "w") as fil:
             fil.write("\n".join(
                 p.strip()
                 for p in pids

@@ -7,8 +7,10 @@ import pytz
 import requests
 
 from pprint import pprint
+
+from src.config.consts import QUERY_GRAPHQL_FILE
 from src.db.database import connect, Query
-from src.helpers.h3_utils import savepid
+from src.helpers.h3_utils import savepid, vprint
 from datetime import datetime, timedelta
 
 SELECTED_WORDS = ['"Data Science"', '"Ciência de Dados"',
@@ -52,7 +54,7 @@ def process_repositories(session, count, some_repositories, page_info):
         ).first()
 
         if query_rep is not None:
-            print(f">> Query Repository already exists: ID={query_rep.id}")
+            vprint(2, "Query Repository already exists: ID={}".format(query_rep.id))
         else:
             count = add_repository(session, repo, page_info, count)
 
@@ -71,7 +73,7 @@ def query_filter(min_pushed=None):
 
     query += words
     if min_pushed:
-        query += f" pushed:>={min_pushed:%Y-%m-%d}"
+        query += " pushed:>={:%Y-%m-%d}".format(min_pushed)
     query += " sort:updated-asc"
 
     return query
@@ -90,7 +92,7 @@ def set_up_query_params(min_pushed):
         exit(1)
 
     headers = {
-        'Authorization': f'bearer {token}'
+        'Authorization': 'bearer {}'.format(token)
     }
 
     variables = {
@@ -98,8 +100,7 @@ def set_up_query_params(min_pushed):
         'repositoriesPerPage': 10,  # from 1 to 100
         'cursor': None
     }
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    query_file_path = f'{current_dir}/query.graphql'
+    query_file_path = QUERY_GRAPHQL_FILE
     request = {
         'query': open(query_file_path, 'r').read(),
         'variables': variables
@@ -124,19 +125,20 @@ def apply(session, min_pushed):
         processed_repositories = 0
 
         while has_next_page and to_process_repositories != 0:
-            print(f'Trying to retrieve the next {variables["repositoriesPerPage"]}'
-                  f' repositories (pushedAt >= {min_pushed})...')
+            print('Trying to retrieve the next {} repositories (pushedAt >= {})...'
+                  .format(variables["repositoriesPerPage"], min_pushed))
+
             try:
                 response = requests.post(url="https://api.github.com/graphql", json=request, headers=headers)
                 result = response.json()
 
                 if 'Retry-After' in response.headers:  # reached retry limit
-                    print(f'Waiting for {response.headers["Retry-After"]} seconds before continuing...', end=' ')
-                    time.sleep(int(response.headers['Retry-After']))
+                    print('Waiting for {} seconds before continuing...'
+                          .format(response.headers["Retry-After"]), end=' ')
 
                 if 'errors' in result:
                     if 'timeout' in result['errors'][0]['message']:  # reached timeout
-                        print(f'Timeout!', end=' ')
+                        print('Timeout!', end=' ')
                         variables['repositoriesPerPage'] = int(max(1, variables['repositoriesPerPage'] * md))
                         # using AIMD
                         ai = 1  # resetting slow start
@@ -159,8 +161,12 @@ def apply(session, min_pushed):
                     to_process_repositories = repository_count - processed_repositories
 
                     print(
-                        f'Processed {processed_repositories} of {repository_count} repositories '
-                        f'at {datetime.now():%H:%M:%S}.', end=' '
+                        'Processed {} of {} repositories at {}.'
+                        .format(processed_repositories,
+                                repository_count,
+                                datetime.now().strftime('%H:%M:%S')
+                                ),
+                        end=' '
                     )
 
                     # Gets last repository's pushedAt field from response for the next iteration
@@ -174,11 +180,11 @@ def apply(session, min_pushed):
 
                         if process_repositories == repository_count:
                             # We have finished all repositories
-                            print(f'Finished.')
+                            print('Finished.')
                             has_next_page = False
                         elif result["data"]["search"]["repositoryCount"] > 1000:
                             # We reached the 1,000 repositories limit
-                            print(f'We reached the limit of 1,000 repositories.', end=' ')
+                            print('We reached the limit of 1,000 repositories.', end=' ')
 
                             # some overlap to accommodate changes in date pushed
                             min_pushed = min_pushed - timedelta(hours=12)
@@ -186,7 +192,7 @@ def apply(session, min_pushed):
                             variables['filter'] = query_filter(min_pushed)
                             variables['cursor'] = None
                         else:
-                            print(f'Finished.')
+                            print('Finished.')
                             has_next_page = False
             except Exception: # noqa
                 print('Possibly Incomplete read, trying again.')

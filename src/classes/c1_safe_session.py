@@ -1,7 +1,7 @@
 from __future__ import print_function
 from src.config.states import NB_STOPPED, NB_LOADED, REP_STOPPED, REP_LOADED
 
-import src.consts as consts
+import src.config.consts as consts
 
 
 class SafeSession(object):
