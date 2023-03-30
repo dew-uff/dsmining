@@ -196,3 +196,22 @@ def get_pyexec(version, versions):
 def invoke(program, *args):
     """Invoke program"""
     return subprocess.check_call([program] + list(map(str, args)))
+
+
+def get_next_pyexec():
+    version = "{}.{}".format(sys.version_info.major, sys.version_info.minor)
+
+    if version == '3.8':
+        next_version = 'dsm27'
+    elif version == '2.7':
+        next_version = 'dsm35'
+    else:
+        raise SyntaxError
+
+    return str(
+        config.ANACONDA_PATH / "envs"
+        / next_version
+        / "bin" / "python"
+    )
+
+

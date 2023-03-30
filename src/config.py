@@ -1,6 +1,5 @@
 import sys
 import os
-import dateutil.parser
 
 if sys.version_info < (3, 5):
     from pathlib2 import Path

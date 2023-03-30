@@ -105,14 +105,18 @@ def filter_code_cells(session, selected_notebooks, selected_repositories,
     return query
 
 
-def filter_python_files(session, selected_repositories,
+def filter_python_files(session, selected_python_files, selected_repositories,
                         count, interval, reverse):
     filters = [
         PythonFile.state != PF_EMPTY
     ]
 
+    if selected_python_files:
+        filters += [PythonFile.id.in_(selected_python_files)]
+
     if selected_repositories:
         filters += [PythonFile.repository_id.in_(selected_repositories)]
+
     if interval:
         filters += [
             PythonFile.repository_id >= interval[0],

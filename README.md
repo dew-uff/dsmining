@@ -56,7 +56,6 @@ conda create -n dsm35 python=3.5 -y
 conda activate dsm35
 pip install --upgrade pip
 pip install -r requirements.txt
-conda install sqlalchemy
 ```
 
 ### Conda 3.8

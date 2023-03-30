@@ -7,9 +7,9 @@ class CellVisitor(ast.NodeVisitor):
     def __init__(self, local_checker):
         self.local_checker = local_checker
 
-        self.input_modes = ["r","rb"]
-        self.output_modes = ["w","wb", "x", "xb", "a", "ab"]
-        self.input_functions_names = ["read","open"]
+        self.input_modes = ["r", "rb"]
+        self.output_modes = ["w", "wb", "x", "xb", "a", "ab"]
+        self.input_functions_names = ["read", "open"]
         self.output_functions_names = ["to_"]
 
         self.modules = []

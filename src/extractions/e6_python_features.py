@@ -2,13 +2,15 @@
 
 import os
 import argparse
+from itertools import groupby
+
 import src.config as config
 
 from future.utils.surrogateescape import register_surrogateescape
 from src.db.database import PythonFileModule, connect, PythonFileDataIO
-from src.helpers.h3_utils import vprint, check_exit, savepid, extract_features
+from src.helpers.h3_utils import vprint, check_exit, savepid, extract_features, get_next_pyexec, invoke
+from timeout_decorator import TimeoutError  # noqa: F401
 from src.classes.c2_status_logger import StatusLogger
-from src.helpers.h3_utils import TimeoutError
 from src.classes.c1_safe_session import SafeSession
 from src.helpers.h2_script_helpers import set_up_argument_parser
 from src.helpers.h4_filters import filter_python_files
@@ -17,7 +19,7 @@ from src.states import *
 
 
 def process_python_file(
-    session, repository_id, python_file, checker,
+    session, dispatches, repository_id, python_file, checker,
     retry_error=False, retry_syntax_error=False, retry_timeout=False
 ):
     """ Processes Python File to collect features """
@@ -47,8 +49,13 @@ def process_python_file(
             python_file.state = PF_PROCESS_TIMEOUT
             return 'Failed due to  Time Out Error.'
         except SyntaxError:
-            python_file.state = PF_SYNTAX_ERROR
-            return 'Failed due to Syntax Error.'
+            try:
+                pyexec = get_next_pyexec()
+                dispatches.add((python_file.id, pyexec))
+                return 'Dispatched to {}.'.format(pyexec)
+            except Exception:  # noqa
+                python_file.state = PF_SYNTAX_ERROR
+                return 'Failed due to Syntax Error.'
 
         vprint(2, "Adding session objects")
         for line, import_type, module_name, local in modules:
@@ -96,14 +103,15 @@ def process_python_file(
 
 
 def apply(
-    session, status, selected_repositories,
-    retry_error, retry_syntax_error, retry_timeout,
-    count, interval, reverse, check
+    session, status, dispatches, selected_python_files,
+    selected_repositories, retry_error, retry_syntax_error,
+    retry_timeout, count, interval, reverse, check
 ):
     """Aggregate Python Files' features"""
 
     query = filter_python_files(
-        session=session, selected_repositories=selected_repositories,
+        session=session, selected_python_files=selected_python_files,
+        selected_repositories=selected_repositories,
         count=count, interval=interval, reverse=reverse
     )
 
@@ -140,7 +148,7 @@ def apply(
         vprint(2, 'Processing Python File: {}'.format(python_file))
 
         result = process_python_file(
-            session, repository_id, python_file, checker,
+            session, dispatches, repository_id, python_file, checker,
             retry_error, retry_syntax_error, retry_timeout
         )
 
@@ -150,6 +158,27 @@ def apply(
     session.commit()
 
 
+def pos_apply(dispatches, retry_errors, retry_timeout, verbose):
+    """Dispatch execution to other python versions"""
+    key = lambda x: x[1]
+    dispatches = sorted(list(dispatches), key=key)
+    for pyexec, disp in groupby(dispatches, key=key):
+        vprint(0, "Retrying to extract with {}".format(pyexec))
+        extra = []
+        if retry_errors:
+            extra.append("-e")
+        if retry_timeout:
+            extra.append("-t")
+        extra.append("-p")
+
+        python_files_ids = [x[0] for x in disp]
+        while python_files_ids:
+            ids = python_files_ids[:20000]
+            args = extra + ids
+            invoke(pyexec, "-u", __file__, "-v", verbose, *args)
+            python_files_ids = python_files_ids[20000:]
+
+
 def main():
     """Main function"""
     register_surrogateescape()
@@ -157,6 +186,8 @@ def main():
 
     parser = argparse.ArgumentParser(description='Execute repositories')
     parser = set_up_argument_parser(parser, script_name, "python_files")
+    parser.add_argument("-p", "--python-files", type=int, default=None,
+                        nargs="*", help="python files ids")
     args = parser.parse_args()
 
     config.VERBOSE = args.verbose
@@ -165,11 +196,14 @@ def main():
         status = StatusLogger(script_name)
         status.report()
 
+    dispatches = set()
     with savepid():
         with connect() as session:
             apply(
                 session=SafeSession(session),
                 status=status,
+                dispatches=dispatches,
+                selected_python_files=args.python_files,
                 selected_repositories=args.repositories,
                 retry_error=True if args.retry_errors else False,
                 retry_syntax_error=0 if args.retry_syntaxerrors else False,
@@ -179,6 +213,14 @@ def main():
                 reverse=args.reverse,
                 check=set(args.check)
             )
+
+            if bool(dispatches):
+                pos_apply(
+                    dispatches,
+                    args.retry_errors,
+                    args.retry_timeout,
+                    args.verbose
+                )
 
 
 if __name__ == '__main__':

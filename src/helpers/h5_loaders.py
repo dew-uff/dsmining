@@ -51,7 +51,7 @@ def load_files(
     if archives is None:
         return True, True, file.id, archives, None
 
-    vprint(1, 'Processing file: {}'.format(file))
+    vprint(1, 'Loading file: {}'.format(file))
     name = to_unicode(file.name)
 
     tarzip, repo_path = archives
@@ -104,7 +104,7 @@ def load_repository(session, file, skip_repo, repository_id,
                 repository, msg
             ))
 
-        vprint(0, 'Processing repository: {}'.format(repository))
+        vprint(0, 'Loading repository: {}'.format(repository))
         return False, file.repository_id, repository, "todo"
 
     return skip_repo, repository_id, repository, archives
