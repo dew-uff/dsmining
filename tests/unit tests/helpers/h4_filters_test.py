@@ -392,6 +392,7 @@ class TestFilterPythonFiles:
 
         query = filter_python_files(
             session=session,
+            selected_python_files=None,
             selected_repositories=None,
             count=False,
             interval=None,
@@ -409,6 +410,7 @@ class TestFilterPythonFiles:
 
         filter_python_files(
             session=session,
+            selected_python_files=None,
             selected_repositories=None,
             count=True,
             interval=None,
@@ -427,6 +429,7 @@ class TestFilterPythonFiles:
 
         query = filter_python_files(
             session=session,
+            selected_python_files=None,
             selected_repositories=None,
             count=False,
             interval=None,
@@ -446,6 +449,7 @@ class TestFilterPythonFiles:
 
         query = filter_python_files(
             session=session,
+            selected_python_files=None,
             selected_repositories=None,
             count=False,
             interval=[1, 2],
@@ -455,6 +459,26 @@ class TestFilterPythonFiles:
         assert query.count() == 2
         assert pf1, pf2 in query.all()
         assert pf3 not in query.all()
+
+    def test_filter_selected_python_files(self, session):
+        repo1 = RepositoryFactory(session).create()
+        PythonFileFactory(session).create(repository_id=repo1.id)
+        PythonFileFactory(session).create(repository_id=repo1.id)
+        PythonFileFactory(session).create(repository_id=repo1.id)
+
+        assert len(session.query(PythonFile).all()) == 3
+
+        query = filter_python_files(
+            session=session,
+            selected_python_files=[1, 2],
+            selected_repositories=None,
+            count=False,
+            interval=None,
+            reverse=False
+        )
+
+        assert query.count() == 2
+        assert session.query(PythonFile).filter(PythonFile.id == 3) not in query
 
     def test_filter_selected_repositories(self, session):
         repo1, repo2, repo3 = RepositoryFactory(session).create_batch(3)
@@ -466,6 +490,7 @@ class TestFilterPythonFiles:
 
         query = filter_python_files(
             session=session,
+            selected_python_files=None,
             selected_repositories=[2],
             count=False,
             interval=None,
@@ -483,6 +508,7 @@ class TestFilterPythonFiles:
 
         query = filter_python_files(
             session=session,
+            selected_python_files=None,
             selected_repositories=None,
             count=False,
             interval=None,

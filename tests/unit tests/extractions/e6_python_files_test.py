@@ -17,7 +17,7 @@ from tests.factories.models import RepositoryFactory, PythonFileFactory
 from tests.factories.models import PythonFileModuleFactory, PythonFileDataIOFactory
 
 
-class TestE6PythonFilesExtract:
+class TestPythonFilesExtract:
     def test_process_python_file(self, session):
         module_name = 'pandas'
         caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
@@ -25,13 +25,16 @@ class TestE6PythonFilesExtract:
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
             repository_id=repository.id,
-            source=f"import {module_name} as pd\ndf={caller}.{function_name}({source})",
+            source="import {} as pd\ndf={}.{}({})".format(module_name, caller, function_name, source),
             state=PF_LOADED
         )
 
         checker = PathLocalChecker("")
-        result = process_python_file(session=session, repository_id=repository.id,
-                                     python_file=python_file, checker=checker)
+        dispatches = set()
+
+        result = process_python_file(session=session, dispatches=dispatches,
+                                     repository_id=repository.id, python_file=python_file,
+                                     checker=checker)
         session.commit()
         module = session.query(PythonFileModule).first()
         data_io = session.query(PythonFileDataIO).first()
@@ -55,8 +58,11 @@ class TestE6PythonFilesExtract:
             state=PF_PROCESSED
         )
         checker = PathLocalChecker("")
-        result = process_python_file(session=session, repository_id=repository.id,
-                                     python_file=python_file, checker=checker)
+        dispatches = set()
+
+        result = process_python_file(session=session, dispatches=dispatches,
+                                     repository_id=repository.id, python_file=python_file,
+                                     checker=checker)
         session.commit()
 
         assert result == 'already processed'
@@ -69,14 +75,16 @@ class TestE6PythonFilesExtract:
             state=PF_LOADED
         )
         checker = PathLocalChecker("")
+        dispatches = set()
 
         def mock_extract(_source, _checker):
             raise TimeoutError
 
         monkeypatch.setattr(e6, 'extract_features', mock_extract)
 
-        result = process_python_file(session=session, repository_id=repository.id,
-                                     python_file=python_file, checker=checker)
+        result = process_python_file(session=session, dispatches=dispatches,
+                                     repository_id=repository.id, python_file=python_file,
+                                     checker=checker)
         session.commit()
 
         assert result == 'Failed due to  Time Out Error.'
@@ -89,18 +97,24 @@ class TestE6PythonFilesExtract:
             state=PF_LOADED
         )
         checker = PathLocalChecker("")
+        dispatches = set()
 
         def mock_extract(_source, _checker):
             raise SyntaxError
 
         monkeypatch.setattr(e6, 'extract_features', mock_extract)
 
-        result = process_python_file(session=session, repository_id=repository.id,
-                                     python_file=python_file, checker=checker)
+        result = process_python_file(session=session, dispatches=dispatches,
+                                     repository_id=repository.id, python_file=python_file,
+                                     checker=checker)
         session.commit()
+        dispatches = list(dispatches)
 
-        assert result == 'Failed due to Syntax Error.'
-        assert python_file.state == PF_SYNTAX_ERROR
+        assert 'Dispatched to' in result
+        assert len(dispatches) == 1
+        assert dispatches[0][0] == python_file.id
+        assert "dsm27" in dispatches[0][1]
+        assert python_file.state == PF_LOADED
 
     def test_process_python_file_other_errors(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
@@ -109,14 +123,16 @@ class TestE6PythonFilesExtract:
             state=PF_LOADED
         )
         checker = PathLocalChecker("")
+        dispatches = set()
 
         def mock_extract(_source, _checker):
             raise ValueError
 
         monkeypatch.setattr(e6, 'extract_features', mock_extract)
 
-        result = process_python_file(session=session, repository_id=repository.id,
-                                     python_file=python_file, checker=checker)
+        result = process_python_file(session=session, dispatches=dispatches,
+                                     repository_id=repository.id, python_file=python_file,
+                                     checker=checker)
         session.commit()
 
         assert 'Failed to process' in result
@@ -129,9 +145,10 @@ class TestE6PythonFilesExtract:
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
             repository_id=repository.id, state=PF_PROCESS_ERROR,
-            source=f"import {module_name} as pd\ndf={caller}.{function_name}({source})"
+            source="import {} as pd\ndf={}.{}({})".format(module_name, caller, function_name, source),
         )
         checker = PathLocalChecker("")
+        dispatches = set()
 
         python_file_module = PythonFileModuleFactory(session).create(repository_id=repository.id,
                                                                      python_file_id=python_file.id)
@@ -140,9 +157,9 @@ class TestE6PythonFilesExtract:
         pm_created_at = python_file_module.created_at
         pd_created_at = python_file_data_io.created_at
 
-        result = process_python_file(session=session, repository_id=repository.id,
-                                     python_file=python_file, checker=checker,
-                                     retry_error=True)
+        result = process_python_file(session=session, dispatches=dispatches,
+                                     repository_id=repository.id, python_file=python_file,
+                                     checker=checker, retry_error=True)
         session.commit()
         module = session.query(PythonFileModule).first()
         data_io = session.query(PythonFileDataIO).first()
@@ -163,9 +180,10 @@ class TestE6PythonFilesExtract:
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
             repository_id=repository.id, state=PF_SYNTAX_ERROR,
-            source=f"import {module_name} as pd\ndf={caller}.{function_name}({source})"
+            source="import {} as pd\ndf={}.{}({})".format(module_name, caller, function_name, source),
         )
         checker = PathLocalChecker("")
+        dispatches = set()
 
         python_file_module = PythonFileModuleFactory(session).create(repository_id=repository.id,
                                                                      python_file_id=python_file.id)
@@ -174,9 +192,9 @@ class TestE6PythonFilesExtract:
         pm_created_at = python_file_module.created_at
         pd_created_at = python_file_data_io.created_at
 
-        result = process_python_file(session=session, repository_id=repository.id,
-                                     python_file=python_file, checker=checker,
-                                     retry_syntax_error=True)
+        result = process_python_file(session=session, dispatches=dispatches,
+                                     repository_id=repository.id, python_file=python_file,
+                                     checker=checker, retry_syntax_error=True)
         session.commit()
         module = session.query(PythonFileModule).first()
         data_io = session.query(PythonFileDataIO).first()
@@ -197,9 +215,10 @@ class TestE6PythonFilesExtract:
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
             repository_id=repository.id, state=PF_PROCESS_TIMEOUT,
-            source=f"import {module_name} as pd\ndf={caller}.{function_name}({source})"
+            source="import {} as pd\ndf={}.{}({})".format(module_name, caller, function_name, source),
         )
         checker = PathLocalChecker("")
+        dispatches = set()
 
         python_file_module = PythonFileModuleFactory(session).create(repository_id=repository.id,
                                                                      python_file_id=python_file.id)
@@ -208,9 +227,9 @@ class TestE6PythonFilesExtract:
         pm_created_at = python_file_module.created_at
         pd_created_at = python_file_data_io.created_at
 
-        result = process_python_file(session=session, repository_id=repository.id,
-                                     python_file=python_file, checker=checker,
-                                     retry_timeout=True)
+        result = process_python_file(session=session, dispatches=dispatches,
+                                     repository_id=repository.id, python_file=python_file,
+                                     checker=checker, retry_timeout=True)
         session.commit()
         module = session.query(PythonFileModule).first()
         data_io = session.query(PythonFileDataIO).first()

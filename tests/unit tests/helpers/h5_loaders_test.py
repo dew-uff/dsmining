@@ -41,7 +41,7 @@ class TestLoadRepository:
         assert repository_id == cell.repository_id == repository.id
         assert initial_repo == repository
         assert archives == 'todo'
-        assert "Processing repository" in captured.out
+        assert "Loading repository" in captured.out
 
     def test_load_repository_notebook_success(self, session, capsys):
         safe_session = SafeSession(session)
@@ -111,7 +111,7 @@ class TestLoadRepository:
         assert repository_id == python_file.repository_id == repository.id
         assert initial_repo == repository
         assert archives == 'todo'
-        assert "Processing repository" in captured.out
+        assert "Loading repository" in captured.out
 
     def test_load_repository_python_file_success(self, session, capsys):
         safe_session = SafeSession(session)
