@@ -1,4 +1,8 @@
 
+# Extractions
+EXTRACTED_SUCCESS = "extracted_repositories"
+EXTRACTED_ERROR = "error_extracting_repositories"
+
 
 # Repositories
 REP_FILTERED = "repository_filtered"

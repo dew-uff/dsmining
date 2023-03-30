@@ -1,4 +1,4 @@
-"""H andles database model and connection """
+""" Handles database model and connection """
 import sys
 import subprocess
 import src.config.consts as consts
@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy import ForeignKeyConstraint, DateTime
+from sqlalchemy import ForeignKeyConstraint, DateTime, Interval
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 
 from src.config.states import *
@@ -73,17 +73,30 @@ class Query(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
+    repositories_objs = one_to_many("Repository", "query_obj")
+
     @force_encoded_string_output
     def __repr__(self):
-        return u"<Query({})>".format(self.query)
+        return u"<Query({0.id})>".format(self.query)
 
 
 class Repository(Base):
     """Repository Table"""
     # pylint: disable=invalid-name
     __tablename__ = 'repositories'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['extraction_id'],
+            ['extractions.id']
+        ),
+        ForeignKeyConstraint(
+            ['query_id'],
+            ['queries.id']
+        ),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    query_id = Column(Integer)
     state = Column(Enum(REP_FILTERED,
                         REP_LOADED,
                         REP_FAILED_TO_CLONE,
@@ -100,6 +113,7 @@ class Repository(Base):
 
     domain = Column(String)
     repository = Column(String)
+    extraction_id = Column(Integer)
     primary_language = Column(String)
     disk_usage = Column(String)
     is_mirror = Column(Boolean)
@@ -145,10 +159,12 @@ class Repository(Base):
     cell_markdown_features_objs = one_to_many("CellMarkdownFeature", "repository_obj")
     cell_modules_objs = one_to_many("CellModule", "repository_obj")
     cell_data_ios_objs = one_to_many("CellDataIO", "repository_obj")
-    files_objs = one_to_many("RepositoryFile", "repository_obj")
 
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "repository_obj")
     modules_objs = one_to_many("Module", "repository_obj")
+
+    extraction_obj = many_to_one("Extraction", "repositories_objs")
+    query_obj = many_to_one("Query", "repositories_objs")
 
     @property
     def path(self):
@@ -243,132 +259,6 @@ class Commit(Base):
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
     repository_obj = many_to_one("Repository", "commits_objs")
-
-
-class PythonFile(Base):
-    """Pyhton File Table"""
-    # pylint: disable=invalid-name
-    __tablename__ = 'python_files'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    repository_id = Column(Integer)
-    state = Column(Enum(PF_LOADED, PF_EMPTY, PF_L_ERROR,
-                        PF_PROCESSED, PF_PROCESS_ERROR, PF_PROCESS_TIMEOUT,
-                        PF_SYNTAX_ERROR, PF_AGGREGATED,
-                        name='python_files_states',
-                        validate_strings=True), default=PF_LOADED)
-    name = Column(String)
-    source = Column(String)
-    total_lines = Column(Integer)
-    processed = Column(Integer, default=0)
-
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
-
-    repository_obj = many_to_one("Repository", "python_files_objs")
-
-    python_file_modules_objs = one_to_many("PythonFileModule", "python_file_obj")
-    python_file_data_ios_objs = one_to_many("PythonFileDataIO", "python_file_obj")
-
-    modules_objs = one_to_many("Module", "python_file_obj")
-
-    @property
-    def path(self):
-        """Return python file path"""
-        return self.repository_obj.path / self.name
-
-    @force_encoded_string_output
-    def __repr__(self):
-        return u"<PythonFile({0.repository_id}/{0.id}:{0.name})>".format(
-            self
-        )
-
-
-class PythonFileModule(Base):
-    """Python Modules Table"""
-    # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'python_file_modules'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['python_file_id'],
-            ['python_files.id']
-        ),
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    repository_id = Column(Integer)
-    python_file_id = Column(Integer)
-
-    line = Column(Integer)
-    import_type = Column(String)
-    module_name = Column(String)
-    local = Column(Boolean)
-    skip = Column(Integer, default=0)
-
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
-
-    python_file_obj = many_to_one("PythonFile", "python_file_modules_objs")
-    repository_obj = many_to_one("Repository", "python_file_modules_objs")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        return (
-            u"<Module({0.repository_id}/{0.python_file_id}/"
-            u"{0.id}:{0.import_type})>"
-        ).format(self)
-
-
-class PythonFileDataIO(Base):
-    """Python Data Table"""
-    # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'python_file_data_ios'
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['python_file_id'],
-            ['python_files.id']
-        ),
-        ForeignKeyConstraint(
-            ['repository_id'],
-            ['repositories.id']
-        ),
-    )
-
-    id = Column(Integer, autoincrement=True, primary_key=True)
-    repository_id = Column(Integer)
-    python_file_id = Column(Integer)
-
-    line = Column(Integer)
-    type = Column(String)
-    caller = Column(String)
-    function_name = Column(String)
-    function_type = Column(String)
-    source = Column(String)
-    source_type = Column(String)
-    skip = Column(Integer, default=0)
-
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
-
-    python_file_obj = many_to_one("PythonFile", "python_file_data_ios_objs")
-    repository_obj = many_to_one("Repository", "python_file_data_ios_objs")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        return (
-            u"<Data({0.repository_id}/{0.python_file_id}/"
-            u"{0.id}:{0.function_name})>"
-        ).format(self)
 
 
 class Notebook(Base):
@@ -500,6 +390,51 @@ class Cell(Base):
         return (
             u"<Cell({0.repository_id}/{0.notebook_id}/{0.id}[{0.index}])>"
         ).format(self)
+
+
+class PythonFile(Base):
+    """Pyhton File Table"""
+    # pylint: disable=invalid-name
+    __tablename__ = 'python_files'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['repository_id'],
+            ['repositories.id']
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    repository_id = Column(Integer)
+    state = Column(Enum(PF_LOADED, PF_EMPTY, PF_L_ERROR,
+                        PF_PROCESSED, PF_PROCESS_ERROR, PF_PROCESS_TIMEOUT,
+                        PF_SYNTAX_ERROR, PF_AGGREGATED,
+                        name='python_files_states',
+                        validate_strings=True), default=PF_LOADED)
+    name = Column(String)
+    source = Column(String)
+    total_lines = Column(Integer)
+    processed = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
+    repository_obj = many_to_one("Repository", "python_files_objs")
+
+    python_file_modules_objs = one_to_many("PythonFileModule", "python_file_obj")
+    python_file_data_ios_objs = one_to_many("PythonFileDataIO", "python_file_obj")
+
+    modules_objs = one_to_many("Module", "python_file_obj")
+
+    @property
+    def path(self):
+        """Return python file path"""
+        return self.repository_obj.path / self.name
+
+    @force_encoded_string_output
+    def __repr__(self):
+        return u"<PythonFile({0.repository_id}/{0.id}:{0.name})>".format(
+            self
+        )
 
 
 class RequirementFile(Base):
@@ -822,11 +757,15 @@ class CellDataIO(Base):
         ).format(self)
 
 
-class RepositoryFile(Base):
-    """Repository Files Table"""
+class PythonFileModule(Base):
+    """Python Modules Table"""
     # pylint: disable=too-few-public-methods, invalid-name
-    __tablename__ = 'repository_files'
+    __tablename__ = 'python_file_modules'
     __table_args__ = (
+        ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
         ForeignKeyConstraint(
             ['repository_id'],
             ['repositories.id']
@@ -835,20 +774,96 @@ class RepositoryFile(Base):
 
     id = Column(Integer, autoincrement=True, primary_key=True)
     repository_id = Column(Integer)
-    path = Column(String)
-    size = Column(BigInt)
+    python_file_id = Column(Integer)
+
+    line = Column(Integer)
+    import_type = Column(String)
+    module_name = Column(String)
+    local = Column(Boolean)
     skip = Column(Integer, default=0)
-    had_surrogates = Column(Boolean, default=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
-    repository_obj = many_to_one("Repository", "files_objs")
+    python_file_obj = many_to_one("PythonFile", "python_file_modules_objs")
+    repository_obj = many_to_one("Repository", "python_file_modules_objs")
 
     @force_encoded_string_output
     def __repr__(self):
         return (
-            u"<File({0.repository_id}/{0.id})>"
+            u"<Module({0.repository_id}/{0.python_file_id}/"
+            u"{0.id}:{0.import_type})>"
+        ).format(self)
+
+
+class PythonFileDataIO(Base):
+    """Python Data Table"""
+    # pylint: disable=too-few-public-methods, invalid-name
+    __tablename__ = 'python_file_data_ios'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
+            ['repository_id'],
+            ['repositories.id']
+        ),
+    )
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    repository_id = Column(Integer)
+    python_file_id = Column(Integer)
+
+    line = Column(Integer)
+    type = Column(String)
+    caller = Column(String)
+    function_name = Column(String)
+    function_type = Column(String)
+    source = Column(String)
+    source_type = Column(String)
+    skip = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
+    python_file_obj = many_to_one("PythonFile", "python_file_data_ios_objs")
+    repository_obj = many_to_one("Repository", "python_file_data_ios_objs")
+
+    @force_encoded_string_output
+    def __repr__(self):
+        return (
+            u"<Data({0.repository_id}/{0.python_file_id}/"
+            u"{0.id}:{0.function_name})>"
+        ).format(self)
+
+
+class Extraction(Base):
+    """Repository Files Table"""
+    # pylint: disable=too-few-public-methods, invalid-name
+    __tablename__ = 'extractions'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    state = Column(Enum(EXTRACTED_SUCCESS,
+                        EXTRACTED_ERROR,
+                        name='extraction_states',
+                        validate_strings=True)
+                   )
+
+    start = Column(DateTime)
+    end = Column(DateTime)
+    runtime = Column(Interval)
+    repositores = Column(Integer)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
+    repositories_objs = one_to_many("Repository", "extraction_obj")
+
+    @force_encoded_string_output
+    def __repr__(self):
+        return (
+            u"<Extraction({0.id})>"
         ).format(self)
 
 

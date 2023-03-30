@@ -1,4 +1,5 @@
 """Main script that calls the others"""
+import shutil
 import subprocess
 import threading
 import os
@@ -6,8 +7,10 @@ from datetime import datetime
 import select
 import sys
 
+from sqlalchemy import func
+
 from src.config.consts import EXTRACTION_DIR, SRC_DIR, LOGS_DIR
-from src.db.database import connect, Repository
+from src.db.database import connect, Repository, Extraction
 from src.helpers.h3_utils import check_exit, savepid, vprint
 from src.classes.c2_status_logger import StatusLogger
 from src.config.states import *
@@ -25,6 +28,44 @@ ORDER = [
     "e6_code_cells",
     "e7_python_features",
 ]
+
+
+def remove_repositorires(repositories):
+    for rep in repositories:
+        if rep.dir_path.exists():
+            shutil.rmtree(os.path.join(rep.dir_path))
+
+
+def save_extraction(session, start, end, selected_repositories, error=False):
+    repositories_ids = [int(item) for item in selected_repositories if item.isdigit()]
+    repositories = session.query(Repository).filter(Repository.id.in_(repositories_ids))
+
+    if not error:
+        extract = Extraction(
+            start=start, end=end, runtime=end - start,
+            repositores=len(selected_repositories),
+            state=EXTRACTED_SUCCESS
+        )
+
+        session.add(extract)
+        session.flush()
+
+        repositories.update({Repository.extraction_id: extract.id}, synchronize_session=False)
+
+        successfull_repos = repositories.filter(Repository.state == REP_REQ_FILE_EXTRACTED)
+        successfull_repos.update({Repository.state: REP_FINISHED}, synchronize_session=False)
+
+
+    else:
+        extraction = Extraction(
+            start=start, end=end, runtime=end - start,
+            repositores=len(selected_repositories),
+            state=EXTRACTED_ERROR
+        )
+
+        session.add(extraction)
+    session.commit()
+    remove_repositorires(repositories)
 
 
 def inform(session, iteration, selected_output):
@@ -104,21 +145,21 @@ def filtered_repositories(session):
 
 def get_stop():
     global stop
-    vprint(4, "\033[93mIf you want to stop execution type 'stop'\033[0m")
+    vprint(4, "\033[93mIf you want to stop the execution type 'stop'\033[0m")
     while not stop:
         if select.select([sys.stdin, ], [], [], 0.0)[0]:
             user_input = input()
             if user_input == "stop":
                 vprint(4, "\033[91mStopping execution on the next iteration.\033[0m")
-                vprint(4, "\033[93mFinishing the currrent iteration.\033[0m")
+                vprint(4, "\033[93mFinishing the current iteration.\033[0m")
                 stop = True
 
 
 def main():
-    """Main function"""
+    """ Main function """
     with connect() as session, savepid():
+
         global stop
-        iteration = 0
         to_execute = {script: [] for script in ORDER}
         selected_repositories, selected_output = select_repositories(session)
 
@@ -132,8 +173,11 @@ def main():
 
         while filtered_repositories(session) > 0 and selected_repositories and not stop:
             try:
-                iteration = iteration + 1
+                previous_iteration = session.query(func.max(Extraction.id)).scalar()
+                iteration = (previous_iteration + 1) if previous_iteration is not None else 1
                 inform(session, iteration, selected_output)
+
+                start = datetime.utcnow()
                 for script, args in to_execute.items():
                     if check_exit({"all", "main", "main.py"}):
                         vprint(0, "Found .exit file. Exiting")
@@ -144,10 +188,19 @@ def main():
 
                     args = args + selected_repositories
                     execute_script(script, args, iteration)
+                end = datetime.utcnow()
+
+                save_extraction(session, start, end, selected_repositories)
+                vprint(4, "\033[92mRepositories from iteration {} extracted successfully!!\033[0m"
+                       .format(iteration))
 
             except Exception as err:
-                vprint(0, err)
+                vprint(4, "\033[91mError extracting repositories from iteration {} \n{}\033[0m"
+                       .format(iteration, err))
+                save_extraction(session, start, end, selected_repositories, error=True)
 
+            vprint(4, "\033[93mFiles from {} were removed from memory.\033[0m"
+                   .format(selected_output))
             selected_repositories, selected_output = select_repositories(session)
 
         stop = True
