@@ -55,7 +55,6 @@ def save_extraction(session, start, end, selected_repositories, error=False):
         successfull_repos = repositories.filter(Repository.state == REP_REQ_FILE_EXTRACTED)
         successfull_repos.update({Repository.state: REP_FINISHED}, synchronize_session=False)
 
-
     else:
         extraction = Extraction(
             start=start, end=end, runtime=end - start,
@@ -89,7 +88,7 @@ def execute_script(script, args, iteration):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    out = path / "{}_{}_{}.outerr".format(str(iteration), script, start)
+    out = path / "{}_{}_{}.outerr".format("itr"+str(iteration), script, start)
     if out.exists():
         out = str(out) + ".2"
 
@@ -169,7 +168,7 @@ def main():
 
         input_thread = threading.Thread(target=get_stop)
         input_thread.start()
-        vprint(0, "Starting main...\n")
+        vprint(0, "Starting extraction...\n")
 
         while filtered_repositories(session) > 0 and selected_repositories and not stop:
             try:
