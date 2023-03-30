@@ -3,8 +3,7 @@
 import os
 import argparse
 from itertools import groupby
-
-import src.config as config
+import src.consts as consts
 
 from future.utils.surrogateescape import register_surrogateescape
 from src.db.database import PythonFileModule, connect, PythonFileDataIO
@@ -15,7 +14,11 @@ from src.classes.c1_safe_session import SafeSession
 from src.helpers.h2_script_helpers import set_up_argument_parser
 from src.helpers.h4_filters import filter_python_files
 from src.helpers.h5_loaders import load_files, load_repository
-from src.states import *
+
+from src.config.states import PF_LOADED, PF_PROCESSED, PF_SYNTAX_ERROR
+from src.config.states import PF_PROCESS_ERROR, PF_PROCESS_TIMEOUT
+from src.config.states import PF_ORDER, PF_ERRORS
+from src.config.states import states_after
 
 
 def process_python_file(
@@ -94,7 +97,7 @@ def process_python_file(
         return "done"
     except Exception as err:
         python_file.state = PF_PROCESS_ERROR
-        if config.VERBOSE > 4:
+        if consts.VERBOSE > 4:
             import traceback
             traceback.print_exc()
         return 'Failed to process ({})'.format(err)
@@ -160,7 +163,7 @@ def apply(
 
 def pos_apply(dispatches, retry_errors, retry_timeout, verbose):
     """Dispatch execution to other python versions"""
-    key = lambda x: x[1]
+    key = lambda x: x[1] # noqa
     dispatches = sorted(list(dispatches), key=key)
     for pyexec, disp in groupby(dispatches, key=key):
         vprint(0, "Retrying to extract with {}".format(pyexec))
@@ -190,7 +193,7 @@ def main():
                         nargs="*", help="python files ids")
     args = parser.parse_args()
 
-    config.VERBOSE = args.verbose
+    consts.VERBOSE = args.verbose
     status = None
     if not args.count:
         status = StatusLogger(script_name)

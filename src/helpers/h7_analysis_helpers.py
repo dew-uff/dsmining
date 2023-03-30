@@ -2,22 +2,23 @@ import os
 import re
 import csv
 import matplotlib
-import src.config as config
-import matplotlib.ticker as ticker
-
-from collections import Counter, defaultdict
-from IPython.display import display
-from contextlib import contextmanager
-from dask.dataframe.core import Series as DaskSeries
-from dask.array.core import Array as DaskArray
-from dask.array import histogram as _dask_histogram
-from collections import namedtuple
 
 import numpy as np
 import seaborn as sns
 import pandas as pd
 import dask.dataframe as dd
+import src.consts as consts
+import matplotlib.ticker as ticker
+
+from contextlib import contextmanager
+from IPython.display import display
+from collections import namedtuple
+from collections import Counter, defaultdict
+
 from matplotlib import pyplot as plt
+from dask.dataframe.core import Series as DaskSeries
+from dask.array.core import Array as DaskArray
+from dask.array import histogram as _dask_histogram
 
 
 Distribution = namedtuple("Distribution", "min q1 median q3 max")
@@ -57,15 +58,15 @@ def var(key, value, template="{}"):
     result = template.format(value)
     latex_result = tex_escape(result)
     data = {}
-    if os.path.exists(f"{config.DATA_DIR}/variables.dat"):
-        with open(f"{config.DATA_DIR}/variables.dat", "r") as fil:
+    if os.path.exists("{}/variables.dat".format(consts.DATA_DIR)):
+        with open("{}/variables.dat".format(consts.DATA_DIR), "r") as fil:
             for line in fil:
                 line = line.strip()
                 if line:
                     k, v = line.split(" = ")
                     data[k] = v
     data[key] = latex_result
-    with open(f"{config.DATA_DIR}/variables.dat", "w") as fil:
+    with open("{}/variables.dat".format(consts.DATA_DIR), "w") as fil:
         fil.writelines(
             "{} = {}\n".format(k, v)
             for k, v in data.items()
@@ -79,7 +80,7 @@ def fetchgenerator(cursor, arraysize=1000):
         results = cursor.fetchmany(arraysize)
         if not results:
             break
-        yield from results
+        yield from results  # noqa
         
         
 def dask_from_query(session, query, file):
@@ -106,7 +107,7 @@ def display_counts(
         counts = counts.to_frame()
     ax = counts.plot.bar(logy=logy, color=color)
     ax.get_yaxis().set_major_formatter(
-        matplotlib.ticker.FuncFormatter(lambda x, p: template2.format(x)))
+        matplotlib.ticker.FuncFormatter(lambda x, p: template2.format(x)))  # noqa
     if show_values:
         for p in ax.patches:
             text = template.format(int(p.get_height()))
@@ -139,7 +140,7 @@ def histogram(column, bins, tick, lim, ax=None):
     fig = ax.get_figure()
     fig.set_size_inches(30, 5)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(tick))
-    ax.bar(x, hist, width);
+    ax.bar(x, hist, width);  # noqa
 
 
 dask_histogram = histogram
@@ -175,9 +176,9 @@ def getitem(container, index, default=None):
         return default
 
 
-def describe_processed(series, statuses, show_undefined=False):
+def describe_processed(series, statuses):
     result = Counter()
-    for key, value in series.iteritems():
+    for key, value in series.iteritems(): # noqa
 
         if key < 0:
             print("Skipping: {}: {}".format(key, value))
@@ -247,14 +248,15 @@ def savefig(name, width=8, height=6):
     yield
     fig = plt.gcf()
     fig.set_size_inches(width, height)
-    # fig.savefig("{}/outputs/svg/{}.svg".format(config.DATA_DIR, name), bbox_inches='tight')
-    # fig.savefig("{}/outputs/pdf/{}.pdf".format(config.DATA_DIR, name), bbox_inches='tight')
-    fig.savefig("{}/outputs/png/{}.png".format(config.DATA_DIR, name), bbox_inches='tight')
+    # fig.savefig("{}/outputs/svg/{}.svg".format(consts.DATA_DIR, name), bbox_inches='tight')
+    # fig.savefig("{}/outputs/pdf/{}.pdf".format(consts.DATA_DIR, name), bbox_inches='tight')
+    fig.savefig("{}/outputs/png/{}.png".format(consts.DATA_DIR, name), bbox_inches='tight')
 
 
 @contextmanager
 def cell_distribution(filename, width, height, select, bins, cell_type_bins_arrays, colors=None, relative=True):
     bar_l = [i for i in range(bins + 1)]
+    total = 0
     if relative:
         total = sum((cell_type_bins_arrays[key] for key in select),  np.zeros(bins + 1))
     with savefig(filename, width, height):
@@ -267,7 +269,7 @@ def cell_distribution(filename, width, height, select, bins, cell_type_bins_arra
             kwargs = {}
             if colors and key in colors:
                 kwargs["color"] = colors[key]
-            bar = ax.bar(bar_l, column, bottom=bottom, label=key, alpha=0.9, width=1, **kwargs)
+                ax.bar(bar_l, column, bottom=bottom, label=key, alpha=0.9, width=1, **kwargs)
             bottom += column
         fig = ax.get_figure()
         fig.set_size_inches(width, height)
@@ -316,7 +318,7 @@ def get_toplevel_modules(modules):
         "any_import", "local_import", "external_import",
         "any_load_ext", "local_load_ext", "external_load_ext",
     ]
-    count_columns = [c + "_count" for c in columns]
+
     for column in columns:
         modules[column] = modules[column].apply(lambda c: {a for a in c.split(",") if a})
         modules["toplevel_" + column] = modules[column].apply(lambda imports: {
@@ -358,14 +360,15 @@ def create_repositories_piechart(repository_attribute, attribute_name,
     if labels is None:
         labels = ["1", "2", "3-5", "6-10", "11-20", "21-50", "51-100", "> 100"]
 
-    attribute = pd.cut(repository_attribute[f"{attribute_name}"], bins=bins).value_counts() \
+    attribute = pd.cut(repository_attribute["{}".format(attribute_name)], bins=bins).value_counts() \
         .rename_axis('repositories').to_frame(attribute_name).reset_index(level=0).sort_values(by='repositories')
     attribute["labels"] = labels
-    attribute = attribute[attribute[f"{attribute_name}"] > 0]
+    attribute = attribute[attribute["{}".format(attribute_name)] > 0]
     fig, ax = plt.subplots(figsize=(15, 4))
     attribute.plot \
-        .pie(ax=ax, y=f"{attribute_name}", title=f"Number of {attribute_name.capitalize()} per Repository",
-             labels=attribute.labels, ylabel=f'{attribute_name.capitalize()}', cmap="cool",
+        .pie(ax=ax, y="{}".format(attribute_name),
+             title="Number of {} per Repository".format(attribute_name.capitalize()),
+             labels=attribute.labels, ylabel="{}".format(attribute_name.capitalize()), cmap="cool",
              autopct=(lambda prct_value: '{:.1f}%\n{:.0f}'
                       .format(prct_value, (len(repository_attribute) * prct_value / 100))
                       )).get_legend().remove()

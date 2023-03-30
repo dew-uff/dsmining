@@ -1,20 +1,21 @@
 import sys
 import os
 
-
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.extractions.e5_markdown_cells as e5
 
-from src.states import *
 from nltk.corpus import stopwords
+from src.config.states import *
 from src.db.database import CellMarkdownFeature
 from src.extractions.e5_markdown_cells import process_markdown_cell
 from tests.stubs.extract_features import stub_extract_features
 from tests.database_config import connection, session  # noqa: F401
-from tests.factories.models import RepositoryFactory, NotebookFactory, MarkdownCellFactory, CellMarkdownFeatureFactory
+from tests.factories.models import RepositoryFactory, NotebookFactory
+from tests.factories.models import MarkdownCellFactory, CellMarkdownFeatureFactory
+
+import src.extractions.e5_markdown_cells as e5
 
 
 class TestMarkdownCellsProcessMarkdownCell:
@@ -95,7 +96,6 @@ class TestMarkdownCellsProcessMarkdownCell:
 
         result = process_markdown_cell(session, repository.id, notebook.id, cell)
         session.commit()
-
 
         assert result == 'already processed'
         assert cell.state == CELL_PROCESS_ERROR

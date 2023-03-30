@@ -1,17 +1,11 @@
-import os
-import sys
-src = os.path.dirname(os.path.abspath(''))
-if src not in sys.path:
-    sys.path.append(src)
-
-from src import config
+import src.consts as consts
 from src.helpers.h4_filters import filter_repositories
 from src.helpers.h3_utils import vprint, check_exit
 
 
 def set_up_argument_parser(parser, script_name, script_type="repository"):
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
-                        type=int, default=config.VERBOSE)
+                        type=int, default=consts.VERBOSE)
     parser.add_argument("-e", "--retry-errors", help="retry errors",
                         action="store_true")
     parser.add_argument("-c", "--count", help="count filtered repositories",
@@ -19,7 +13,7 @@ def set_up_argument_parser(parser, script_name, script_type="repository"):
     parser.add_argument("-r", "--reverse", help="iterate in reverse order",
                         action="store_true")
     parser.add_argument("-i", "--interval", help="interval",
-                        type=int, nargs=2, default=config.REPOSITORY_INTERVAL)
+                        type=int, nargs=2, default=consts.REPOSITORY_INTERVAL)
     parser.add_argument("--check", help="check name in .exit", type=str,
                         nargs="*", default={"all", script_name, script_name + ".py"})
     parser.add_argument("-sr", "--repositories", help="selected repositories ids",
@@ -61,5 +55,3 @@ def apply(session, status, selected_repositories, retry,
 
         status.count += 1
         session.commit()
-
-

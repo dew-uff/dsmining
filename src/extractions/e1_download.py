@@ -7,9 +7,8 @@ if src not in sys.path:
     sys.path.append(src)
 
 import argparse
-import src.config as config
+import src.consts as consts
 
-from src.states import *
 from src.db.database import Commit, connect
 from src.helpers.h1_git_helpers import git, extract_hash_parts, git_output, format_commit, remove_repo_and_prepare
 from src.helpers.h3_utils import savepid, vprint, check_exit
@@ -17,6 +16,10 @@ from src.classes.c2_status_logger import StatusLogger
 from src.classes.c1_safe_session import SafeSession
 from src.helpers.h2_script_helpers import set_up_argument_parser
 from src.helpers.h4_filters import filter_repositories
+
+from src.config.states import REP_LOADED, REP_EMPTY, REP_STOPPED
+from src.config.states import REP_FAILED_TO_CLONE, REP_UNAVAILABLE_FILES
+from src.config.states import REP_ORDER, REP_ERRORS, states_after
 
 
 def load_commits(full_dir):
@@ -48,20 +51,20 @@ def load_commits(full_dir):
                 commits_info.append(merge_row)
 
     except Exception as err:
-        raise EnvironmentError(f"Load commits failed. Error:{err}")
+        raise EnvironmentError("Load commits failed. Error:{}".format(err))
 
     return commits_info
 
 
 def clone(part, end, repo, remote, branch=None, commit=None):
     """Clone git repository into a proper directory"""
-    part_dir = config.SELECTED_REPOS_DIR / "content" / part
+    part_dir = consts.SELECTED_REPOS_DIR / "content" / part
     part_dir.mkdir(parents=True, exist_ok=True)
     full_dir = part_dir / end
 
     if full_dir.exists():
-        vprint(1, f"Repository already cloned."
-                  f"Delete it if you would like to re-run.")
+        vprint(1, "Repository already cloned."
+                  "Delete it if you would like to re-run.")
         return full_dir, None, True
     else:
         args = ["clone"]
@@ -72,7 +75,7 @@ def clone(part, end, repo, remote, branch=None, commit=None):
             args.append(branch)
 
         if git(*args) != 0:
-            raise EnvironmentError(f"Clone failed for {repo}")
+            raise EnvironmentError("Clone failed for {}".format(repo))
 
         if commit is not None:
 
@@ -97,14 +100,14 @@ def load_repository_and_commits(session, repository,  commit=None, branch=None, 
 
     repo = repository.repository
     part, end = extract_hash_parts(repo)
-    remote = f"https://github.com/{repo}.git"
+    remote = "https://github.com/{}.git".format(repo)
 
     if repository.commit and not retry:
-        vprint(1, f"Repository {repository} already loaded")
+        vprint(1, "Repository {} already loaded".format(repository))
         return
 
     try:
-        vprint(1, f"Remote: {remote}\nDownloading repository...")
+        vprint(1, "Remote: {}\nDownloading repository...".format(remote))
 
         full_dir, repo_commits, already_exists = clone(part, end, repo, remote, branch, commit)
 
@@ -125,7 +128,8 @@ def load_repository_and_commits(session, repository,  commit=None, branch=None, 
             repository.state = REP_EMPTY
             session.add(repository)
     except Exception as err:
-        vprint(0, f'Failed to download repository {repository} due to {err}')
+        vprint(0, 'Failed to download repository {} due to {}'
+               .format(repository, err))
         repository.state = REP_FAILED_TO_CLONE
         session.add(repository)
 
@@ -135,10 +139,10 @@ def process_repository(session, repository, branch=None, commit=None, retry=Fals
 
     if retry:
         if repository.state == REP_UNAVAILABLE_FILES:
-            vprint(3, f"redownloading {repository}")
+            vprint(3, "redownloading {}".format(repository))
             commit = remove_repo_and_prepare(session, repository)
         elif retry and repository.state == REP_FAILED_TO_CLONE:
-            vprint(3, f"retrying to download {repository}")
+            vprint(3, "retrying to download {}".format(repository))
             commit = remove_repo_and_prepare(session, repository)
 
     if repository.state == REP_LOADED \
@@ -171,7 +175,8 @@ def apply(session, status, selected_repositories, retry, count,
             return
 
         status.report()
-        vprint(0, f"Downloading repository {repository} from {repository.domain}.")
+        vprint(0, "Downloading repository {} from {}."
+               .format(repository, repository.domain))
 
         result = process_repository(
             session=session,
@@ -199,7 +204,7 @@ def main():
                         help="specific commit")
 
     args = parser.parse_args()
-    config.VERBOSE = args.verbose
+    consts.VERBOSE = args.verbose
 
     status = None
 

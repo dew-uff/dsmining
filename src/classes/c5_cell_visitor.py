@@ -20,7 +20,6 @@ class CellVisitor(ast.NodeVisitor):
         self.modules.append((line, type_, name,
                              self.local_checker.is_local(name)))
 
-
     def new_data_io(self, line, type_, caller,
                     function_name, function_type,
                     source, source_type):
@@ -28,7 +27,6 @@ class CellVisitor(ast.NodeVisitor):
         self.data_ios.append((line, type_, caller,
                               function_name, function_type,
                               source, source_type))
-
 
     @staticmethod
     def get_function_data(function):
@@ -48,7 +46,6 @@ class CellVisitor(ast.NodeVisitor):
 
         return caller, function_name, function_type
 
-
     def get_source_data(self, arguments):
         if len(arguments) >= 1:
             first_arg = arguments[0]
@@ -60,12 +57,10 @@ class CellVisitor(ast.NodeVisitor):
             return source, source_type
         return None, None
 
-
     def visit_Import(self, node):
         """ Gets modules from 'import ...' """
         for import_ in node.names:
             self.new_module(node.lineno, "import", import_.name)
-
 
     def visit_ImportFrom(self, node):
         """ Gets module from "from ...import ...' """
@@ -74,10 +69,9 @@ class CellVisitor(ast.NodeVisitor):
             ("." * (node.level or 0)) + (node.module or "")
         )
 
-
     def visit_Call(self, node):
         function = node.func
-        arguments =  node.args
+        arguments = node.args
 
         caller, function_name, function_type = self.get_function_data(function)
         source, source_type = self.get_source_data(arguments)

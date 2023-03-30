@@ -1,5 +1,5 @@
 from src.db.database import Repository, Cell, PythonFile, Notebook
-from src.states import CELL_UNKNOWN_VERSION, PF_EMPTY, NB_GENERIC_LOAD_ERROR
+from src.config.states import PF_EMPTY, NB_GENERIC_LOAD_ERROR
 
 
 def filter_repositories(session, selected_repositories,

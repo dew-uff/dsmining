@@ -3,16 +3,23 @@
 import os
 import argparse
 import nbformat as nbf
-import src.config as config
+import src.consts as consts
 
 from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect
 from src.helpers.h3_utils import savepid, unzip_repository, cell_output_formats
 from src.classes.c1_safe_session import SafeSession
-from src.helpers.h3_utils import find_files, timeout, TimeoutError, vprint
+from src.helpers.h3_utils import find_files, TimeoutError, vprint
 from src.classes.c2_status_logger import StatusLogger
 from src.helpers.h2_script_helpers import apply, set_up_argument_parser
-from src.states import *
+
+from src.config.states import NB_LOADED, NB_LOAD_ERROR, NB_STOPPED
+from src.config.states import NB_LOAD_FORMAT_ERROR, NB_LOAD_TIMEOUT
+from src.config.states import NB_LOAD_SYNTAX_ERROR, NB_GENERIC_LOAD_ERROR
+from src.config.states import CELL_LOADED, CELL_SYNTAX_ERROR, CELL_UNKNOWN_VERSION
+from src.config.states import REP_LOADED, REP_N_ERROR, REP_UNAVAILABLE_FILES
+from src.config.states import REP_N_EXTRACTED, REP_ORDER, REP_ERRORS
+from src.config.states import states_after, states_before
 
 
 def load_cells(repository_id, nbrow, notebook, status):
@@ -157,7 +164,7 @@ def process_notebooks(session, repository, repository_notebooks_names):
                 if notebook.state == NB_GENERIC_LOAD_ERROR:
                     count -= 1
                     vprint(2, "Notebook already exists. Delete from DB: {}".format(notebook))
-                    with open(str(config.LOGS_DIR / "todo_delete"), "a") as f:
+                    with open(str(consts.LOGS_DIR / "todo_delete"), "a") as f:
                         f.write("{},".format(notebook.id))
                 else:
                     vprint(2, "Notebook already processed")
@@ -204,7 +211,7 @@ def process_notebooks(session, repository, repository_notebooks_names):
             repository.state = REP_N_ERROR
             session.add(repository)
             vprint(1, "Failed to load notebook {} due {!r}".format(name, err))
-            if config.VERBOSE > 4:
+            if consts.VERBOSE > 4:
                 import traceback
                 traceback.print_exc()
     return count, repository
@@ -245,7 +252,8 @@ def process_repository(session, repository, retry=False):
             or repository.state in states_after(REP_N_EXTRACTED, REP_ORDER):
         return "already processed"
     elif repository.state in states_before(REP_LOADED, REP_ORDER):
-        return f'wrong script order, before you must run {states_before(REP_LOADED, REP_ORDER)}'
+        return "wrong script order, before you must run {}"\
+            .format(states_before(REP_LOADED, REP_ORDER))
 
     repository_notebooks_names = find_notebooks(session, repository)
 
@@ -278,7 +286,7 @@ def main():
     parser = set_up_argument_parser(parser, script_name)
     args = parser.parse_args()
 
-    config.VERBOSE = args.verbose
+    consts.VERBOSE = args.verbose
     status = None
 
     if not args.count:

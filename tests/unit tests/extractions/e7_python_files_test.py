@@ -7,7 +7,7 @@ if src not in sys.path:
 
 import src.extractions.e7_python_features as e7
 
-from src.states import *
+from src.config.states import *
 from src.helpers.h3_utils import TimeoutError
 from src.classes.c4_local_checkers import PathLocalChecker
 from src.extractions.e7_python_features import process_python_file

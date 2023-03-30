@@ -3,8 +3,7 @@ from __future__ import print_function
 import csv
 import os
 import time
-
-from src import config as config
+import src.consts as consts
 
 
 class StatusLogger(object):
@@ -15,9 +14,9 @@ class StatusLogger(object):
         self._skipped = 0
         self._total = 0
         self.time = time.time()
-        config.LOGS_DIR.mkdir(parents=True, exist_ok=True)
-        self.file = config.LOGS_DIR / "status.csv"
-        self.freq = config.STATUS_FREQUENCY.get(script, 5)
+        consts.LOGS_DIR.mkdir(parents=True, exist_ok=True)
+        self.file = consts.LOGS_DIR / "status.csv"
+        self.freq = consts.STATUS_FREQUENCY.get(script, 5)
         self.pid = os.getpid()
 
     @property
@@ -48,7 +47,7 @@ class StatusLogger(object):
                 writer = csv.writer(csvfile)
                 now = time.time()
                 writer.writerow([
-                    config.MACHINE, self.script,
+                    consts.MACHINE, self.script,
                     self.total, self.count, self.skipped,
                     self.time, now, now - self.time, self.pid
                 ])

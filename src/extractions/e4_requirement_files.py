@@ -2,14 +2,18 @@
 import os
 import argparse
 import chardet
-import src.config as config
+import src.consts as consts
 
-from src.states import *
 from src.db.database import RequirementFile, connect
 from src.helpers.h3_utils import vprint, savepid
 from src.classes.c2_status_logger import StatusLogger
 from src.helpers.h3_utils import find_files_in_path, unzip_repository
 from src.helpers.h2_script_helpers import apply, set_up_argument_parser
+
+from src.config.states import REQ_FILE_LOADED, REQ_FILE_L_ERROR, REQ_FILE_EMPTY
+from src.config.states import REP_REQ_FILE_EXTRACTED, REP_PF_EXTRACTED
+from src.config.states import REP_ORDER, REP_ERRORS, REP_UNAVAILABLE_FILES
+from src.config.states import states_after, states_before
 
 
 def find_requirements(session, repository):
@@ -118,7 +122,8 @@ def process_repository(session, repository):
             or repository.state in states_after(REP_REQ_FILE_EXTRACTED, REP_ORDER):
         return "already processed"
     elif repository.state in states_before(REP_PF_EXTRACTED, REP_ORDER):
-        return f'wrong script order, before you must run {states_before(REP_PF_EXTRACTED, REP_ORDER)}'
+        return "wrong script order, before you must run {}"\
+            .format(states_before(REP_PF_EXTRACTED, REP_ORDER))
 
     setups, requirements, pipfiles, pipfile_locks = find_requirements(session, repository)
 
@@ -129,7 +134,8 @@ def process_repository(session, repository):
         process_requirement_files(session, repository, pipfile_locks, "Pipfile.lock")
         repository.state = REP_REQ_FILE_EXTRACTED
     else:
-        vprint(3, f"files are unavailable for repository {repository}, fix it then rerun all scripts.")
+        vprint(3, "files are unavailable for repository {}, fix it then rerun all scripts."
+               .format(repository))
 
     session.add(repository)
     session.commit()
@@ -144,7 +150,7 @@ def main():
     parser = set_up_argument_parser(parser, script_name)
     args = parser.parse_args()
 
-    config.VERBOSE = args.verbose
+    consts.VERBOSE = args.verbose
     status = None
 
     if not args.count:

@@ -1,7 +1,8 @@
 import sys
 import os
 src = os.path.dirname(os.path.abspath(''))
-if src not in sys.path: sys.path.append(src)
+if src not in sys.path:
+    sys.path.append(src)
 
 from src.helpers.h3_utils import to_unicode
 

@@ -5,17 +5,17 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
+from unittest.mock import mock_open  # noqa
 
-import src.extractions.e3_python_files as e3
-
-from unittest.mock import mock_open
+from src.consts import Path
+from src.config.states import *
 from src.db.database import Repository, PythonFile
-from src.config import Path
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.factories.models import PythonFileFactory
 from tests.stubs.others import stub_unzip, stub_unzip_failed
-from src.states import *
+
+import src.extractions.e3_python_files as e3
 
 
 class TestPythonFilesFindPythonFiles:
@@ -28,10 +28,10 @@ class TestPythonFilesFindPythonFiles:
         file4_relative_path = 'abc123/setup.py'
 
         def mock_find_python_files(path, pattern):  # noqa: F841
-            return [Path(f'{repository.path}/{file1_relative_path}'),
-                    Path(f'{repository.path}/{file2_relative_path}'),
-                    Path(f'{repository.path}/{file3_relative_path}'),
-                    Path(f'{repository.path}/{file4_relative_path}')]
+            return [Path('{}/{}'.format(repository.path, file1_relative_path)),
+                    Path('{}/{}'.format(repository.path, file2_relative_path)),
+                    Path('{}/{}'.format(repository.path, file3_relative_path)),
+                    Path('{}/{}'.format(repository.path, file4_relative_path))]
 
         monkeypatch.setattr(e3, 'find_files', mock_find_python_files)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
@@ -51,10 +51,10 @@ class TestPythonFilesFindPythonFiles:
         file4_relative_path = 'abc123/setup.py'
 
         def mock_find_python_files(path, pattern):  # noqa: F841
-            return [Path(f'{repository.path}/{file1_relative_path}'),
-                    Path(f'{repository.path}/{file2_relative_path}'),
-                    Path(f'{repository.path}/{file3_relative_path}'),
-                    Path(f'{repository.path}/{file4_relative_path}')]
+            return [Path('{}/{}'.format(repository.path, file1_relative_path)),
+                    Path('{}/{}'.format(repository.path, file2_relative_path)),
+                    Path('{}/{}'.format(repository.path, file3_relative_path)),
+                    Path('{}/{}'.format(repository.path, file4_relative_path))]
 
         monkeypatch.setattr(e3, 'find_files', mock_find_python_files)
         monkeypatch.setattr(Path, 'exists', lambda path: False)

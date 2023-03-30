@@ -4,12 +4,12 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import ast
-import pytest
-
 from src.classes.c4_local_checkers import PathLocalChecker
 from src.helpers.h3_utils import extract_features
 from tests.database_config import connection, session  # noqa: F401
+
+import ast
+import pytest
 
 
 class TestExtractFeatures:
@@ -31,5 +31,4 @@ class TestExtractFeatures:
 
         with pytest.raises(SyntaxError):
             extract_features(text, checker)
-
 

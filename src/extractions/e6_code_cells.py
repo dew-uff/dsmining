@@ -2,9 +2,11 @@
 
 import argparse
 import os
-from itertools import groupby
+import src.consts as consts
 
-import src.config as config
+
+from itertools import groupby
+from future.utils.surrogateescape import register_surrogateescape
 
 from src.helpers.h3_utils import extract_features, invoke
 from src.classes.c1_safe_session import SafeSession
@@ -15,9 +17,11 @@ from src.db.database import CellModule, connect, CellDataIO
 from src.helpers.h2_script_helpers import set_up_argument_parser
 from src.helpers.h4_filters import filter_code_cells
 from src.helpers.h5_loaders import load_notebook, load_repository
-from future.utils.surrogateescape import register_surrogateescape
 
-from src.states import *
+from src.config.states import CELL_LOADED, CELL_PROCESSED, CELL_PROCESS_ERROR
+from src.config.states import CELL_SYNTAX_ERROR, CELL_PROCESS_TIMEOUT
+from src.config.states import CELL_ORDER, CELL_ERRORS
+from src.config.states import states_after
 
 
 def process_code_cell(
@@ -94,7 +98,7 @@ def process_code_cell(
 
     except Exception as err:
         cell.state = CELL_PROCESS_ERROR
-        if config.VERBOSE > 4:
+        if consts.VERBOSE > 4:
             import traceback
             traceback.print_exc()
         return 'Failed to process ({})'.format(err)
@@ -161,7 +165,7 @@ def apply(
 
 def pos_apply(dispatches, retry_errors, retry_timeout, verbose):
     """Dispatch execution to other python versions"""
-    key = lambda x: x[1]
+    key = lambda x: x[1]  # noqa
     dispatches = sorted(list(dispatches), key=key)
     for pyexec, disp in groupby(dispatches, key=key):
         vprint(0, "Dispatching to {}".format(pyexec))
@@ -191,7 +195,7 @@ def main():
                         nargs="*", help="notebooks ids")
     args = parser.parse_args()
 
-    config.VERBOSE = args.verbose
+    consts.VERBOSE = args.verbose
     status = None
     if not args.count:
         status = StatusLogger(script_name)

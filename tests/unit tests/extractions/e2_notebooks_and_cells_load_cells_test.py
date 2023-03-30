@@ -12,7 +12,7 @@ from tests.factories.models import RepositoryFactory
 from tests.stubs.others import stub_KeyError
 from tests.stubs.notebook_dict import get_notebook_node, get_notebook_nbrow
 from tests.stubs.nbf_read import stub_IndentationError
-from src.states import *
+from src.config.states import *
 
 
 class TestNotebooksAndCellsLoadCells:

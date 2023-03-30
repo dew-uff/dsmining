@@ -1,4 +1,4 @@
-from src.states import NB_LOADED, CELL_LOADED
+from src.config.states import NB_LOADED, CELL_LOADED
 
 
 def stub_load_cells(lc_repository_id, lc_nbrow, lc_notebook, lc_status):   # noqa: F841

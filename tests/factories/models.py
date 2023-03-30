@@ -1,8 +1,8 @@
-import datetime
+from src.db.database import Repository, Notebook, PythonFile, RequirementFile
+from src.db.database import Cell, CellMarkdownFeature, CellModule, CellDataIO
+from src.db.database import PythonFileModule, PythonFileDataIO, Commit
 
 import factory
-from src.db.database import Repository, Notebook, PythonFile, RequirementFile, Cell, CellMarkdownFeature, CellModule, \
-    CellDataIO, PythonFileModule, PythonFileDataIO, Commit
 
 
 def RepositoryFactory(session):
@@ -37,7 +37,7 @@ def CommitFactory(session):
             sqlalchemy_session = session
 
         type = "commit"
-        hash = factory.Sequence(lambda n: f"dd{n}d1c3")
+        hash = factory.Sequence(lambda n: "dd{}d1c3".format(n))
         author = factory.Sequence(lambda n: 'person{}'.format(n + 1))
         message = "test message"
 

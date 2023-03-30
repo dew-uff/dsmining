@@ -5,17 +5,18 @@ src = os.path.dirname(os.path.abspath(''))
 if src not in sys.path:
     sys.path.append(src)
 
-import chardet
-import src.extractions.e4_requirement_files as e4
+from unittest.mock import mock_open  # noqa
 
-from unittest.mock import mock_open
-from src.states import *
+from src.config.states import *
 from src.db.database import RequirementFile
-from src.config import Path
+from src.consts import Path
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.factories.models import RequirementFileFactory
 from tests.stubs.others import stub_unzip, stub_unzip_failed, REQUIREMENTS_TXT
+
+import chardet
+import src.extractions.e4_requirement_files as e4
 
 
 class TestRequiremtFilesFindRequirements:
@@ -28,10 +29,10 @@ class TestRequiremtFilesFindRequirements:
         file4_relative_path = 'Pipfile.lock'
 
         def mock_find_requirement_files(path, pattern):  # noqa: F841
-            return [[Path(f'{file1_relative_path}')],
-                    [Path(f'{file2_relative_path}')],
-                    [Path(f'{file3_relative_path}')],
-                    [Path(f'{file4_relative_path}')]]
+            return [[Path('{}'.format(file1_relative_path))],
+                    [Path('{}'.format(file2_relative_path))],
+                    [Path('{}'.format(file3_relative_path))],
+                    [Path('{}'.format(file4_relative_path))]]
 
         monkeypatch.setattr(e4, 'find_files_in_path', mock_find_requirement_files)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
@@ -57,10 +58,10 @@ class TestRequiremtFilesFindRequirements:
         file4_relative_path = 'Pipfile.lock'
 
         def mock_find_requirement_files(path, pattern):  # noqa: F841
-            return [[Path(f'{file1_relative_path}')],
-                    [Path(f'{file2_relative_path}')],
-                    [Path(f'{file3_relative_path}')],
-                    [Path(f'{file4_relative_path}')]]
+            return [[Path('{}'.format(file1_relative_path))],
+                    [Path('{}'.format(file2_relative_path))],
+                    [Path('{}'.format(file3_relative_path))],
+                    [Path('{}'.format(file4_relative_path))]]
 
         monkeypatch.setattr(Path, 'exists', lambda path: False)
         monkeypatch.setattr(e4, 'unzip_repository', stub_unzip)

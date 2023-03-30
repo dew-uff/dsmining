@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.states import REP_LOADED
+from src.config.states import REP_LOADED
 
 
 def stub_repo_commits():

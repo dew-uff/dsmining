@@ -1,20 +1,19 @@
 """H andles database model and connection """
 import sys
-from datetime import datetime
-
-import src.config as config
 import subprocess
+import src.consts as consts
 
-from src.config import DB_CONNECTION
+from datetime import datetime
 from contextlib import contextmanager
 from sqlalchemy import create_engine, Enum
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Interval
+from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import ForeignKeyConstraint, DateTime
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
-from sqlalchemy import ForeignKeyConstraint
 
+from src.config.states import *
+from src.consts import DB_CONNECTION
 from src.helpers.h3_utils import version_string_to_list
-from src.states import *
 
 BigInt = Integer
 Base = declarative_base()  # pylint: disable=invalid-name
@@ -156,7 +155,7 @@ class Repository(Base):
         """Return notebook path"""
         if self.hash_dir1 and self.hash_dir2:
             return (
-                config.Path(config.SELECTED_REPOS_DIR) / "content" /
+                consts.Path(consts.SELECTED_REPOS_DIR) / "content" /
                 self.hash_dir1 / self.hash_dir2
             )
 
@@ -165,13 +164,13 @@ class Repository(Base):
         """Return notebook path"""
         if self.hash_dir1:
             return (
-                    config.Path(config.SELECTED_REPOS_DIR) / "content" / self.hash_dir1
+                    consts.Path(consts.SELECTED_REPOS_DIR) / "content" / self.hash_dir1
             )
 
     @property
     def zip_path(self):
         """Return notebook path"""
-        return config.Path(str(self.path) + ".tar.bz2")
+        return consts.Path(str(self.path) + ".tar.bz2")
 
     def compress(self, target=None, return_cmd=False):
         """Compress repository"""
@@ -180,10 +179,10 @@ class Repository(Base):
         if target is None:
             target = self.zip_path
         elif isinstance(target, str):
-            target = config.Path(target)
+            target = consts.Path(target)
         cmd = [
             "tar", "-cf", str(target),
-            "--use-compress-program={}".format(config.COMPRESSION),
+            "--use-compress-program={}".format(consts.COMPRESSION),
             "-C", str(target.parent), str(self.hash_dir2)
         ]
         if return_cmd:
@@ -207,7 +206,7 @@ class Repository(Base):
         """Get commit from uncompressed repository"""
         cwd = cwd or self.path
         if isinstance(cwd, str):
-            cwd = config.Path(cwd)
+            cwd = consts.Path(cwd)
         if not cwd.exists():
             return None
         try:
@@ -1113,81 +1112,6 @@ class Module(Base):
                 u"<Module({0.repository_id}/{0.python_file_id}/{0.id})>"
             ).format(self)
 
-
-# class DataIO(Base):
-#     """DataIOs Table"""
-#     # pylint: disable=too-few-public-methods, invalid-name
-#     __tablename__ = 'data_ios'
-#     __table_args__ = (
-#         ForeignKeyConstraint(
-#             ['notebook_id'],
-#             ['notebooks.id']
-#         ),
-#         ForeignKeyConstraint(
-#             ['python_file_id'],
-#             ['python_files.id']
-#         ),
-#         ForeignKeyConstraint(
-#             ['repository_id'],
-#             ['repositories.id']
-#         ),
-#     )
-#
-#     id = Column(Integer, autoincrement=True, primary_key=True)
-#     repository_id = Column(Integer)
-#     type = Column(String)
-#     notebook_id = Column(Integer)
-#     python_file_id = Column(Integer)
-#
-#     index = Column(String)
-#     index_count = Column(Integer)
-#
-#     any_any = Column(String)
-#     any_any_count = Column(Integer)
-#     local_any = Column(String)
-#     local_any_count = Column(Integer)
-#     external_any = Column(String)
-#     external_any_count = Column(Integer)
-#
-#     any_import_from = Column(String)
-#     any_import_from_count = Column(Integer)
-#     local_import_from = Column(String)
-#     local_import_from_count = Column(Integer)
-#     external_import_from = Column(String)
-#     external_import_from_count = Column(Integer)
-#
-#     any_import = Column(String)
-#     any_import_count = Column(Integer)
-#     local_import = Column(String)
-#     local_import_count = Column(Integer)
-#     external_import = Column(String)
-#     external_import_count = Column(Integer)
-#
-#     any_load_ext = Column(String)
-#     any_load_ext_count = Column(Integer)
-#     local_load_ext = Column(String)
-#     local_load_ext_count = Column(Integer)
-#     external_load_ext = Column(String)
-#     external_load_ext_count = Column(Integer)
-#
-#     others = Column(String)
-#
-#     skip = Column(Integer, default=0)
-#
-#     notebook_obj = many_to_one("Notebook", "modules_objs")
-#     python_file_obj = many_to_one("PythonFile", "modules_objs")
-#     repository_obj = many_to_one("Repository", "modules_objs")
-#
-#     @force_encoded_string_output
-#     def __repr__(self):
-#         if self.type == 'notebook':
-#             return (
-#                 u"<Module({0.repository_id}/{0.notebook_id}/{0.id})>"
-#             ).format(self)
-#         elif self.type == 'python_file':
-#             return (
-#                 u"<Module({0.repository_id}/{0.python_file_id}/{0.id})>"
-#             ).format(self)
 
 @contextmanager
 def connect(echo=False):

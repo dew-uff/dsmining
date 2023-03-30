@@ -4,17 +4,18 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import nbformat as nbf
-import src.extractions.e2_notebooks_and_cells as e2
+from unittest.mock import mock_open  # noqa
+from src.config.states import REP_LOADED, NB_LOADED
+from src.config.states import NB_LOAD_ERROR, NB_LOAD_FORMAT_ERROR
 
-from src.states import REP_LOADED, NB_LOADED, NB_LOAD_ERROR, NB_LOAD_FORMAT_ERROR
-
-from unittest.mock import mock_open
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.stubs.notebook_dict import get_empty_nbrow
 from tests.stubs.nbf_read import stub_nbf_read, stub_nbf_readOSError, stub_nbf_readException
 from tests.stubs.load_cells import stub_load_cells, stub_load_no_cells
+
+import nbformat as nbf
+import src.extractions.e2_notebooks_and_cells as e2
 
 
 class TestNotebooksAndCellsLoadNotebooks:

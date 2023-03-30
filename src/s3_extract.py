@@ -6,12 +6,11 @@ from datetime import datetime
 import select
 import sys
 
-import src.config as config
-from src.config import EXTRACTION_DIR, SRC_DIR
+from src.consts import EXTRACTION_DIR, SRC_DIR, LOGS_DIR
 from src.db.database import connect, Repository
 from src.helpers.h3_utils import check_exit, savepid, vprint
 from src.classes.c2_status_logger import StatusLogger
-from src.states import *
+from src.config.states import *
 
 stop = False
 
@@ -45,7 +44,7 @@ def execute_script(script, args, iteration):
     start = datetime.now()
     vprint(0, "\033[93m[{}]\033[0m Executing {}.py"
            .format(start.strftime('%Y-%m-%d %H:%M:%S'), script))
-    path = config.LOGS_DIR / script
+    path = LOGS_DIR / script
     if not os.path.exists(path):
         os.makedirs(path)
 

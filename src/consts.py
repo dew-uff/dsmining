@@ -43,6 +43,7 @@ SELECTED_REPOS_FILE = RESOURCE_DIR + os.sep + "selected_repositories.xlsx"
 
 # Configs
 VERBOSE = 5
+COMPRESSION = "lbzip2"
 ANACONDA_PATH = Path.home().joinpath("anaconda3")
 
 

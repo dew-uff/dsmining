@@ -8,9 +8,9 @@ import ast
 import bisect
 import fnmatch
 import subprocess
-import src.config as config
+import src.consts as consts
 
-from src.config import Path
+from src.consts import Path
 from contextlib import contextmanager
 from src.classes.c5_cell_visitor import CellVisitor
 from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
@@ -23,7 +23,7 @@ def to_unicode(text):
 
 
 def vprint(verbose, *args):
-    if config.VERBOSE > verbose:
+    if consts.VERBOSE > verbose:
         if verbose > 0:
             print(">" * verbose, *args)
         else:
@@ -187,7 +187,7 @@ def best_match(version, versions):
 
 def get_pyexec(version, versions):
     return str(
-        config.ANACONDA_PATH / "envs"
+        consts.ANACONDA_PATH / "envs"
         / best_match(version, versions)
         / "bin" / "python"
     )
@@ -209,9 +209,7 @@ def get_next_pyexec():
         raise SyntaxError
 
     return str(
-        config.ANACONDA_PATH / "envs"
+        consts.ANACONDA_PATH / "envs"
         / next_version
         / "bin" / "python"
     )
-
-

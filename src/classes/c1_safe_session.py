@@ -1,7 +1,7 @@
 from __future__ import print_function
+from src.config.states import NB_STOPPED, NB_LOADED, REP_STOPPED, REP_LOADED
 
-from src import config as config
-from src.states import NB_STOPPED, NB_LOADED, REP_STOPPED, REP_LOADED
+import src.consts as consts
 
 
 class SafeSession(object):
@@ -38,7 +38,7 @@ class SafeSession(object):
                 self.session.commit()
             return True, ""
         except Exception as err:
-            if config.VERBOSE > 4:
+            if consts.VERBOSE > 4:
                 import traceback
                 traceback.print_exc()
             return False, err

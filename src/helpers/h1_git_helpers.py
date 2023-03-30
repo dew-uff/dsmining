@@ -5,7 +5,7 @@ import subprocess
 import pytz
 
 from datetime import datetime
-from src.states import REP_FILTERED
+from src.config.states import REP_FILTERED
 
 
 def extract_hash_parts(repo):
@@ -40,7 +40,7 @@ def format_commit(line, commit_type):
             "message": message
         }
         return commit_row
-    except Exception as err:
+    except Exception:
         raise EnvironmentError("Invalid commit.")
 
 

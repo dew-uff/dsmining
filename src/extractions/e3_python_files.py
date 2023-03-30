@@ -2,14 +2,18 @@
 
 import os
 import argparse
-import src.config as config
+import src.consts as consts
 
 from src.db.database import PythonFile, connect
 from src.helpers.h3_utils import vprint, savepid
 from src.classes.c2_status_logger import StatusLogger
 from src.helpers.h3_utils import find_files, unzip_repository
 from src.helpers.h2_script_helpers import apply, set_up_argument_parser
-from src.states import *
+
+from src.config.states import PF_LOADED, PF_EMPTY, PF_L_ERROR
+from src.config.states import REP_PF_EXTRACTED, REP_UNAVAILABLE_FILES
+from src.config.states import REP_N_EXTRACTED, REP_ORDER, REP_ERRORS
+from src.config.states import states_after, states_before
 
 
 def find_python_files(session, repository):
@@ -102,7 +106,8 @@ def process_repository(session, repository):
             or repository.state in states_after(REP_PF_EXTRACTED, REP_ORDER):
         return "already processed"
     elif repository.state in states_before(REP_N_EXTRACTED, REP_ORDER):
-        return f'wrong script order, before you must run {states_before(REP_N_EXTRACTED, REP_ORDER)}'
+        return "wrong script order, before you must run {}"\
+            .format(states_before(REP_N_EXTRACTED, REP_ORDER))
 
     count = 0
     repository_python_files_names = find_python_files(session, repository)
@@ -126,7 +131,7 @@ def main():
     parser = set_up_argument_parser(parser, script_name)
     args = parser.parse_args()
 
-    config.VERBOSE = args.verbose
+    consts.VERBOSE = args.verbose
     status = None
 
     if not args.count:

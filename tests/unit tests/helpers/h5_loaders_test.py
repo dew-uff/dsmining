@@ -7,9 +7,9 @@ if src not in sys.path:
 import tarfile
 import src.helpers.h5_loaders as h5
 
-from src.config import Path
+from src.consts import Path
 from src.helpers.h3_utils import to_unicode
-from src.states import REP_UNAVAILABLE_FILES
+from src.config.states import REP_UNAVAILABLE_FILES
 from tests.stubs.others import stub_unzip
 from src.classes.c1_safe_session import SafeSession
 from src.helpers.h5_loaders import load_files, load_notebook, load_repository
@@ -471,4 +471,3 @@ class TestLoadArchives:
         assert skip_repo is True
         assert archives is None
         assert repository.state == REP_UNAVAILABLE_FILES
-

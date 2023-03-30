@@ -1,11 +1,11 @@
 import os
 import sys
+
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.extractions.e6_code_cells as e6
-
+from src.config.states import *
 from src.helpers.h3_utils import TimeoutError
 from src.classes.c4_local_checkers import PathLocalChecker
 from src.extractions.e6_code_cells import process_code_cell
@@ -14,7 +14,8 @@ from tests.factories.models import RepositoryFactory
 from tests.factories.models import NotebookFactory, CodeCellFactory
 from tests.factories.models import CellModuleFactory, CellDataIOFactory
 from tests.database_config import connection, session  # noqa: F401
-from src.states import *
+
+import src.extractions.e6_code_cells as e6
 
 
 class TestCodeCellsProcessCodeCell:
@@ -24,11 +25,14 @@ class TestCodeCellsProcessCodeCell:
 
         repository = RepositoryFactory(session).create(state=REP_REQ_FILE_EXTRACTED)
         notebook = NotebookFactory(session).create(repository_id=repository.id)
-        cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id,
-                                               source=f"import {module_name} as pd\n"
-                                                      f"df={caller}.{function_name}({source})",
-                                               state=CELL_LOADED)
+        cell = CodeCellFactory(session).create(
+            repository_id=repository.id,
+            notebook_id=notebook.id,
+            state=CELL_LOADED,
+            source="import {} as pd\n".format(module_name) +
+                   "df = {}.{}({})".format(caller, function_name, source)
+        )
+
         checker = PathLocalChecker("")
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker)
@@ -51,9 +55,11 @@ class TestCodeCellsProcessCodeCell:
     def test_process_code_cell_already_processed(self, session):
         repository = RepositoryFactory(session).create(state=REP_REQ_FILE_EXTRACTED)
         notebook = NotebookFactory(session).create(repository_id=repository.id)
-        cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id,
-                                               state=CELL_PROCESSED)
+        cell = CodeCellFactory(session).create(
+            repository_id=repository.id,
+            notebook_id=notebook.id,
+            state=CELL_PROCESSED
+        )
         checker = PathLocalChecker("")
         result = process_code_cell(session=session, repository_id=repository.id,
                                    notebook_id=notebook.id, cell=cell, checker=checker)
@@ -65,9 +71,11 @@ class TestCodeCellsProcessCodeCell:
     def test_process_code_cell_time_out(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
-        cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id,
-                                               state=CELL_LOADED)
+        cell = CodeCellFactory(session).create(
+            repository_id=repository.id,
+            notebook_id=notebook.id,
+            state=CELL_LOADED
+        )
         checker = PathLocalChecker("")
 
         def mock_extract(_source, _checker):
@@ -84,9 +92,11 @@ class TestCodeCellsProcessCodeCell:
     def test_process_code_cell_syntax_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
-        cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id,
-                                               state=CELL_LOADED)
+        cell = CodeCellFactory(session).create(
+            repository_id=repository.id,
+            notebook_id=notebook.id,
+            state=CELL_LOADED
+        )
         checker = PathLocalChecker("")
 
         def mock_extract(_source, _checker):
@@ -103,9 +113,11 @@ class TestCodeCellsProcessCodeCell:
     def test_process_code_cell_other_errors(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
-        cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id,
-                                               state=CELL_LOADED)
+        cell = CodeCellFactory(session).create(
+            repository_id=repository.id,
+            notebook_id=notebook.id,
+            state=CELL_LOADED
+        )
         checker = PathLocalChecker("")
 
         def mock_extract(_source, _checker):
@@ -125,11 +137,14 @@ class TestCodeCellsProcessCodeCell:
 
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
-        cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id,
-                                               state=CELL_PROCESS_ERROR,
-                                               source=f"import {module_name} as pd\n"
-                                                      f"df={caller}.{function_name}({source})")
+        cell = CodeCellFactory(session).create(
+            repository_id=repository.id,
+            notebook_id=notebook.id,
+            state=CELL_PROCESS_ERROR,
+            source="import {} as pd\n".format(module_name) +
+                   "df = {}.{}({})".format(caller, function_name, source)
+        )
+
         checker = PathLocalChecker("")
 
         cell_module = CellModuleFactory(session).create(cell_id=cell.id)
@@ -159,11 +174,13 @@ class TestCodeCellsProcessCodeCell:
 
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
-        cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id,
-                                               state=CELL_SYNTAX_ERROR,
-                                               source=f"import {module_name} as pd\n"
-                                                      f"df={caller}.{function_name}({source})")
+        cell = CodeCellFactory(session).create(
+            repository_id=repository.id,
+            notebook_id=notebook.id,
+            state=CELL_SYNTAX_ERROR,
+            source="import {} as pd\n".format(module_name) +
+                   "df = {}.{}({})".format(caller, function_name, source)
+        )
         checker = PathLocalChecker("")
 
         cell_module = CellModuleFactory(session).create(cell_id=cell.id)
@@ -193,11 +210,13 @@ class TestCodeCellsProcessCodeCell:
 
         repository = RepositoryFactory(session).create()
         notebook = NotebookFactory(session).create(repository_id=repository.id)
-        cell = CodeCellFactory(session).create(repository_id=repository.id,
-                                               notebook_id=notebook.id,
-                                               state=CELL_PROCESS_TIMEOUT,
-                                               source=f"import {module_name} as pd\n"
-                                                      f"df={caller}.{function_name}({source})")
+        cell = CodeCellFactory(session).create(
+            repository_id=repository.id,
+            notebook_id=notebook.id,
+            state=CELL_PROCESS_TIMEOUT,
+            source="import {} as pd\n".format(module_name) +
+                   "df = {}.{}({})".format(caller, function_name, source),
+        )
         checker = PathLocalChecker("")
 
         cell_module = CellModuleFactory(session).create(cell_id=cell.id)

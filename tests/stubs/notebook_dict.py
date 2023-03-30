@@ -1,6 +1,6 @@
 import nbformat
 
-from src.states import NB_LOADED
+from src.config.states import NB_LOADED
 
 notebook_dict = \
         {

@@ -1,6 +1,6 @@
 import os
 import shutil
-from src.config import REPOS_DIR, DB_FILE, LOGS_DIR
+from src.consts import REPOS_DIR, DB_FILE, LOGS_DIR
 
 REPOS = True
 DATABASE = True

@@ -4,16 +4,16 @@ src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
-import src.extractions.e2_notebooks_and_cells as e2
-from src.db.database import Repository, Notebook, Cell
-
-from src.config import LOGS_DIR, Path
+from src.config.states import *
+from src.consts import LOGS_DIR, Path
 from src.classes.c1_safe_session import SafeSession
+from src.db.database import Repository, Notebook, Cell
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory, NotebookFactory
 from tests.stubs.others import stub_unzip
 from tests.stubs.load_notebook import stub_load_notebook, stub_load_notebook_error
-from src.states import *
+
+import src.extractions.e2_notebooks_and_cells as e2
 
 
 class TestNotebooksAndCellsFindNotebooks:
@@ -26,9 +26,10 @@ class TestNotebooksAndCellsFindNotebooks:
         file3_relative_path = 'file.ipynb_checkpoints'
 
         def mock_find_files(path, pattern):  # noqa: F841
-            return [Path(f'{repository.path}/{file1_relative_path}'),
-                    Path(f'{repository.path}/{file2_relative_path}'),
-                    Path(f'{repository.path}/{file3_relative_path}')]
+            return [Path('{}/{}'.format(repository.path, file1_relative_path)),
+                    Path('{}/{}'.format(repository.path, file2_relative_path)),
+                    Path('{}/{}'.format(repository.path, file3_relative_path))]
+
         monkeypatch.setattr(e2, 'find_files', mock_find_files)
         monkeypatch.setattr(Path, 'exists', lambda path: True)
 

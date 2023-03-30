@@ -1,4 +1,4 @@
-from src.states import NB_LOADED, CELL_LOADED
+from src.config.states import NB_LOADED, CELL_LOADED
 
 nbrow = {'repository_id': 1, 'name': 'file.ipynb', 'nbformat': '4.0', 'kernel': 'python3',
          'language': 'python', 'language_version': '3.5.1', 'max_execution_count': 22, 'total_cells': 61,

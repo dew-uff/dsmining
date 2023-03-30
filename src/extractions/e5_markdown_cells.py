@@ -2,7 +2,7 @@
 
 import os
 import argparse
-import src.config as config
+import src.consts as consts
 
 from langdetect import detect
 from nltk.corpus import stopwords
@@ -13,7 +13,10 @@ from src.classes.c2_status_logger import StatusLogger
 from src.classes.c3_renderer import CountRenderer, LANG_MAP
 from src.helpers.h2_script_helpers import set_up_argument_parser
 from src.helpers.h4_filters import filter_markdown_cells
-from src.states import *
+
+from src.config.states import CELL_LOADED, CELL_PROCESSED, CELL_PROCESS_ERROR
+from src.config.states import CELL_ORDER, CELL_ERRORS
+from src.config.states import states_after
 
 
 def extract_features(text):
@@ -24,7 +27,7 @@ def extract_features(text):
         language = LANG_MAP[detect(text)]
         stopwords_set = stopwords.words(language)
         using_stopwords = True
-    except Exception:
+    except Exception:  # noqa
         stopwords_set = set()
         using_stopwords = False
 
@@ -135,7 +138,7 @@ def main():
     parser = set_up_argument_parser(parser, script_name, "markdown_cells")
 
     args = parser.parse_args()
-    config.VERBOSE = args.verbose
+    consts.VERBOSE = args.verbose
     status = None
 
     if not args.count:

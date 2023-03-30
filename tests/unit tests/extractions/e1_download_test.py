@@ -1,22 +1,22 @@
-import shutil
 import sys
 import os
-
-import pytest
-
-from src import config
-from src.config import TEST_REPOS_DIR
-from src.db.database import Commit
-from src.classes.c1_safe_session import SafeSession
 
 src = os.path.dirname(os.path.dirname(os.path.abspath(''))) + '/src'
 if src not in sys.path:
     sys.path.append(src)
 
+from src.consts import TEST_REPOS_DIR
+from src.db.database import Commit
+from src.classes.c1_safe_session import SafeSession
+from src.config.states import *
+
 from tests.database_config import connection, session  # noqa: F401
 from tests.factories.models import RepositoryFactory
 from tests.stubs.commits import stub_repo_commits, mock_load_rep_and_commits
-from src.states import *
+
+import shutil
+import pytest
+import src.consts as consts
 import src.extractions.e1_download as e1
 
 
@@ -140,10 +140,9 @@ class TestDownloadLoadRepositoryAndCommits:
     def test_load_repository_commits_error(self, session, monkeypatch, capsys):
         repository = RepositoryFactory(session).create(state=REP_FILTERED, commit=None)
         safe_session = SafeSession(session, interrupted=REP_STOPPED)
-        commit_hash = b'8a34a4f653bdbdc01415a94dc20d4e9b97438965\n'
 
         def stub_clone(_part, _end, _repo, _remote, _branch, _commit):
-            raise EnvironmentError(f"Clone failed for {repository}")
+            raise EnvironmentError("Clone failed for {}".format(repository))
 
         monkeypatch.setattr(e1, 'clone', stub_clone)
 
@@ -172,10 +171,10 @@ class TestDownloadClone:
                                                      branch=None, commit=None)
 
         assert already_exists is False
-        assert full_dir == config.SELECTED_REPOS_DIR / "content" / part / end
+        assert full_dir == consts.SELECTED_REPOS_DIR / "content" / part / end
         assert full_dir.exists() is True
         assert len(commits) == 3
-        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
+        shutil.rmtree(consts.TEST_REPOS_DIR, ignore_errors=True)
         assert full_dir.exists() is False
 
     def test_load_repository_commits_repo_exists(self, session, monkeypatch, capsys):
@@ -196,10 +195,10 @@ class TestDownloadClone:
         assert already_exists is False
         assert already_exists2 is True
 
-        assert full_dir == config.SELECTED_REPOS_DIR / "content" / part / end
+        assert full_dir == consts.SELECTED_REPOS_DIR / "content" / part / end
         assert full_dir.exists() is True
         assert "Repository already cloned" in captured.out
-        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
+        shutil.rmtree(consts.TEST_REPOS_DIR, ignore_errors=True)
         assert full_dir.exists() is False
 
     def test_load_repository_commits_with_commit(self, session, monkeypatch):
@@ -214,11 +213,11 @@ class TestDownloadClone:
         last_commit = commits[5]
 
         assert already_exists is False
-        assert full_dir == config.SELECTED_REPOS_DIR / "content" / part / end
+        assert full_dir == consts.SELECTED_REPOS_DIR / "content" / part / end
         assert full_dir.exists() is True
         assert len(commits) == 6
         assert last_commit["hash"] == commit
-        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
+        shutil.rmtree(consts.TEST_REPOS_DIR, ignore_errors=True)
         assert full_dir.exists() is False
 
     def test_load_repository_commits_with_branch(self, session, monkeypatch):
@@ -232,10 +231,10 @@ class TestDownloadClone:
                                                      branch=branch, commit=None)
 
         assert already_exists is False
-        assert full_dir == config.SELECTED_REPOS_DIR / "content" / part / end
+        assert full_dir == consts.SELECTED_REPOS_DIR / "content" / part / end
         assert full_dir.exists() is True
         assert len(commits) > 15
-        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
+        shutil.rmtree(consts.TEST_REPOS_DIR, ignore_errors=True)
         assert full_dir.exists() is False
 
     def test_load_repository_commits_clone_error(self, session, monkeypatch):
@@ -270,7 +269,7 @@ class TestDownloadClone:
         with pytest.raises(EnvironmentError):
             e1.clone(part, end, repo, remote, branch=None, commit=commit)
 
-        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
+        shutil.rmtree(consts.TEST_REPOS_DIR, ignore_errors=True)
 
 
 class TestDownloadLoadCommits:
@@ -298,7 +297,7 @@ class TestDownloadLoadCommits:
         assert commits[0]["type"] == "commit"
         assert commits[1]["type"] == "merge"
 
-        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
+        shutil.rmtree(consts.TEST_REPOS_DIR, ignore_errors=True)
         assert full_dir.exists() is False
 
     def test_load_commits_invalid_commit(self, session, monkeypatch):
@@ -317,5 +316,4 @@ class TestDownloadLoadCommits:
         with pytest.raises(EnvironmentError):
             e1.clone(part, end, repo, remote, branch=None, commit=None)
 
-        shutil.rmtree(config.TEST_REPOS_DIR, ignore_errors=True)
-
+        shutil.rmtree(consts.TEST_REPOS_DIR, ignore_errors=True)

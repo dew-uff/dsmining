@@ -1,9 +1,10 @@
 from src.classes.c1_safe_session import SafeSession
 from src.db.database import Repository, Cell, PythonFile
-from src.helpers.h4_filters import filter_repositories, filter_markdown_cells, filter_code_cells, filter_python_files
-from src.states import NB_STOPPED, CELL_UNKNOWN_VERSION, PF_EMPTY
-from tests.factories.models import RepositoryFactory, MarkdownCellFactory, CodeCellFactory, NotebookFactory, \
-    PythonFileFactory
+from src.helpers.h4_filters import filter_repositories, filter_markdown_cells
+from src.helpers.h4_filters import filter_code_cells, filter_python_files
+from src.config.states import NB_STOPPED, PF_EMPTY
+from tests.factories.models import RepositoryFactory, MarkdownCellFactory
+from tests.factories.models import CodeCellFactory, NotebookFactory, PythonFileFactory
 from tests.database_config import connection, session  # noqa: F401
 
 
