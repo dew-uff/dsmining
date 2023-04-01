@@ -1,0 +1,122 @@
+import pandas as pd
+from datetime import timedelta
+from src.config.consts import GITHUB
+from src.config.states import REP_FILTERED
+from src.db.database import connect, Repository
+from src.helpers.h3_utils import vprint
+
+
+def filter_queries(queries):
+    vprint(2, "\033[93mFiltering queries according to the defined criteria...\033[0m\n")
+
+    queries[['user', 'name']] = queries['repo'].str.split('/', expand=True)
+
+    total = len(queries)
+    vprint(0, "\033[92mRepositories queried from GitHub   : {}\033[0m".format(total))
+    vprint(0, "-------------------------------------------------------")
+
+    # filter 1: contributors == 0
+    filter1 = queries["contributors"] > 0
+    queries_filter1 = queries[filter1]
+    vprint(1, "Filtering repositories with no contributors")
+    vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(queries) - len(queries_filter1)))
+
+    # filter 2: commits is null
+    filter2 = queries_filter1['commits'].notnull()
+    queries_filter2 = queries_filter1[filter2]
+    vprint(1, "Filtering repositories with no commits")
+    vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(queries_filter1) - len(queries_filter2)))
+
+    # filter 3: languages == 0
+    filter3 = queries_filter2["languages"] > 0
+    queries_filter3 = queries_filter2[filter3]
+    vprint(1, "Filtering repositories with no languages")
+    vprint(0, "\033[91mRemoved {} \033[0m repositories".format(len(queries_filter2) - len(queries_filter3)))
+
+    # filter 4: name does not contain 'course'
+    filter4 = ~queries_filter3['name'].str.contains('course')
+    queries_filter4 = queries_filter3[filter4]
+    vprint(1, "Filtering repositories where name contains the word 'course'")
+    vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(queries_filter3) - len(queries_filter4)))
+
+    # filter 5: name contains the word 'curso'
+    filter5 = ~queries_filter4['name'].str.contains('curso')
+    queries_filter5 = queries_filter4[filter5]
+    vprint(1, "Filtering repositories where name contains the word 'curso'")
+    vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(queries_filter4) - len(queries_filter5)))
+
+    # filter 6: name contains the word 'cours'
+    filter6 = ~queries_filter5['name'].str.contains('cours')
+    queries_filter6 = queries_filter5[filter6]
+    vprint(1, "Filtering repositories where name contains the word 'cours'")
+    vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(queries_filter5) - len(queries_filter6)))
+
+    vprint(0, "-------------------------------------------------------")
+    vprint(0, "\033[92mRemaing repositories afet the filtering: {}\033[0m\n".format(len(queries_filter6)))
+
+    return queries_filter6
+
+
+def select_repositories(filtered_queries):
+    vprint(2, "\033[93mSelecting Repositories by Language for futher extraction and analysis...\033[0m\n")
+
+    filtered_repos = filtered_queries.query("primary_language == 'Jupyter Notebook' | primary_language== 'Python'").copy()
+    vprint(0, "Total repositories with 'Jupyter Notebook' or 'Python' as Primary Language: {}\n"
+           .format(len(filtered_repos)))
+
+    filtered_repos["disk_usage"] = filtered_repos["disk_usage"].astype(int)
+    vprint(
+        0,
+        "Disk Usage for the {} repositories is estimated to be:\n"
+        "\033[92m{} KB - {:.2f} MB - {:.2f} GB - {:.2f} TB\033[0m\n"
+        .format(
+            len(filtered_repos),
+            filtered_repos.disk_usage.sum(),
+            filtered_repos.disk_usage.sum() / 10 ** 3,
+            filtered_repos.disk_usage.sum() / 10 ** 6,
+            filtered_repos.disk_usage.sum() / 10 ** 9
+        )
+        )
+    return filtered_repos
+
+
+def save_repositories(session, selected_repos):
+    vprint(2, "\033[93mSaving selected repositories to database...\033[0m")
+    count = 0
+    for repo in selected_repos[:10].itertuples(index=False):
+        repository = session.query(Repository).filter(
+            Repository.domain == GITHUB,
+            Repository.repository == repo.repo,
+        ).first()
+        if repository is not None:
+            vprint(1, "Repository already exists: ID={}".format(repository.id))
+        else:
+            count = count + 1
+            repo_row = Repository(
+                query_id=repo.id,
+                state=REP_FILTERED, domain=GITHUB,
+                repository=repo.repo, primary_language=repo.primary_language,
+                disk_usage=repo.disk_usage, is_mirror=repo.is_mirror,
+                git_created_at=repo.git_created_at, git_pushed_at=repo.git_pushed_at,
+                languages=repo.languages, contributors=repo.contributors, commits=repo.commits,
+                pull_requests=repo.pull_requests, branches=repo.branches, watchers=repo.watchers,
+                issues=repo.issues, stargazers=repo.stargazers, forks=repo.forks,
+                description=repo.description, tags=repo.tags, releases=repo.releases
+            )
+
+            session.add(repo_row)
+    session.commit()
+    print("\033[92mInserted {} repository into table Repositories\033[0m".format(count))
+
+
+def main():
+    with connect() as session:
+        vprint(2, "\033[93mRetrieving queries from the database...\033[0m\n")
+        queries = pd.read_sql_table("queries", session.connection())
+        filtered_queries = filter_queries(queries)
+        selected_repos = select_repositories(filtered_queries)
+        save_repositories(session, selected_repos)
+
+
+if __name__ == "__main__":
+    main()
