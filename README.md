@@ -68,28 +68,26 @@ Mining Data Science projects from public repositories to identify patterns and b
       <th width="450px" style="text-align:center">Description</th>
     </tr>
     <tr>
-      <td align="center">a1_collected.ipynb</td>
+      <td align="center">a0_collected.ipynb</td>
       <td>Analyzes collected repositories' features</td>
     </tr>
     <tr>
-      <td align="center">a2_repositories_and_git.py</td>
-      <td>Analyzes filtered repositories and git-related features</td>
-    </tr>
-    <tr>
-      <td  align="center">a3_languages.py</td>
+      <td  align="center">a1_languages.py</td>
       <td>Analyzes language-related features</td>
     </tr>
     <tr>
-      <td align="center">a4_modules.py</td>
+      <td align="center">a2_modules.py</td>
       <td>Analyzes modules extracted</td>
     </tr>
     <tr>
-      <td align="center">a5_data.py</td>
+      <td align="center">a3_data.py</td>
       <td>Analyzes data inputs/outputs</td>
     </tr>
+    <tr>
+      <td align="center">a4_repositories_and_git.py</td>
+      <td>Analyzes filtered repositories and git-related features</td>
+    </tr>
   </table>
-</p>
-
 
 
 
