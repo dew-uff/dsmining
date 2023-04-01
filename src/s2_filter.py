@@ -1,12 +1,11 @@
 import pandas as pd
-from datetime import timedelta
 from src.config.consts import GITHUB
-from src.config.states import REP_FILTERED
-from src.db.database import connect, Repository
+from src.config.states import REP_FILTERED, QUERY_SELECTED, QUERY_FILTRED, QUERY_DISCARDED
+from src.db.database import connect, Repository, Query
 from src.helpers.h3_utils import vprint
 
 
-def filter_queries(queries):
+def filter_queries(session, queries):
     vprint(2, "\033[93mFiltering queries according to the defined criteria...\033[0m\n")
 
     queries[['user', 'name']] = queries['repo'].str.split('/', expand=True)
@@ -52,15 +51,26 @@ def filter_queries(queries):
     vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(queries_filter5) - len(queries_filter6)))
 
     vprint(0, "-------------------------------------------------------")
-    vprint(0, "\033[92mRemaing repositories afet the filtering: {}\033[0m\n".format(len(queries_filter6)))
+    vprint(0, "\033[92mRemaing repositories after the filtering: {}\033[0m\n".format(len(queries_filter6)))
 
-    return queries_filter6
+    filtered_repos = queries_filter6
+
+    ids = filtered_repos["id"]
+    repos = session.query(Query).filter(Query.id.in_(ids))
+    repos.update({Query.state: QUERY_FILTRED}, synchronize_session=False)
+    repos_out = session.query(Query).filter(~Query.id.in_(ids))
+    repos_out.update({Query.state: QUERY_DISCARDED}, synchronize_session=False)
+    session.commit()
+
+    return filtered_repos
 
 
 def select_repositories(filtered_queries):
     vprint(2, "\033[93mSelecting Repositories by Language for futher extraction and analysis...\033[0m\n")
 
-    filtered_repos = filtered_queries.query("primary_language == 'Jupyter Notebook' | primary_language== 'Python'").copy()
+    filtered_repos = filtered_queries\
+        .query("primary_language == 'Jupyter Notebook' "
+               "| primary_language== 'Python'").copy()
     vprint(0, "Total repositories with 'Jupyter Notebook' or 'Python' as Primary Language: {}\n"
            .format(len(filtered_repos)))
 
@@ -83,28 +93,30 @@ def select_repositories(filtered_queries):
 def save_repositories(session, selected_repos):
     vprint(2, "\033[93mSaving selected repositories to database...\033[0m")
     count = 0
-    for repo in selected_repos[:10].itertuples(index=False):
+    for repo_query in selected_repos[:10].itertuples(index=False):
+        query = session.query(Query).filter(Query.id == repo_query.id).first()
         repository = session.query(Repository).filter(
             Repository.domain == GITHUB,
-            Repository.repository == repo.repo,
+            Repository.repository == repo_query.repo,
         ).first()
         if repository is not None:
             vprint(1, "Repository already exists: ID={}".format(repository.id))
         else:
+            query.state = QUERY_SELECTED
             count = count + 1
             repo_row = Repository(
-                query_id=repo.id,
+                query_id=repo_query.id,
                 state=REP_FILTERED, domain=GITHUB,
-                repository=repo.repo, primary_language=repo.primary_language,
-                disk_usage=repo.disk_usage, is_mirror=repo.is_mirror,
-                git_created_at=repo.git_created_at, git_pushed_at=repo.git_pushed_at,
-                languages=repo.languages, contributors=repo.contributors, commits=repo.commits,
-                pull_requests=repo.pull_requests, branches=repo.branches, watchers=repo.watchers,
-                issues=repo.issues, stargazers=repo.stargazers, forks=repo.forks,
-                description=repo.description, tags=repo.tags, releases=repo.releases
+                repository=repo_query.repo, primary_language=repo_query.primary_language,
+                disk_usage=repo_query.disk_usage, is_mirror=repo_query.is_mirror,
+                git_created_at=repo_query.git_created_at, git_pushed_at=repo_query.git_pushed_at,
+                languages=repo_query.languages, contributors=repo_query.contributors, commits=repo_query.commits,
+                pull_requests=repo_query.pull_requests, branches=repo_query.branches, watchers=repo_query.watchers,
+                issues=repo_query.issues, stargazers=repo_query.stargazers, forks=repo_query.forks,
+                description=repo_query.description, tags=repo_query.tags, releases=repo_query.releases
             )
-
             session.add(repo_row)
+
     session.commit()
     print("\033[92mInserted {} repository into table Repositories\033[0m".format(count))
 
@@ -113,7 +125,7 @@ def main():
     with connect() as session:
         vprint(2, "\033[93mRetrieving queries from the database...\033[0m\n")
         queries = pd.read_sql_table("queries", session.connection())
-        filtered_queries = filter_queries(queries)
+        filtered_queries = filter_queries(session, queries)
         selected_repos = select_repositories(filtered_queries)
         save_repositories(session, selected_repos)
 

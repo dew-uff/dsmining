@@ -46,6 +46,12 @@ class Query(Base):
     __tablename__ = 'queries'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    state = Column(Enum(QUERY_COLLECTED,
+                        QUERY_FILTRED,
+                        QUERY_SELECTED,
+                        QUERY_DISCARDED,
+                        name='query_states',
+                        validate_strings=True), default=QUERY_COLLECTED)
     repo = Column(String)
     end_cursor = Column(String)
     has_next_page = Column(Boolean)
@@ -77,7 +83,7 @@ class Query(Base):
 
     @force_encoded_string_output
     def __repr__(self):
-        return u"<Query({0.id})>".format(self.query)
+        return u"<Query({})>".format(self.repo)
 
 
 class Repository(Base):

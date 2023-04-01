@@ -1,3 +1,9 @@
+# Queries
+QUERY_COLLECTED = 'query_collected'
+QUERY_FILTRED = 'query_filtred'
+QUERY_SELECTED = 'query_selected'
+QUERY_DISCARDED = 'query_discarded'
+
 
 # Extractions
 EXTRACTED_SUCCESS = "extracted_repositories"
