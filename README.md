@@ -98,7 +98,6 @@ Mining Data Science projects from public repositories to identify patterns and b
 ### Applied Filters
 The projects that had the following requirements were collected from Github:
 - At least 1 language, 1 commit and 1 contributor
-- More than 1 day between first and last commit
 - Is not a course project
 
 ## Requirements
