@@ -43,7 +43,7 @@ def save_extraction(session, start, end, selected_repositories, error=False):
     if not error:
         extract = Extraction(
             start=start, end=end, runtime=end - start,
-            repositores=len(selected_repositories),
+            repositores=len(repositories_ids),
             state=EXTRACTED_SUCCESS
         )
 

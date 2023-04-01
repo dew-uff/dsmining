@@ -1,6 +1,6 @@
 import pandas as pd
 from src.config.consts import GITHUB
-from src.config.states import REP_FILTERED, QUERY_SELECTED, QUERY_FILTRED, QUERY_DISCARDED
+from src.config.states import REP_FILTERED, QUERY_SELECTED, QUERY_FILTERED, QUERY_DISCARDED
 from src.db.database import connect, Repository, Query
 from src.helpers.h3_utils import vprint
 
@@ -57,7 +57,7 @@ def filter_queries(session, queries):
 
     ids = filtered_repos["id"]
     repos = session.query(Query).filter(Query.id.in_(ids))
-    repos.update({Query.state: QUERY_FILTRED}, synchronize_session=False)
+    repos.update({Query.state: QUERY_FILTERED}, synchronize_session=False)
     repos_out = session.query(Query).filter(~Query.id.in_(ids))
     repos_out.update({Query.state: QUERY_DISCARDED}, synchronize_session=False)
     session.commit()
@@ -93,7 +93,7 @@ def select_repositories(filtered_queries):
 def save_repositories(session, selected_repos):
     vprint(2, "\033[93mSaving selected repositories to database...\033[0m")
     count = 0
-    for repo_query in selected_repos[:10].itertuples(index=False):
+    for repo_query in selected_repos[-10:].itertuples(index=False):
         query = session.query(Query).filter(Query.id == repo_query.id).first()
         repository = session.query(Repository).filter(
             Repository.domain == GITHUB,

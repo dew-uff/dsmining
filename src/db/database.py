@@ -47,7 +47,7 @@ class Query(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     state = Column(Enum(QUERY_COLLECTED,
-                        QUERY_FILTRED,
+                        QUERY_FILTERED,
                         QUERY_SELECTED,
                         QUERY_DISCARDED,
                         name='query_states',
