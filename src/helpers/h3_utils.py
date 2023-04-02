@@ -16,9 +16,6 @@ from contextlib import contextmanager
 from src.classes.c5_cell_visitor import CellVisitor
 from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
 
-from src.config.states import REP_FILTERED
-from src.db.database import Repository
-
 
 def to_unicode(text):
     if isinstance(text, str):
@@ -217,12 +214,6 @@ def get_next_pyexec():
         / next_version
         / "bin" / "python"
     )
-
-
-def filtered_repositories(session):
-    return session.query(Repository)\
-        .filter(Repository.state == REP_FILTERED)\
-        .count()
 
 
 def remove_repositorires(repositories):

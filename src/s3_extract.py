@@ -25,7 +25,7 @@ from sqlalchemy import func
 
 from src.config.consts import EXTRACTION_DIR, SRC_DIR, LOGS_DIR
 from src.db.database import connect, Repository, Extraction
-from src.helpers.h3_utils import check_exit, savepid, vprint, filtered_repositories, remove_repositorires
+from src.helpers.h3_utils import check_exit, savepid, vprint, remove_repositorires
 from src.classes.c2_status_logger import StatusLogger
 from src.config.states import *
 
@@ -117,6 +117,12 @@ def execute_script(script, args, iteration):
         return status
 
 
+def filtered_repositories(session):
+    return session.query(Repository)\
+        .filter(Repository.state == REP_FILTERED)\
+        .count()
+
+
 def select_repositories(session):
     filtered_repos = session.query(Repository).filter(Repository.state == REP_FILTERED)
     iteration_repositories = []
@@ -201,6 +207,8 @@ def main():
             except Exception as err:
                 vprint(4, "\033[91mError extracting repositories from iteration {} \n{}\033[0m"
                        .format(iteration, err))
+                if not end:
+                    end = datetime.utcnow()
                 save_extraction(session, start, end, selected_repositories, error=True)
 
             vprint(4, "\033[93mFiles from {} were removed from memory.\033[0m"

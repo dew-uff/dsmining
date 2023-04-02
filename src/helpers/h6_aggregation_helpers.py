@@ -1,5 +1,5 @@
 from collections import Counter, OrderedDict
-from src.db.database import CellModule, CellMarkdownFeature, PythonFileModule
+from src.db.database import CellModule, CellMarkdownFeature, PythonFileModule, CellDataIO, PythonFileDataIO, DataIO
 from src.helpers.h3_utils import vprint
 
 IGNORE_COLUMNS = {
@@ -22,6 +22,14 @@ MODULE_LOCAL = {
 MODULE_TYPES = {
     "any", "import_from", "import", "load_ext"
 }
+
+
+def infer_source(source):
+    source = source.replace("'", "")
+    if "." in source and source[-1] != "/":
+        return source.rsplit(".", 1)
+    else:
+        return None, None
 
 
 def calculate_markdown(notebook):
@@ -93,17 +101,60 @@ def calculate_modules(file, file_type):
 
     agg["others"] = ",".join(others)
     agg["repository_id"] = file.repository_id
-    agg[f"{file_type}_id"] = file.id
+    agg["{}_id".format(file_type)] = file.id
     agg["type"] = file_type
     return agg
 
 
+def calculate_data_ios(file, file_type):
+    query = []
+    notebook_id, python_file_id, index = None, None, None
+    check_index = False
+
+    if file_type == 'notebook':
+        query = (file.cell_data_ios_objs.order_by(CellDataIO.index.asc()))
+        notebook_id = file.id
+        check_index = True
+    elif file_type == 'python_file':
+        query = (file.python_file_data_ios_objs.order_by(PythonFileDataIO.id.asc()))
+        python_file_id = file.id
+
+    dtiorows = []
+    for data_io in query:
+        index, infered_file, infered_file_extension = None, None, None
+        if data_io.source_type == "Constant":
+            infered_file, infered_file_extension = infer_source(data_io.source)
+        if check_index:
+            index = data_io.index
+        row = DataIO(
+            repository_id=file.repository_id,
+            notebook_id=notebook_id,
+            python_file_id=python_file_id,
+            type=file_type,
+            index=index,
+            line=data_io.line,
+            infered_type=data_io.type,
+            caller=data_io.caller,
+            function_name=data_io.function_name,
+            function_type=data_io.function_type,
+            source=data_io.source,
+            source_type=data_io.source_type,
+            infered_file=infered_file,
+            infered_file_extension=infered_file_extension
+
+        )
+        dtiorows.append(row)
+
+    return dtiorows
+
+
 def load_repository(session, file, repository_id):
     if repository_id != file.repository_id:
+        repository_id = file.repository_id
         try:
             session.commit()
         except Exception as err:
-            vprint(0, 'Failed to save modules from repository {} due to {}'.format(
+            vprint(0, 'Failed to save agreggations from repository {} due to {}'.format(
                 repository_id, err
             ))
 

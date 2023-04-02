@@ -3,13 +3,14 @@ import argparse
 import os
 import src.config.consts as consts
 
-from src.db.database import connect, NotebookMarkdown, Cell
+from src.db.database import connect, NotebookMarkdown, Cell, DataIO
 from src.db.database import Module
 from src.helpers.h2_script_helpers import set_up_argument_parser
 from src.helpers.h3_utils import vprint, check_exit, savepid
 from src.classes.c2_status_logger import StatusLogger
 from src.helpers.h4_filters import filter_notebooks
-from src.helpers.h6_aggregation_helpers import calculate_markdown, calculate_modules, load_repository
+from src.helpers.h6_aggregation_helpers import calculate_markdown, calculate_modules
+from src.helpers.h6_aggregation_helpers import calculate_data_ios,  load_repository
 from src.config.states import *
 
 TYPE = "notebook"
@@ -56,9 +57,11 @@ def process_notebook(session, notebook, retry=False):
         return "ok - syntax error"
 
     agg_modules = calculate_modules(notebook, TYPE)
+    data_ios = calculate_data_ios(notebook, TYPE)
 
     session.add(NotebookMarkdown(**agg_markdown))
     session.add(Module(**agg_modules))
+    session.add_all(data_ios)
 
     notebook.state = NB_AGGREGATED
     session.add(notebook)

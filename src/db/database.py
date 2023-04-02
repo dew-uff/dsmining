@@ -1,6 +1,5 @@
 """ Handles database model and connection """
 import sys
-import subprocess
 import src.config.consts as consts
 
 from datetime import datetime
@@ -168,6 +167,7 @@ class Repository(Base):
 
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "repository_obj")
     modules_objs = one_to_many("Module", "repository_obj")
+    data_ios_objs = one_to_many("DataIO", "repository_obj")
 
     extraction_obj = many_to_one("Extraction", "repositories_objs")
     query_obj = many_to_one("Query", "repositories_objs")
@@ -193,50 +193,6 @@ class Repository(Base):
     def zip_path(self):
         """Return notebook path"""
         return consts.Path(str(self.path) + ".tar.bz2")
-
-    def compress(self, target=None, return_cmd=False):
-        """Compress repository"""
-        if not self.path.exists():
-            return False
-        if target is None:
-            target = self.zip_path
-        elif isinstance(target, str):
-            target = consts.Path(target)
-        cmd = [
-            "tar", "-cf", str(target),
-            "--use-compress-program={}".format(consts.COMPRESSION),
-            "-C", str(target.parent), str(self.hash_dir2)
-        ]
-        if return_cmd:
-            return cmd
-        return subprocess.call(cmd) == 0
-
-    def uncompress(self, target=None, return_cmd=False):
-        """Uncompress repository"""
-        if not self.zip_path.exists():
-            return False
-        target = target or self.zip_path.parent
-        cmd = [
-            "tar", "-xjf", str(self.zip_path),
-            "-C", str(target)
-        ]
-        if return_cmd:
-            return cmd
-        return subprocess.call(cmd) == 0
-
-    def get_commit(self, cwd=None):
-        """Get commit from uncompressed repository"""
-        cwd = cwd or self.path
-        if isinstance(cwd, str):
-            cwd = consts.Path(cwd)
-        if not cwd.exists():
-            return None
-        try:
-            return subprocess.check_output([
-                "git", "rev-parse", "HEAD"
-            ], cwd=str(cwd)).decode("utf-8").strip()
-        except subprocess.CalledProcessError:
-            return "Failed"
 
     @force_encoded_string_output
     def __repr__(self):
@@ -316,7 +272,9 @@ class Notebook(Base):
     cell_modules_objs = one_to_many("CellModule", "notebook_obj")
     cell_data_ios_objs = one_to_many("CellDataIO", "notebook_obj")
     notebook_markdowns_objs = one_to_many("NotebookMarkdown", "notebook_obj")
+
     modules_objs = one_to_many("Module", "notebook_obj")
+    data_ios_objs = one_to_many("DataIO", "notebook_obj")
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -430,6 +388,7 @@ class PythonFile(Base):
     python_file_data_ios_objs = one_to_many("PythonFileDataIO", "python_file_obj")
 
     modules_objs = one_to_many("Module", "python_file_obj")
+    data_ios_objs = one_to_many("DataIO", "python_file_obj")
 
     @property
     def path(self):
@@ -1132,6 +1091,58 @@ class Module(Base):
             return (
                 u"<Module({0.repository_id}/{0.python_file_id}/{0.id})>"
             ).format(self)
+
+
+class DataIO(Base):
+    """Data IO Table"""
+    # pylint: disable=too-few-public-methods, invalid-name
+    __tablename__ = 'data_ios'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['notebook_id'],
+            ['notebooks.id']
+        ),
+        ForeignKeyConstraint(
+            ['python_file_id'],
+            ['python_files.id']
+        ),
+        ForeignKeyConstraint(
+            ['repository_id'],
+            ['repositories.id']
+        ),
+    )
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    repository_id = Column(Integer)
+    type = Column(String)
+    notebook_id = Column(Integer)
+    python_file_id = Column(Integer)
+
+    index = Column(Integer)
+    line = Column(Integer)
+    infered_type = Column(String)
+    caller = Column(String)
+    function_name = Column(String)
+    function_type = Column(String)
+    source = Column(String)
+    source_type = Column(String)
+    infered_file = Column(String)
+    infered_file_extension = Column(String)
+    skip = Column(Integer, default=0)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
+    notebook_obj = many_to_one("Notebook", "data_ios_objs")
+    python_file_obj = many_to_one("PythonFile", "data_ios_objs")
+    repository_obj = many_to_one("Repository", "data_ios_objs")
+
+    @force_encoded_string_output
+    def __repr__(self):
+        return (
+            u"<DataIO({0.id}/{0.repository_id}/"
+            u"{0.function_name})>"
+        ).format(self)
 
 
 @contextmanager

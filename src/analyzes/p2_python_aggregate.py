@@ -10,6 +10,7 @@ from src.helpers.h3_utils import vprint, check_exit, savepid
 from src.classes.c2_status_logger import StatusLogger
 from src.helpers.h4_filters import filter_python_files
 from src.helpers.h6_aggregation_helpers import calculate_modules, load_repository
+from src.helpers.h6_aggregation_helpers import calculate_data_ios
 from src.config.states import *
 
 TYPE = "python_file"
@@ -21,8 +22,11 @@ def process_python_file(session, python_file):
         return "already processed"
 
     agg_modules = calculate_modules(python_file, TYPE)
+    data_ios = calculate_data_ios(python_file, TYPE)
 
     session.add(Module(**agg_modules))
+    session.add_all(data_ios)
+
     python_file.state = PF_AGGREGATED
     session.add(python_file)
 
