@@ -13,67 +13,117 @@ Repositories that did not meet the requirements were discarded on step 2, the fi
 
 ## Scripts Description
 
+#### Main Scripts
 <p align="center">
   <table>
     <tr>
       <th width="230px" style="text-align:center">Script</th>
-      <th width="450px" style="text-align:center">Description</th>
+      <th width="400px" style="text-align:center">Description</th>
+      <th width="150px" style="text-align:center">Input Table</th>
+      <th width="150px" style="text-align:center">Output Table</th>
     </tr>
     <tr>
       <td align="center">s1_collect.py</td>
       <td>Queries projects' metadata from GitHub API</td>
+      <td>None</td>
+      <td>Queries</td>
     </tr>
     <tr>
       <td align="center">s2_filter.ipynb</td>
       <td>Filters and selects repositories for further extractions</td>
+      <td>Queries</td>
+      <td>Repositories</td>
     </tr>
     <tr>
       <td align="center">s3_extract.py</td>
       <td>Extracts data from selected repositories</td>
+      <td>Repositories</td>
+      <td>Commits, Notebooks, Cells, Python Files, Requirement Files and others tables derivated from them </td>
     </tr>
   </table>
 
 
+#### Extraction Scripts
+<table>
+  <tr>
+    <th width="230px" style="text-align:center">Script</th>
+    <th width="400px" style="text-align:center">Description</th>
+    <th width="150px" style="text-align:center">Input Table</th>
+    <th width="150px" style="text-align:center">Output Table</th>
+  </tr>
+  <tr>
+    <td>e1_download.py</td>
+    <td>Downloads selected repositories from GitHub</td>
+    <td>Repositories</td>
+    <td>Repositories</td>
+  </tr>
+  <tr>
+    <td>e2_notebooks_and_cells.py</td>
+    <td>Extracts Notebooks and Cells from repositories</td>
+    <td>Repositories</td>
+    <td>Notebooks, Cells</td>
+  </tr>
+  <tr>
+    <td>e3_python_files.py</td>
+    <td>Extracts Python Files from repositories</td>
+    <td>Repositores</td>
+    <td>Python Files</td>
+  </tr>
+  <tr>
+    <td>e4_requirement_files.py</td>
+    <td>Extracts Requirement Files from repositories</td>
+    <td>Repositores</td>
+    <td>Requirement Files</td>
+  </tr>
+  <tr>
+    <td>e5_markdown_cells.py</td>
+    <td>Extracts features from markdown cells</td>
+    <td>Cells with type "markdown"</td>
+    <td>Cell Markdown Features</td>
+  </tr>
+  <tr>
+    <td>e6_code_cells.py</td>
+    <td>Extracts features from code cells</td>
+    <td>Cells with type "code"</td>
+    <td>Cell Modules, Cell Data IOs</td>
+  </tr>
+  <tr>
+    <td>e7_python_features.py</td>
+    <td>Extracts features from python files</td>
+    <td>Python Files</td>
+    <td>Python Modules, Python Data IOs</td>
+  </tr>
+</table>
 
+
+#### Aggregation Scripts
+<p align="center">
   <table>
     <tr>
       <th width="230px" style="text-align:center">Script</th>
-      <th width="450px" style="text-align:center">Description</th>
+      <th width="400px" style="text-align:center">Description</th>
+      <th width="150px" style="text-align:center">Input Table</th>
+      <th width="150px" style="text-align:center">Output Table</th>
     </tr>
     <tr>
-      <td align="center">e1_download.py</td>
-      <td>Downloads selected repositories from GitHub</td>
+      <td align="center">p1_notebook_aggregate.ipynb</td>
+      <td>Aggregates some of the data related to Notebooks and their Cells for an easier analysis</td>
+      <td>Cell Markdown Features, Cell Modules, Cell Data IOs</td>
+      <td>Notebook Markdowns, Modules, Data IOs</td>
     </tr>
     <tr>
-      <td align="center">e2_notebooks_and_cells.py</td>
-      <td>Extracts Notebooks and Cells from repositories</td>
-    </tr>
-    <tr>
-      <td align="center">e3_python_files.py</td>
-      <td>Extracts Python Files from repositories</td>
-    </tr>
-    <tr>
-      <td align="center">e4_requirement_files.py</td>
-      <td>Extracts Requirement Files from repositories</td>
-    </tr>
-    <tr>
-      <td align="center">e5_markdown_cells.py</td>
-      <td>Extracts features from markdown cells</td>
-    </tr>
-    <tr>
-      <td align="center">e6_code_cells.py</td>
-      <td>Extracts features from code cells</td>
-    </tr>
-    <tr>
-      <td align="center">e7_python_features.py</td>
-      <td>Extracts features from python files</td>
+      <td align="center">p2_python_aggregate.ipynb</td>
+      <td>Aggregates some of the data related to Python Files for an easier analysis</td>
+      <td>Python Modules, Python Data IOs</td>
+      <td>Modules, Data IOs</td>
     </tr>
   </table>
 
-
+#### Analysis Notebooks
+After we extract all the data from selected repositories, we use Jupyter Notebooks to analyze the data and generate conclusions and graphic outputs.
   <table>
     <tr>
-      <th width="230px" style="text-align:center">Script</th>
+      <th width="230px" style="text-align:center">Notebook</th>
       <th width="450px" style="text-align:center">Description</th>
     </tr>
     <tr>
@@ -81,19 +131,19 @@ Repositories that did not meet the requirements were discarded on step 2, the fi
       <td>Analyzes collected repositories' features</td>
     </tr>
     <tr>
-      <td  align="center">a1_languages.py</td>
+      <td  align="center">a1_languages.ipynb</td>
       <td>Analyzes language-related features</td>
     </tr>
     <tr>
-      <td align="center">a2_modules.py</td>
+      <td align="center">a2_modules.ipynb</td>
       <td>Analyzes modules extracted</td>
     </tr>
     <tr>
-      <td align="center">a3_data.py</td>
+      <td align="center">a3_data.ipynb</td>
       <td>Analyzes data inputs/outputs</td>
     </tr>
     <tr>
-      <td align="center">a4_repositories_and_git.py</td>
+      <td align="center">a4_repositories_and_git.ipynb</td>
       <td>Analyzes filtered repositories and git-related features</td>
     </tr>
   </table>
@@ -129,8 +179,6 @@ conda activate dsm38
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
-
-
 
 # References
 - [DB Mining](https://github.com/gems-uff/db-mining)
