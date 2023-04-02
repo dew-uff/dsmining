@@ -1,9 +1,49 @@
-# Data Science Mining
+# About
+DS Mining is a project with the purpose of mining data from from public Data Science repositories to identify patterns and behaviors. The project is developed in Python 3.8, uses SQL Alchemy to deal with a SQLite database and pytest as a testing framework.
 
-## About
-Mining Data Science projects from public repositories to identify patterns and behaviors
+## Overview
+The project consists of 4 step that go from data collection to analysis.
+<img width="1534" alt="Project Workflow" src="https://user-images.githubusercontent.com/50959073/229359623-53e50159-19c9-41eb-a9bc-9aad06c04745.png">
 
-### Script Workflow   
+## Corpus
+The corpus of the project consists of a search in GitHub's GraphQL API for the terms: "Data Science", "Ciência de Dados", "Ciencia de los Datos" and "Science des Données". After the collection, we estabelished the following requirements a repository has to have to be extracted and analyzed:
+- At least 1 language, 1 commit and 1 contributor
+- Is not a course project
+Repositories that did not meet the requirements were discarded on step 2, the filtering.
+
+
+# Installation
+## Requirements
+Running all the scripts requires you to download and set up 3 conda enviroments. 
+After that you will need to download the requirements listed on ```requirements.txt```
+
+
+### Conda 2.7
+```
+conda create -n dsm27 python=2.7 -y
+conda activate dsm27
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Conda 3.5
+```
+conda create -n dsm35 python=3.5 -y
+conda activate dsm35
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Conda 3.8
+```
+conda create -n dsm38 python=3.8 -y
+conda activate dsm38
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+## Scripts Description
+
 <p align="center">
   <table>
     <tr>
@@ -90,44 +130,7 @@ Mining Data Science projects from public repositories to identify patterns and b
   </table>
 
 
-
-
-## Corpus
-### Applied Filters
-The projects that had the following requirements were collected from Github:
-- At least 1 language, 1 commit and 1 contributor
-- Is not a course project
-
-## Requirements
-Running all the scripts requires you to download and set up 3 conda enviroments. 
-After that you will need to download the requirements listed on ```requirements.txt```
-
-
-### Conda 2.7
-```
-conda create -n dsm27 python=2.7 -y
-conda activate dsm27
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### Conda 3.5
-```
-conda create -n dsm35 python=3.5 -y
-conda activate dsm35
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### Conda 3.8
-```
-conda create -n dsm38 python=3.8 -y
-conda activate dsm38
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-## References
+# References
 - [DB Mining](https://github.com/gems-uff/db-mining)
 - [Script Analysis](https://github.com/dew-uff/script-analysis)
 - [JupArc](https://github.com/gems-uff/jupyter-archaeology)
