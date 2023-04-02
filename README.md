@@ -11,6 +11,9 @@ The corpus of the project consists of a search in GitHub's GraphQL API for the t
 - Is not a course project
 Repositories that did not meet the requirements were discarded on step 2, the filtering.
 
+# Workflow
+<img width="1984" alt="Workflow" src="https://user-images.githubusercontent.com/50959073/229381991-6baa9d88-1d00-4430-9aaa-f49c11cb6b90.png">
+
 ## Scripts Description
 
 #### Main Scripts
