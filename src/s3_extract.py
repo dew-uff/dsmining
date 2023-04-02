@@ -1,5 +1,19 @@
-"""Main script that calls the others"""
-import shutil
+"""
+ - s3_extract.py
+
+This script is responsible for extracting data from repositories
+that were collected in `s1_collect.py` and then filtered and selected
+in `s2_filter.py`.
+
+It consists of loop that goes through the repositories in waves of a certing
+SIZE_LIMIT that you can set. The extraction is done by executing a series of
+extraction scripts that are located in the `src/extractions` folder in a certain
+order that you can also set.
+
+There's also a second thread that allows you two pause
+the loop if and when you want to, by typing stop.
+"""
+
 import subprocess
 import threading
 import os
@@ -11,7 +25,7 @@ from sqlalchemy import func
 
 from src.config.consts import EXTRACTION_DIR, SRC_DIR, LOGS_DIR
 from src.db.database import connect, Repository, Extraction
-from src.helpers.h3_utils import check_exit, savepid, vprint
+from src.helpers.h3_utils import check_exit, savepid, vprint, filtered_repositories, remove_repositorires
 from src.classes.c2_status_logger import StatusLogger
 from src.config.states import *
 
@@ -28,12 +42,6 @@ ORDER = [
     "e6_code_cells",
     "e7_python_features",
 ]
-
-
-def remove_repositorires(repositories):
-    for rep in repositories:
-        if rep.dir_path.exists():
-            shutil.rmtree(os.path.join(rep.dir_path))
 
 
 def save_extraction(session, start, end, selected_repositories, error=False):
@@ -101,6 +109,9 @@ def execute_script(script, args, iteration):
         status = subprocess.call(options, stdout=outf, stderr=outf)
         end = datetime.now()
 
+        if status != 0:
+            raise Exception("Extraction failed.")
+
         vprint(0, "\033[93m[{}]\033[0m Done - Status: {} - Runtime: {}\n"
                .format(end.strftime('%Y-%m-%d %H:%M:%S'), status, str(end - start)))
         return status
@@ -134,12 +145,6 @@ def select_repositories(session):
         options_to_all.append(str(id_))
 
     return options_to_all, selected_output
-
-
-def filtered_repositories(session):
-    return session.query(Repository)\
-        .filter(Repository.state == REP_FILTERED)\
-        .count()
 
 
 def get_stop():

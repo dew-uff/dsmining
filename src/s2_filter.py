@@ -1,3 +1,12 @@
+"""
+- s2_filter.py
+
+This script is responsible for filtering that were collected in
+`s1_collect.py` according to a criteria and also selecting some
+of the repositories to be extracted and futher analyzed in `s3_extract.py`.
+"""
+
+
 import pandas as pd
 from src.config.consts import GITHUB
 from src.config.states import REP_FILTERED, QUERY_SELECTED, QUERY_FILTERED, QUERY_DISCARDED

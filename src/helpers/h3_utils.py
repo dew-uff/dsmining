@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import os
 import re
+import shutil
 import sys
 import ast
 import bisect
@@ -14,6 +15,9 @@ from src.config.consts import Path, LOGS_DIR
 from contextlib import contextmanager
 from src.classes.c5_cell_visitor import CellVisitor
 from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
+
+from src.config.states import REP_FILTERED
+from src.db.database import Repository
 
 
 def to_unicode(text):
@@ -213,3 +217,15 @@ def get_next_pyexec():
         / next_version
         / "bin" / "python"
     )
+
+
+def filtered_repositories(session):
+    return session.query(Repository)\
+        .filter(Repository.state == REP_FILTERED)\
+        .count()
+
+
+def remove_repositorires(repositories):
+    for rep in repositories:
+        if rep.dir_path.exists():
+            shutil.rmtree(os.path.join(rep.dir_path))

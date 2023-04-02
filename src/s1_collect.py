@@ -1,4 +1,17 @@
-""" Collects Repositories from GitHub """
+"""
+ - s1_collect.py
+
+This code is responsible for collecting Repositories metadata from GitHub.
+It does so by using GitHub GraphQL API, an API that allows you to specify
+exactly what data you want in a single request. That is defined in the
+`query.graphql` file that can be found in `src/config`. Along with that
+we define a "search text" that will be searched and you can also specify
+a min pushed date.
+
+Using the API the scripts craws GitHub and populates the table Query
+with the information it receives.
+
+"""
 
 import os
 import time
