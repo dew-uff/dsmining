@@ -11,37 +11,6 @@ The corpus of the project consists of a search in GitHub's GraphQL API for the t
 - Is not a course project
 Repositories that did not meet the requirements were discarded on step 2, the filtering.
 
-
-# Installation
-## Requirements
-Running all the scripts requires you to download and set up 3 conda enviroments. 
-After that you will need to download the requirements listed on ```requirements.txt```
-
-
-### Conda 2.7
-```
-conda create -n dsm27 python=2.7 -y
-conda activate dsm27
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### Conda 3.5
-```
-conda create -n dsm35 python=3.5 -y
-conda activate dsm35
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### Conda 3.8
-```
-conda create -n dsm38 python=3.8 -y
-conda activate dsm38
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
 ## Scripts Description
 
 <p align="center">
@@ -128,6 +97,39 @@ pip install -r requirements.txt
       <td>Analyzes filtered repositories and git-related features</td>
     </tr>
   </table>
+
+
+
+# Installation
+## Requirements
+Running all the scripts requires you to download and set up 3 conda enviroments. 
+After that you will need to download the requirements listed on ```requirements.txt```
+
+
+### Conda 2.7
+```
+conda create -n dsm27 python=2.7 -y
+conda activate dsm27
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Conda 3.5
+```
+conda create -n dsm35 python=3.5 -y
+conda activate dsm35
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Conda 3.8
+```
+conda create -n dsm38 python=3.8 -y
+conda activate dsm38
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
 
 
 # References
