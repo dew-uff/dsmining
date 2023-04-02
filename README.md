@@ -1,6 +1,16 @@
 # About
 DS Mining is a project with the purpose of mining data from from public Data Science repositories to identify patterns and behaviors. The project is developed in Python 3.8, uses SQL Alchemy to deal with a SQLite database and pytest as a testing framework.
 
+Table of Contents
+=================
+
+- [Overview](#overview)
+- [Workflow](#workflow)
+- [Installation](#installation)
+- [Running](#running)
+- [References](#references)
+
+
 ## Overview
 The project consists of 4 step that go from data collection to analysis.
 <img width="1534" alt="Project Workflow" src="https://user-images.githubusercontent.com/50959073/229359623-53e50159-19c9-41eb-a9bc-9aad06c04745.png">
@@ -154,9 +164,12 @@ After we extract all the data from selected repositories, we use Jupyter Noteboo
 
 
 # Installation
+The project primarily uses Python 3.8 as an interpreter, but it also uses other Python versions when extracting features from Abstract Syntax Trees from other versions, too deal with that we use Conda, instructions to install it on Linux can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html).
+
+
 ## Requirements
-Running all the scripts requires you to download and set up 3 conda enviroments. 
-After that you will need to download the requirements listed on ```requirements.txt```
+In the project we used 3 conda enviroments (2.7, 3.5 and 3.8). 
+We also used several Python modules that can be found on ```requirements.txt```. You can follow the instructions bellow to set up the conda enviroments and download the modules in each one of them.
 
 
 ### Conda 2.7
@@ -182,6 +195,9 @@ conda activate dsm38
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
+# Running
+To run the project you simply have to run scripts s1, s2, s3, p1, p2 and then each analysis notebook.
+To run the tests you can call them using ``pytest file.py`` or ``pytest directory/``
 
 # References
 - [DB Mining](https://github.com/gems-uff/db-mining)
