@@ -1,6 +1,6 @@
 # Queries
 QUERY_COLLECTED = 'query_collected'
-QUERY_FILTERED = 'query_filtred'
+QUERY_FILTERED = 'query_filtered'
 QUERY_SELECTED = 'query_selected'
 QUERY_DISCARDED = 'query_discarded'
 
