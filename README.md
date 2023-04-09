@@ -23,7 +23,7 @@ The corpus of the project consists of a search in GitHub's GraphQL API for the t
 Repositories that did not meet the requirements were discarded on step 2, the filtering.
 
 # Workflow
-<img width="1984" alt="Workflow" src="https://user-images.githubusercontent.com/50959073/229383165-5e11fa80-c699-4e59-98ad-adb8e75f69ea.png">
+<img width="1984" alt="Workflow" src="https://user-images.githubusercontent.com/50959073/230793885-728120bb-4ad9-40db-b382-29bdf7708a65.png">
 
 ## Scripts Description
 
@@ -120,13 +120,13 @@ Repositories that did not meet the requirements were discarded on step 2, the fi
       <th width="150px" style="text-align:center">Output Table</th>
     </tr>
     <tr>
-      <td align="center">p1_notebook_aggregate.ipynb</td>
+      <td align="center">ag1_notebook_aggregate.ipynb</td>
       <td>Aggregates some of the data related to Notebooks and their Cells for an easier analysis</td>
       <td>Cell Markdown Features, Cell Modules, Cell Data IOs</td>
       <td>Notebook Markdowns, Modules, Data IOs</td>
     </tr>
     <tr>
-      <td align="center">p2_python_aggregate.ipynb</td>
+      <td align="center">ag2_python_aggregate.ipynb</td>
       <td>Aggregates some of the data related to Python Files for an easier analysis</td>
       <td>Python Modules, Python Data IOs</td>
       <td>Modules, Data IOs</td>
@@ -141,24 +141,24 @@ After we extract all the data from selected repositories, we use Jupyter Noteboo
       <th width="450px" style="text-align:center">Description</th>
     </tr>
     <tr>
-      <td align="center">a0_collected.ipynb</td>
+      <td align="center">a1_collected.ipynb</td>
       <td>Analyzes collected repositories' features</td>
     </tr>
     <tr>
-      <td  align="center">a1_languages.ipynb</td>
+      <td  align="center">a2_filtered.ipynb</td>
       <td>Analyzes language-related features</td>
     </tr>
+        <tr>
+      <td align="center">a3_selected.ipynb</td>
+      <td>Analyzes selected repositories' features</td>
+    </tr>
     <tr>
-      <td align="center">a2_modules.ipynb</td>
+      <td align="center">a4_modules.ipynb</td>
       <td>Analyzes modules extracted</td>
     </tr>
     <tr>
-      <td align="center">a3_data.ipynb</td>
-      <td>Analyzes data inputs/outputs</td>
-    </tr>
-    <tr>
-      <td align="center">a4_repositories_and_git.ipynb</td>
-      <td>Analyzes filtered repositories and git-related features</td>
+      <td align="center">a5_code_and_data.ipynb</td>
+      <td>Analyzes code features and data inputs/outputs</td>
     </tr>
   </table>
 
