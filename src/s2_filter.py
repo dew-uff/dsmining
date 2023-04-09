@@ -102,7 +102,9 @@ def select_repositories(filtered_queries):
 def save_repositories(session, selected_repos):
     vprint(2, "\033[93mSaving selected repositories to database...\033[0m")
     count = 0
-    for repo_query in selected_repos[-10:].itertuples(index=False):
+
+    selected_repos = selected_repos.sort_values(by='stargazers', ascending=False)
+    for repo_query in selected_repos[:10].itertuples(index=False):
         query = session.query(Query).filter(Query.id == repo_query.id).first()
         repository = session.query(Repository).filter(
             Repository.domain == GITHUB,
