@@ -122,7 +122,7 @@ def calculate_data_ios(file, file_type):
     dtiorows = []
     for data_io in query:
         index, infered_file, infered_file_extension = None, None, None
-        if data_io.source_type == "Constant":
+        if data_io.source_type == "Constant" or data_io.source_type == "Str":
             infered_file, infered_file_extension = infer_source(data_io.source)
         if check_index:
             index = data_io.index
