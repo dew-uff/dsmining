@@ -144,10 +144,13 @@ def filter_python_files(session, selected_python_files, selected_repositories,
     return query
 
 
-def filter_notebooks(session, count, interval, reverse):
+def filter_notebooks(session, selected_repositories, count, interval, reverse):
     filters = [
         Notebook.state != NB_GENERIC_LOAD_ERROR
     ]
+
+    if selected_repositories:
+        filters += [Notebook.repository_id.in_(selected_repositories)]
 
     if interval:
         filters += [

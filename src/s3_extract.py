@@ -41,6 +41,8 @@ ORDER = [
     "e5_markdown_cells",
     "e6_code_cells",
     "e7_python_features",
+    "ag1_notebook_aggregate",
+    "ag2_python_aggregate"
 ]
 
 
@@ -101,10 +103,8 @@ def execute_script(script, args, iteration):
         out = str(out) + ".2"
 
     with open(str(out), "wb") as outf:
-        if script == 's3_download':
-            options = ['python', '-u', SRC_DIR + os.sep + script + ".py"] + args
-        else:
-            options = ['python', '-u', EXTRACTION_DIR + os.sep + script + ".py"] + args
+
+        options = ['python', '-u', EXTRACTION_DIR + os.sep + script + ".py"] + args
 
         status = subprocess.call(options, stdout=outf, stderr=outf)
         end = datetime.now()

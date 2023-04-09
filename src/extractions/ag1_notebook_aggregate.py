@@ -70,13 +70,13 @@ def process_notebook(session, notebook, retry=False):
 
 
 def apply(
-    session, status, retry,
+    session, status, selected_repositories, retry,
     count, interval, reverse, check
 ):
     """Aggregate Notebook features"""
 
-    query = filter_notebooks(session=session, count=count,
-                             interval=interval, reverse=reverse)
+    query = filter_notebooks(session=session, selected_repositories=selected_repositories,
+                             count=count, interval=interval, reverse=reverse)
 
     repository_id = None
 
@@ -114,6 +114,7 @@ def main():
         apply(
             session=session,
             status=status,
+            selected_repositories=args.repositories,
             retry=True if args.retry_errors else False,
             count=args.count,
             interval=args.interval,

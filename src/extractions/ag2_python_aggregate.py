@@ -34,14 +34,14 @@ def process_python_file(session, python_file):
 
 
 def apply(
-    session, status,
+    session, status, selected_repositories,
     count, interval, reverse, check
 ):
     """Extract code cell features"""
 
     query = filter_python_files(
         session=session, selected_python_files=False,
-        selected_repositories=False,
+        selected_repositories=selected_repositories,
         count=count, interval=interval, reverse=reverse
     )
 
@@ -80,6 +80,7 @@ def main():
         apply(
             session=session,
             status=status,
+            selected_repositories=args.repositories,
             count=args.count,
             interval=args.interval,
             reverse=args.reverse,
