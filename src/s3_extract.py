@@ -23,7 +23,7 @@ import sys
 
 from sqlalchemy import func
 
-from src.config.consts import EXTRACTION_DIR, SRC_DIR, LOGS_DIR
+from src.config.consts import EXTRACTION_DIR, LOGS_DIR
 from src.db.database import connect, Repository, Extraction
 from src.helpers.h3_utils import check_exit, savepid, vprint, remove_repositorires
 from src.classes.c2_status_logger import StatusLogger

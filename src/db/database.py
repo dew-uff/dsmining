@@ -142,7 +142,6 @@ class Repository(Base):
     hash_dir2 = Column(String)
     commit = Column(String)
 
-    processed = Column(Integer, default=0)
     notebooks_count = Column(Integer)
     python_files_count = Column(Integer)
     setups_count = Column(Integer)
@@ -263,8 +262,6 @@ class Notebook(Base):
     raw_cells = Column(Integer)
     unknown_cell_formats = Column(Integer)
     empty_cells = Column(Integer)
-    processed = Column(Integer, default=0)
-    skip = Column(Integer, default=0)
 
     repository_obj = many_to_one("Repository", "notebooks_objs")
     cell_objs = one_to_many("Cell", "notebook_obj")
@@ -337,8 +334,6 @@ class Cell(Base):
     output_formats = Column(String)
     source = Column(String)
     python = Column(Boolean)
-    processed = Column(Integer, default=0)
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -377,7 +372,6 @@ class PythonFile(Base):
     name = Column(String)
     source = Column(String)
     total_lines = Column(Integer)
-    processed = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -421,8 +415,6 @@ class RequirementFile(Base):
     name = Column(String)
     reqformat = Column(String)  # setup.py, requirements.py, Pipfile, Pipfile.lock
     content = Column(String)
-    processed = Column(Integer, default=0)
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -608,7 +600,6 @@ class CellMarkdownFeature(Base):
     latex_lines = Column(Integer)
     latex_words = Column(Integer)
     latex_stopwords = Column(Integer)
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -656,7 +647,6 @@ class CellModule(Base):
     import_type = Column(String)
     module_name = Column(String)
     local = Column(Boolean)
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -705,7 +695,6 @@ class CellDataIO(Base):
     function_type = Column(String)
     source = Column(String)
     source_type = Column(String)
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -745,7 +734,6 @@ class PythonFileModule(Base):
     import_type = Column(String)
     module_name = Column(String)
     local = Column(Boolean)
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -787,7 +775,6 @@ class PythonFileDataIO(Base):
     function_type = Column(String)
     source = Column(String)
     source_type = Column(String)
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -998,7 +985,6 @@ class NotebookMarkdown(Base):
     latex_lines = Column(Integer)
     latex_words = Column(Integer)
     latex_stopwords = Column(Integer)
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -1069,10 +1055,7 @@ class Module(Base):
     local_load_ext_count = Column(Integer)
     external_load_ext = Column(String)
     external_load_ext_count = Column(Integer)
-
     others = Column(String)
-
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -1128,7 +1111,6 @@ class DataIO(Base):
     source_type = Column(String)
     infered_file = Column(String)
     infered_file_extension = Column(String)
-    skip = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)

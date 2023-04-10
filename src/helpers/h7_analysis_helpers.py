@@ -59,15 +59,15 @@ def var(key, value, template="{}"):
     result = template.format(value)
     latex_result = tex_escape(result)
     data = {}
-    if os.path.exists("{}/variables.dat".format(consts.DATA_DIR)):
-        with open("{}/variables.dat".format(consts.DATA_DIR), "r") as fil:
+    if os.path.exists("{}/variables.dat".format(consts.OUTPUTS_DIR)):
+        with open("{}/variables.dat".format(consts.OUTPUTS_DIR), "r") as fil:
             for line in fil:
                 line = line.strip()
                 if line:
                     k, v = line.split(" = ")
                     data[k] = v
     data[key] = latex_result
-    with open("{}/variables.dat".format(consts.DATA_DIR), "w") as fil:
+    with open("{}/variables.dat".format(consts.OUTPUTS_DIR), "w") as fil:
         fil.writelines(
             "{} = {}\n".format(k, v)
             for k, v in data.items()
@@ -249,9 +249,9 @@ def savefig(name, width=8, height=6):
     yield
     fig = plt.gcf()
     fig.set_size_inches(width, height)
-    # fig.savefig("{}/outputs/svg/{}.svg".format(consts.DATA_DIR, name), bbox_inches='tight')
-    # fig.savefig("{}/outputs/pdf/{}.pdf".format(consts.DATA_DIR, name), bbox_inches='tight')
-    fig.savefig("{}/outputs/png/{}.png".format(consts.DATA_DIR, name), bbox_inches='tight')
+    # fig.savefig("{}/outputs/svg/{}.svg".format(consts.OUTPUTS_DIR, name), bbox_inches='tight')
+    # fig.savefig("{}/outputs/pdf/{}.pdf".format(consts.OUTPUTS_DIR, name), bbox_inches='tight')
+    fig.savefig("{}/outputs/png/{}.png".format(consts.OUTPUTS_DIR, name), bbox_inches='tight')
 
 
 @contextmanager

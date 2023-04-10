@@ -16,7 +16,7 @@ class StatusLogger(object):
         self.time = time.time()
         consts.LOGS_DIR.mkdir(parents=True, exist_ok=True)
         self.file = consts.LOGS_DIR / "status.csv"
-        self.freq = consts.STATUS_FREQUENCY.get(script, 5)
+        self.freq = consts.STATUS_FREQUENCY
         self.pid = os.getpid()
 
     @property

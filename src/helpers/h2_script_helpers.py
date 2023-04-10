@@ -13,7 +13,7 @@ def set_up_argument_parser(parser, script_name, script_type="repository"):
     parser.add_argument("-r", "--reverse", help="iterate in reverse order",
                         action="store_true")
     parser.add_argument("-i", "--interval", help="interval",
-                        type=int, nargs=2, default=consts.REPOSITORY_INTERVAL)
+                        type=int, nargs=2)
     parser.add_argument("--check", help="check name in .exit", type=str,
                         nargs="*", default={"all", script_name, script_name + ".py"})
     parser.add_argument("-sr", "--repositories", help="selected repositories ids",
