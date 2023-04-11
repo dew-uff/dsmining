@@ -3,7 +3,7 @@ import argparse
 import os
 import src.config.consts as consts
 
-from src.db.database import connect, NotebookMarkdown, Cell, DataIO
+from src.db.database import connect, NotebookMarkdown, Cell
 from src.db.database import Module
 from src.helpers.h2_script_helpers import set_up_argument_parser
 from src.helpers.h3_utils import vprint, check_exit, savepid

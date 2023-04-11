@@ -19,7 +19,6 @@ def RepositoryFactory(session):
         is_mirror = 0
         disk_usage = 34707
         primary_language = "Jupyter Notebook"
-        processed = 0
 
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):  # noqa: F841
@@ -69,7 +68,6 @@ def NotebookFactory(session):
         raw_cells = 0
         unknown_cell_formats = 0
         empty_cells = 0
-        processed = 0
 
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):
@@ -93,7 +91,6 @@ def MarkdownCellFactory(session):
         source = "Recall what these components mean: the full data is a 64-dimensional point cloud, and these points are the projection of each data point along the directions with the largest variance.\n" \
                  "Essentially, we have found the optimal stretch and rotation in 64-dimensional space that allows us to see the layout of the digits in two dimensions, and have done this in an unsupervised manner—that is, without reference to the labels."
         python = 1
-        processed = 0
 
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):
@@ -117,7 +114,6 @@ def CodeCellFactory(session):
         output_formats = "image/png;text/plain"
         source = "plt.contour(X, Y, Z, colors='black');"
         python = 1
-        processed = 0
 
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):
@@ -137,7 +133,6 @@ def PythonFileFactory(session):
         name = 'python_file_1.py'
         source = 'import matplotlib\nprint("água")\n'
         total_lines = 2
-        processed = 0
 
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):
@@ -157,7 +152,6 @@ def RequirementFileFactory(session):
         name = 'requirements.txt'
         reqformat = 'requirements.txt'
         content = 'click\nSphinx\ncoverage\nawscli\nflake8\n'
-        processed = 0
 
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):

@@ -1,6 +1,7 @@
 import os
 import shutil
 from src.config.consts import REPOS_DIR, DB_FILE, LOGS_DIR
+from src.db.database import *
 
 REPOS = True
 DATABASE = True
@@ -12,9 +13,11 @@ if REPOS:
         print("Deleted Repositories")
 
 if DATABASE:
-    if os.path.exists(DB_FILE):
-        os.remove(DB_FILE)
-        print("Deleted database")
+    with connect() as session:
+        for table in Base.metadata.sorted_tables:
+            if table != Base.metadata.tables["queries"]:
+                table.drop(session.connection())
+        print("Dropped all tables but 'queries'")
 
 if LOGS:
     if os.path.exists(LOGS_DIR):
