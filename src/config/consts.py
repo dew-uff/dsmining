@@ -37,7 +37,7 @@ VERBOSE = 5
 STATUS_FREQUENCY = 5
 COMPRESSION = "lbzip2"
 ANACONDA_PATH = Path.home().joinpath("anaconda3")
-
+MAIN_VERSION = ANACONDA_PATH / "envs" / "dsm38" / "bin" / "python"
 
 VERSIONS = {
     2: {

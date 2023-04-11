@@ -23,7 +23,7 @@ import sys
 
 from sqlalchemy import func
 
-from src.config.consts import EXTRACTION_DIR, LOGS_DIR
+from src.config.consts import EXTRACTION_DIR, LOGS_DIR, MAIN_VERSION
 from src.db.database import connect, Repository, Extraction
 from src.helpers.h3_utils import check_exit, savepid, vprint, remove_repositorires
 from src.classes.c2_status_logger import StatusLogger
@@ -103,8 +103,9 @@ def execute_script(script, args, iteration):
         out = str(out) + ".2"
 
     with open(str(out), "wb") as outf:
+        python = MAIN_VERSION
 
-        options = ['python', '-u', EXTRACTION_DIR + os.sep + script + ".py"] + args
+        options = [python, '-u', EXTRACTION_DIR + os.sep + script + ".py"] + args
 
         status = subprocess.call(options, stdout=outf, stderr=outf)
         end = datetime.now()
@@ -207,8 +208,8 @@ def main():
             except Exception as err:
                 vprint(4, "\033[91mError extracting repositories from iteration {} \n{}\033[0m"
                        .format(iteration, err))
-                if not end:
-                    end = datetime.utcnow()
+
+                end = datetime.utcnow()
                 save_extraction(session, start, end, selected_repositories, error=True)
 
             vprint(4, "\033[93mFiles from {} were removed from memory.\033[0m"
