@@ -165,18 +165,21 @@ After we extract all the data from selected repositories, we use Jupyter Noteboo
 
 
 # Installation
-The project primarily uses Python 3.8 as an interpreter, but it also uses other Python versions when extracting features from Abstract Syntax Trees from other versions, too deal with that we use Conda, instructions to install it on Linux can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html).
+The project primarily uses Python 3.8 as an interpreter, but it also uses other Python versions (2.7 and 3.5) when extracting features from Abstract Syntax Trees from other versions, to deal with that we use Conda, instructions to install it on Linux can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html).
+
+After downloading and installing conda you might need to add ``export PATH="~/anaconda3/bin":$PATH`` to your .bashrc file.
+Then you must run ``conda init`` to initialize conda.
 
 
 ## Requirements
-In the project we used 3 conda enviroments (2.7, 3.5 and 3.8). 
+
 We also used several Python modules that can be found on ```requirements.txt```. You can follow the instructions bellow to set up the conda enviroments and download the modules in each one of them.
 
 
 ### Conda 2.7
 ```
 conda create -n dsm27 python=2.7 -y
-conda activate dsm27
+conda activate dsm27  
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
