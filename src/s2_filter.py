@@ -74,29 +74,34 @@ def filter_queries(session, queries):
     return filtered_repos
 
 
-def select_repositories(filtered_queries):
+def select_repositories(session, filtered_queries):
     vprint(2, "\033[93mSelecting Repositories by Language for futher extraction and analysis...\033[0m\n")
 
-    filtered_repos = filtered_queries\
+    selected_repos = filtered_queries\
         .query("primary_language == 'Jupyter Notebook' "
                "| primary_language== 'Python'").copy()
     vprint(0, "Total repositories with 'Jupyter Notebook' or 'Python' as Primary Language: {}\n"
-           .format(len(filtered_repos)))
+           .format(len(selected_repos)))
 
-    filtered_repos["disk_usage"] = filtered_repos["disk_usage"].astype(int)
+    ids = selected_repos["id"]
+    repos = session.query(Query).filter(Query.id.in_(ids))
+    repos.update({Query.state: QUERY_SELECTED}, synchronize_session=False)
+    session.commit()
+
+    selected_repos["disk_usage"] = selected_repos["disk_usage"].astype(int)
     vprint(
         0,
         "Disk Usage for the {} repositories is estimated to be:\n"
         "\033[92m{} KB - {:.2f} MB - {:.2f} GB - {:.2f} TB\033[0m\n"
         .format(
-            len(filtered_repos),
-            filtered_repos.disk_usage.sum(),
-            filtered_repos.disk_usage.sum() / 10 ** 3,
-            filtered_repos.disk_usage.sum() / 10 ** 6,
-            filtered_repos.disk_usage.sum() / 10 ** 9
+            len(selected_repos),
+            selected_repos.disk_usage.sum(),
+            selected_repos.disk_usage.sum() / 10 ** 3,
+            selected_repos.disk_usage.sum() / 10 ** 6,
+            selected_repos.disk_usage.sum() / 10 ** 9
         )
         )
-    return filtered_repos
+    return selected_repos
 
 
 def save_repositories(session, selected_repos):
@@ -104,8 +109,8 @@ def save_repositories(session, selected_repos):
     count = 0
 
     selected_repos = selected_repos.sort_values(by='stargazers', ascending=False)
+
     for repo_query in selected_repos[:10].itertuples(index=False):
-        query = session.query(Query).filter(Query.id == repo_query.id).first()
         repository = session.query(Repository).filter(
             Repository.domain == GITHUB,
             Repository.repository == repo_query.repo,
@@ -113,14 +118,13 @@ def save_repositories(session, selected_repos):
         if repository is not None:
             vprint(1, "Repository already exists: ID={}".format(repository.id))
         else:
-            query.state = QUERY_SELECTED
             count = count + 1
             repo_row = Repository(
                 query_id=repo_query.id,
                 state=REP_FILTERED, domain=GITHUB,
                 repository=repo_query.repo, primary_language=repo_query.primary_language,
                 disk_usage=repo_query.disk_usage, is_mirror=repo_query.is_mirror,
-                git_created_at=repo_query.git_created_at, git_pushed_at=repo_query.git_pushed_at,
+                git_created_at=repo_query.git_created_at, git_pushed_at=repo_query.git_pushed_at or None,
                 languages=repo_query.languages, contributors=repo_query.contributors, commits=repo_query.commits,
                 pull_requests=repo_query.pull_requests, branches=repo_query.branches, watchers=repo_query.watchers,
                 issues=repo_query.issues, stargazers=repo_query.stargazers, forks=repo_query.forks,
@@ -137,7 +141,7 @@ def main():
         vprint(2, "\033[93mRetrieving queries from the database...\033[0m\n")
         queries = pd.read_sql_table("queries", session.connection())
         filtered_queries = filter_queries(session, queries)
-        selected_repos = select_repositories(filtered_queries)
+        selected_repos = select_repositories(session, filtered_queries)
         save_repositories(session, selected_repos)
 
 
