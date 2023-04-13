@@ -6,7 +6,6 @@ This script is responsible for filtering that were collected in
 of the repositories to be extracted and futher analyzed in `s3_extract.py`.
 """
 
-
 import pandas as pd
 from src.config.states import REP_FILTERED, REP_SELECTED, REP_DISCARDED
 from src.db.database import connect, Repository
@@ -41,27 +40,45 @@ def filter_repositories(session, repositories):
     vprint(0, "\033[91mRemoved {} \033[0m repositories".format(len(filter_repositories2) - len(filter_repositories3)))
 
     # filter 4: name does not contain 'course'
-    filter4 = ~filter_repositories3['name'].str.contains('course')
+    filter4 = ~filter_repositories3['name'].str.contains('course', case=False)
     filter_repositories4 = filter_repositories3[filter4]
     vprint(1, "Filtering repositories where name contains the word 'course'")
     vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(filter_repositories3) - len(filter_repositories4)))
 
-    # filter 5: name contains the word 'curso'
-    filter5 = ~filter_repositories4['name'].str.contains('curso')
+    # filter 5: description does not contain 'course'
+    filter5 = ~filter_repositories4['description'].fillna('').str.contains('course', case=False)
     filter_repositories5 = filter_repositories4[filter5]
-    vprint(1, "Filtering repositories where name contains the word 'curso'")
+    vprint(1, "Filtering repositories where description contains the word 'course'")
     vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(filter_repositories4) - len(filter_repositories5)))
 
-    # filter 6: name contains the word 'cours'
-    filter6 = ~filter_repositories5['name'].str.contains('cours')
+    # filter 6: name contains the word 'curso'
+    filter6 = ~filter_repositories5['name'].str.contains('curso', case=False)
     filter_repositories6 = filter_repositories5[filter6]
-    vprint(1, "Filtering repositories where name contains the word 'cours'")
+    vprint(1, "Filtering repositories where name contains the word 'curso'")
     vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(filter_repositories5) - len(filter_repositories6)))
 
-    vprint(0, "-------------------------------------------------------")
-    vprint(0, "\033[92mRemaing repositories after the filtering: {}\033[0m\n".format(len(filter_repositories6)))
+    # filter 7: description contains the word 'curso'
+    filter7 = ~filter_repositories6['description'].fillna('').str.contains('curso', case=False)
+    filter_repositories7 = filter_repositories6[filter7]
+    vprint(1, "Filtering repositories where description contains the word 'curso'")
+    vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(filter_repositories6) - len(filter_repositories7)))
 
-    filtered_repos = filter_repositories6
+    # filter 8: name contains the word 'cours'
+    filter8 = ~filter_repositories7['name'].str.contains('cours', case=False)
+    filter_repositories8 = filter_repositories7[filter8]
+    vprint(1, "Filtering repositories where name contains the word 'cours'")
+    vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(filter_repositories7) - len(filter_repositories8)))
+
+    # filter 9: description contains the word 'cours'
+    filter9 = ~filter_repositories8['description'].fillna('').str.contains('cours', case=False)
+    filter_repositories9 = filter_repositories8[filter9]
+    vprint(1, "Filtering repositories where description contains the word 'cours'")
+    vprint(0, "\033[91mRemoved {} repositories\033[0m".format(len(filter_repositories8) - len(filter_repositories9)))
+
+    vprint(0, "-------------------------------------------------------")
+    vprint(0, "\033[92mRemaing repositories after the filtering: {}\033[0m\n".format(len(filter_repositories9)))
+
+    filtered_repos = filter_repositories9
 
     ids = filtered_repos["id"]
     repos = session.query(Repository).filter(Repository.id.in_(ids))
@@ -76,7 +93,7 @@ def filter_repositories(session, repositories):
 def select_repositories(session, filtered_queries):
     vprint(2, "\033[93mSelecting Repositories by Language for futher extraction and analysis...\033[0m\n")
 
-    selected_repos = filtered_queries\
+    selected_repos = filtered_queries \
         .query("primary_language == 'Jupyter Notebook' "
                "| primary_language== 'Python'").copy()
     vprint(0, "Total repositories with 'Jupyter Notebook' or 'Python' as Primary Language: {}\n"
@@ -100,7 +117,7 @@ def select_repositories(session, filtered_queries):
             selected_repos.disk_usage.sum() / 10 ** 6,
             selected_repos.disk_usage.sum() / 10 ** 9
         )
-        )
+    )
     return selected_repos
 
 
