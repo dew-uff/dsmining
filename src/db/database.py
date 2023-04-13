@@ -39,52 +39,6 @@ def force_encoded_string_output(func):
         return func
 
 
-class Query(Base):
-    """Query Table"""
-    # pylint: disable=invalid-name, too-few-public-methods
-    __tablename__ = 'queries'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    state = Column(Enum(QUERY_COLLECTED,
-                        QUERY_FILTERED,
-                        QUERY_SELECTED,
-                        QUERY_DISCARDED,
-                        name='query_states',
-                        validate_strings=True), default=QUERY_COLLECTED)
-    repo = Column(String)
-    end_cursor = Column(String)
-    has_next_page = Column(Boolean)
-
-    primary_language = Column(String)
-    disk_usage = Column(String)
-    description = Column(String)
-
-    is_mirror = Column(Boolean)
-
-    languages = Column(Integer)
-    contributors = Column(Integer)
-    commits = Column(Integer)
-    pull_requests = Column(Integer)
-    branches = Column(Integer)
-    watchers = Column(Integer)
-    issues = Column(Integer)
-    stargazers = Column(Integer)
-    forks = Column(Integer)
-    tags = Column(Integer)
-    releases = Column(Integer)
-    git_created_at = Column(DateTime)
-    git_pushed_at = Column(DateTime)
-
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
-
-    repositories_objs = one_to_many("Repository", "query_obj")
-
-    @force_encoded_string_output
-    def __repr__(self):
-        return u"<Query({})>".format(self.repo)
-
-
 class Repository(Base):
     """Repository Table"""
     # pylint: disable=invalid-name
@@ -94,27 +48,28 @@ class Repository(Base):
             ['extraction_id'],
             ['extractions.id']
         ),
-        ForeignKeyConstraint(
-            ['query_id'],
-            ['queries.id']
-        ),
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    query_id = Column(Integer)
-    state = Column(Enum(REP_FILTERED,
-                        REP_LOADED,
-                        REP_FAILED_TO_CLONE,
-                        REP_N_EXTRACTED,
-                        REP_N_ERROR,
-                        REP_PF_EXTRACTED,
-                        REP_REQ_FILE_EXTRACTED,
-                        REP_FINISHED,
-                        REP_UNAVAILABLE_FILES,
-                        REP_STOPPED,
-                        REP_EMPTY,
-                        name='repository_states',
-                        validate_strings=True), default=REP_FILTERED)
+    state = Column(
+        Enum(
+            REP_COLLECTED,
+            REP_FILTERED,
+            REP_SELECTED,
+            REP_DISCARDED,
+            REP_LOADED,
+            REP_FAILED_TO_CLONE,
+            REP_N_EXTRACTED,
+            REP_N_ERROR,
+            REP_PF_EXTRACTED,
+            REP_REQ_FILE_EXTRACTED,
+            REP_FINISHED,
+            REP_UNAVAILABLE_FILES,
+            REP_STOPPED,
+            REP_EMPTY,
+            name='repository_states',
+            validate_strings=True
+        ), default=REP_FILTERED)
 
     domain = Column(String)
     repository = Column(String)
@@ -141,6 +96,9 @@ class Repository(Base):
     hash_dir1 = Column(String)
     hash_dir2 = Column(String)
     commit = Column(String)
+
+    end_cursor = Column(String)
+    has_next_page = Column(Boolean)
 
     notebooks_count = Column(Integer)
     python_files_count = Column(Integer)
@@ -169,7 +127,6 @@ class Repository(Base):
     data_ios_objs = one_to_many("DataIO", "repository_obj")
 
     extraction_obj = many_to_one("Extraction", "repositories_objs")
-    query_obj = many_to_one("Query", "repositories_objs")
 
     @property
     def path(self):

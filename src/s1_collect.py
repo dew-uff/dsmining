@@ -5,7 +5,7 @@ This code is responsible for collecting Repositories metadata from GitHub.
 It does so by using GitHub GraphQL API, an API that allows you to specify
 exactly what data you want in a single request. That is defined in the
 `query.graphql` file that can be found in `src/config`. Along with that
-we define a "search text" that will be searched and you can also specify
+we define a "search text" that will be searched, and you can also specify
 a min pushed date.
 
 Using the API the scripts craws GitHub and populates the table Query
@@ -21,8 +21,9 @@ import requests
 
 from pprint import pprint
 
-from src.config.consts import QUERY_GRAPHQL_FILE
-from src.db.database import connect, Query
+from src.config.consts import QUERY_GRAPHQL_FILE, GITHUB
+from src.config.states import REP_COLLECTED
+from src.db.database import connect, Repository
 from src.helpers.h3_utils import savepid, vprint
 from datetime import datetime, timedelta
 
@@ -38,18 +39,21 @@ def add_repository(session, repo, page_info, count):
     git_pushed_at = datetime.strptime(repo["pushedAt"], '%Y-%m-%dT%H:%M:%SZ')
     git_pushed_at = git_pushed_at.astimezone(pytz.timezone('GMT'))
 
-    query_row = Query(
-        end_cursor=page_info["endCursor"], has_next_page=page_info["hasNextPage"],
-        repo=str(repo["owner"] + '/' + repo["name"]), primary_language=repo["primaryLanguage"],
+    repository_row = Repository(
+        state=REP_COLLECTED,
+        domain=GITHUB,
+        repository=str(repo["owner"] + '/' + repo["name"]),
+        primary_language=repo["primaryLanguage"],
         disk_usage=repo["diskUsage"], is_mirror=repo["isMirror"],
         git_created_at=git_created_at, git_pushed_at=git_pushed_at,
         languages=repo["languages"], contributors=repo["contributors"], commits=repo["commits"],
         pull_requests=repo["pullRequests"], branches=repo["branches"], watchers=repo["watchers"],
         issues=repo["issues"], stargazers=repo["stargazers"], forks=repo["forks"],
-        description=repo["description"], tags=repo["tags"], releases=repo["releases"]
+        description=repo["description"], tags=repo["tags"], releases=repo["releases"],
+        end_cursor=page_info["endCursor"], has_next_page=page_info["hasNextPage"]
     )
     count = count + 1
-    session.add(query_row)
+    session.add(repository_row)
     return count
 
 
@@ -62,12 +66,12 @@ def process_repositories(session, count, some_repositories, page_info):
                 value = next(iter(value.values()))
             repo[key] = value
 
-        query_rep = session.query(Query).filter(
-            Query.repo == str(repo["owner"] + '/' + repo["name"])
+        repository = session.query(Repository).filter(
+            Repository.repository == str(repo["owner"] + '/' + repo["name"])
         ).first()
 
-        if query_rep is not None:
-            vprint(2, "Query Repository already exists: ID={}".format(query_rep.id))
+        if repository is not None:
+            vprint(2, "Repository already exists: ID={}".format(repository.id))
         else:
             count = add_repository(session, repo, page_info, count)
 

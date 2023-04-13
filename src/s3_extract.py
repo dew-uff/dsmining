@@ -83,8 +83,8 @@ def inform(session, iteration, selected_output):
            .format(query.filter(Repository.state == REP_REQ_FILE_EXTRACTED).count()))
     vprint(1, "Failed Repositories: {}"
            .format(query.filter(Repository.state in REP_ERRORS).count()))
-    vprint(1, "Filtered Repositories: {} (yet to process)\n\n"
-           .format(query.filter(Repository.state == REP_FILTERED).count()))
+    vprint(1, "Unprocessed Repositories: {}\n\n"
+           .format(query.filter(Repository.state == REP_SELECTED).count()))
     vprint(2, "Iteration {}".format(iteration))
     vprint(2, selected_output + "\n\n")
 
@@ -120,12 +120,12 @@ def execute_script(script, args, iteration):
 
 def filtered_repositories(session):
     return session.query(Repository)\
-        .filter(Repository.state == REP_FILTERED)\
+        .filter(Repository.state == REP_SELECTED)\
         .count()
 
 
 def select_repositories(session):
-    filtered_repos = session.query(Repository).filter(Repository.state == REP_FILTERED)
+    filtered_repos = session.query(Repository).filter(Repository.state == REP_SELECTED)
     iteration_repositories = []
     iteration_size = 0
     options_to_all = ['-sr']
@@ -175,7 +175,7 @@ def main():
         selected_repositories, selected_output = select_repositories(session)
 
         if not selected_repositories:
-            vprint(2, "\033[92mThere are no filtered repositories to process.\033[0m")
+            vprint(2, "\033[92mThere are no selected repositories to process.\033[0m")
             exit(0)
 
         input_thread = threading.Thread(target=get_stop)

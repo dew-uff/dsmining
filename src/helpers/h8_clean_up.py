@@ -15,9 +15,9 @@ if REPOS:
 if DATABASE:
     with connect() as session:
         for table in Base.metadata.sorted_tables:
-            if table != Base.metadata.tables["queries"]:
+            if table != Base.metadata.tables["repositories"]:
                 table.drop(session.connection())
-        print("Dropped all tables but 'queries'")
+        print("Dropped all tables but 'repositories'")
 
 if LOGS:
     if os.path.exists(LOGS_DIR):

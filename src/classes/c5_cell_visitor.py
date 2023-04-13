@@ -9,8 +9,8 @@ class CellVisitor(ast.NodeVisitor):
 
         self.input_modes = ["r", "rb"]
         self.output_modes = ["w", "wb", "x", "xb", "a", "ab"]
-        self.input_functions_names = ["read", "open"]
-        self.output_functions_names = ["to_"]
+        self.input_functions_names = ["read", "open", "input"]
+        self.output_functions_names = ["to_", "save", "write"]
 
         self.modules = []
         self.data_ios = []

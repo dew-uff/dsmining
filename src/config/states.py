@@ -1,17 +1,8 @@
-# Queries
-QUERY_COLLECTED = 'query_collected'
-QUERY_FILTERED = 'query_filtered'
-QUERY_SELECTED = 'query_selected'
-QUERY_DISCARDED = 'query_discarded'
-
-
-# Extractions
-EXTRACTED_SUCCESS = "extracted_repositories"
-EXTRACTED_ERROR = "error_extracting_repositories"
-
-
 # Repositories
-REP_FILTERED = "repository_filtered"
+REP_COLLECTED = 'repository_collected'
+REP_FILTERED = 'repository_filtered'
+REP_SELECTED = 'repository_selected'
+REP_DISCARDED = 'repository_discarded'
 REP_EMPTY = "empty_repository"
 REP_LOADED = "repository_loaded"
 REP_FAILED_TO_CLONE = 'error_cloning_repository'
@@ -23,9 +14,16 @@ REP_UNAVAILABLE_FILES = "error_unavailable_files"
 REP_FINISHED = "repository_finished_processing"
 REP_STOPPED = "loading_repository_stopped"
 
-REP_ORDER = [REP_FILTERED, REP_LOADED, REP_N_EXTRACTED, REP_PF_EXTRACTED, REP_REQ_FILE_EXTRACTED, REP_FINISHED]
-REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR, REP_UNAVAILABLE_FILES, REP_STOPPED, REP_EMPTY]
+REP_ORDER = [REP_COLLECTED, REP_FILTERED, REP_SELECTED,
+             REP_LOADED, REP_N_EXTRACTED, REP_PF_EXTRACTED,
+             REP_REQ_FILE_EXTRACTED, REP_FINISHED]
 
+REP_ERRORS = [REP_FAILED_TO_CLONE, REP_N_ERROR,
+              REP_UNAVAILABLE_FILES, REP_STOPPED, REP_EMPTY]
+
+# Extractions
+EXTRACTED_SUCCESS = "extracted_repositories"
+EXTRACTED_ERROR = "error_extracting_repositories"
 
 # Notebooks
 NB_LOADED = "notebook_loaded"
@@ -42,8 +40,9 @@ NB_INVALID = 'invalid_notebook'
 NB_AGGR_MARKDOWN = 'only_markdown_aggregated_notebook'
 
 NB_ORDER = [NB_LOADED, NB_AGGREGATED, NB_AGGR_MARKDOWN]
-NB_ERRORS = [NB_LOAD_ERROR, NB_LOAD_FORMAT_ERROR, NB_LOAD_SYNTAX_ERROR,
-             NB_LOAD_TIMEOUT, NB_STOPPED, NB_SYNTAX_ERROR, NB_AGGREGATE_ERROR,
+NB_ERRORS = [NB_LOAD_ERROR, NB_LOAD_FORMAT_ERROR,
+             NB_LOAD_SYNTAX_ERROR, NB_LOAD_TIMEOUT,
+             NB_STOPPED, NB_SYNTAX_ERROR, NB_AGGREGATE_ERROR,
              NB_INVALID]
 
 # Cells
