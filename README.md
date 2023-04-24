@@ -6,6 +6,7 @@ Table of Contents
 
 - [Overview](#overview)
 - [Workflow](#workflow)
+- [Corpus](#corpus)
 - [Installation](#installation)
 - [Running](#running)
 - [References](#references)
@@ -13,17 +14,19 @@ Table of Contents
 
 ## Overview
 The project consists of 4 step that go from data collection to analysis.
-<img width="1534" alt="Project Workflow" src="https://user-images.githubusercontent.com/50959073/229359623-53e50159-19c9-41eb-a9bc-9aad06c04745.png">
+<img width="1534" alt="Project Workflow" src="https://user-images.githubusercontent.com/50959073/234132659-5b46ecde-bce4-4622-87ed-7ce5cd41d773.png">
 
-## Corpus
+
+# Workflow
+<img width="1984" alt="Workflow" src="https://user-images.githubusercontent.com/50959073/234132993-7281ce07-f5ff-43c7-9f14-92b472b17917.png">
+
+# Corpus
 The corpus of the project consists of a search in GitHub's GraphQL API for the terms: "Data Science", "Ciência de Dados", "Ciencia de los Datos" and "Science des Données". After the collection, we estabelished the following requirements a repository has to have to be analyzed:
 - At least 1 language, 1 commit and 1 contributor
 - Is not a course project
 
 Repositories that did not meet the requirements were discarded on step 2, the filtering.
 
-# Workflow
-<img width="1984" alt="Workflow" src="https://user-images.githubusercontent.com/50959073/230793885-728120bb-4ad9-40db-b382-29bdf7708a65.png">
 
 ## Scripts Description
 
