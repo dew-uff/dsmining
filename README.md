@@ -18,7 +18,7 @@ The project consists of 4 step that go from data collection to analysis.
 
 
 # Workflow
-<img width="1984" alt="Workflow" src="https://user-images.githubusercontent.com/50959073/234132993-7281ce07-f5ff-43c7-9f14-92b472b17917.png">
+<img width="1984" alt="Workflow" src="https://user-images.githubusercontent.com/50959073/234133710-7bf9f075-4355-46aa-abc4-95470b83f49f.png">
 
 # Corpus
 The corpus of the project consists of a search in GitHub's GraphQL API for the terms: "Data Science", "Ciência de Dados", "Ciencia de los Datos" and "Science des Données". After the collection, we estabelished the following requirements a repository has to have to be analyzed:
