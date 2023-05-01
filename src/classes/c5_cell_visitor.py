@@ -6,6 +6,7 @@ class CellVisitor(ast.NodeVisitor):
 
     def __init__(self, local_checker):
         self.local_checker = local_checker
+        self.variables = {}
 
         self.input_modes = ["r", "rb"]
         self.output_modes = ["w", "wb", "x", "xb", "a", "ab"]
@@ -22,11 +23,16 @@ class CellVisitor(ast.NodeVisitor):
 
     def new_data_io(self, line, type_, caller,
                     function_name, function_type,
-                    source, source_type):
+                    source):
         """Insert new data input or output"""
         self.data_ios.append((line, type_, caller,
                               function_name, function_type,
-                              source, source_type))
+                              source))
+
+
+
+    def try_to_find_assigment(self, var):
+        return self.variables[var]
 
     @staticmethod
     def get_function_data(function):
@@ -49,13 +55,28 @@ class CellVisitor(ast.NodeVisitor):
     def get_source_data(self, arguments):
         if len(arguments) >= 1:
             first_arg = arguments[0]
-            if isinstance(first_arg, ast.Call):
+            value = None
+            if isinstance(first_arg, ast.Constant):
+                value = self.visit(first_arg)
+
+            elif isinstance(first_arg, ast.Name):
+                value = self.try_to_find_assigment(first_arg)
+
+            elif isinstance(first_arg, ast.Call):
                 """ Adds Data IO recursively """
                 self.visit(first_arg)
-            source = astunparse.unparse(first_arg).replace('\n', '')
-            source_type = type(first_arg).__name__
-            return source, source_type
-        return None, None
+
+            if value and (isinstance(value, ast.Str) or isinstance(value, str)):
+                return value
+        return None
+
+    def visit_Str(self, node):
+        return node.value
+
+
+    # def visit_Assign(self, node):
+    #     self.variables[node]
+
 
     def visit_Import(self, node):
         """ Gets modules from 'import ...' """
@@ -74,15 +95,11 @@ class CellVisitor(ast.NodeVisitor):
         arguments = node.args
 
         caller, function_name, function_type = self.get_function_data(function)
-        source, source_type = self.get_source_data(arguments)
 
-        if not (function_name and function_type and source and source_type):
-            return
-        elif any(word in function_name for word in self.input_functions_names):
-            self.new_data_io(node.lineno, 'input', caller,
-                             function_name, function_type,
-                             source, source_type)
-        elif any(word in function_name for word in self.output_functions_names):
-            self.new_data_io(node.lineno, 'output', caller,
-                             function_name, function_type,
-                             source, source_type)
+        if function_name and function_type:
+            source = self.get_source_data(arguments)
+
+            if source:
+                self.new_data_io(node.lineno, '', caller,
+                                 function_name, function_type,
+                                 source)

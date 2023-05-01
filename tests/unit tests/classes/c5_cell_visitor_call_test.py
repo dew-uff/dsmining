@@ -113,21 +113,19 @@ class TestCellVisitorGetSourceData:
     def test_get_source_data(self):
         caller = "pd"
         function_name = "read_csv"
-        source = "'data.csv'"
+        source = "data.csv"
 
-        node = ast.parse(f"{caller}.{function_name}({source})")
+        node = ast.parse("{}.{}(\"{}\")".format(caller, function_name, source))
         args = node.body[0].value.args
 
-        result_source, result_source_type = self.cell_visitor.get_source_data(args)
+        result_source = self.cell_visitor.get_source_data(args)
         assert result_source == source
-        assert result_source_type == ast.Constant.__name__
 
     def test_get_source_data_no_args(self):
         args = []
 
-        result_source, result_source_type = self.cell_visitor.get_source_data(args)
+        result_source = self.cell_visitor.get_source_data(args)
         assert result_source is None
-        assert result_source_type is None
 
     def test_get_source_data_more_args(self):
         caller = "pd"
@@ -147,12 +145,11 @@ class TestCellVisitorGetSourceData:
         function_name = "read_json"
         source = "SOURCE"
 
-        node = ast.parse(f"{caller}.{function_name}({source})")
+        node = ast.parse("{}.{}({})".format(caller, function_name, source))
         args = node.body[0].value.args
 
         result_source, result_source_type = self.cell_visitor.get_source_data(args)
         assert result_source == source
-        assert result_source_type == ast.Name.__name__
 
     def test_get_source_data_subscript(self):
         caller = "pd"
