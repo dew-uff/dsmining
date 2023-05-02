@@ -24,6 +24,12 @@ MODULE_TYPES = {
 }
 
 
+input_modes = ["r", "rb"]
+output_modes = ["w", "wb", "x", "xb", "a", "ab"]
+input_functions_names = ["read", "open", "input"]
+output_functions_names = ["to_", "save", "write"]
+
+
 def infer_source(source):
     source = source.replace("'", "")
     if "." in source and source[-1] != "/":

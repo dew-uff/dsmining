@@ -16,28 +16,22 @@ class TestCellVisitorNewDataIO:
         self.cell_visitor = CellVisitor(self.checker)
 
     def test_new_data_io(self, monkeypatch):
-        assert len(self.cell_visitor.data_ios) == 0
         line = 10
-        type_ = "module"
         caller = 'pd'
         function_name = "read_excel"
         function_type = "Attribute"
         source = "example.xlsx"
-        source_type = "Constant"
-        self.cell_visitor.new_data_io(line, type_, caller,
-                                      function_name, function_type,
-                                      source, source_type)
 
+        assert len(self.cell_visitor.data_ios) == 0
+        self.cell_visitor.new_data_io(line, caller, function_name, function_type, source)
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, result_caller, \
-            result_function_name, result_function_type, \
-            result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type, result_caller,
-                result_function_name, result_function_type,
-                result_source, result_source_type
-                ) == (line, type_, caller,
-                      function_name, function_type,
-                      source, source_type)
+
+        result_line, result_caller, result_function_name,\
+            result_function_type, result_source = self.cell_visitor.data_ios[0]
+
+        assert (result_line, result_caller, result_function_name,
+                result_function_type, result_source)\
+               == (line, caller, function_name, function_type, source)
 
 
 class TestCellVisitorGetFunctionData:
@@ -48,7 +42,7 @@ class TestCellVisitorGetFunctionData:
     def test_get_function_data_name(self):
         function_name = "read_csv"
         source = "'data.csv'"
-        node = ast.parse(f"{function_name}({source})")
+        node = ast.parse("{}({})".format(function_name, source))
         function = node.body[0].value.func
 
         assert len(self.cell_visitor.data_ios) == 0
@@ -63,7 +57,7 @@ class TestCellVisitorGetFunctionData:
         caller = "pd"
         function_name = "read_csv"
         source = "'data.csv'"
-        node = ast.parse(f"{caller}.{function_name}({source})")
+        node = ast.parse("{}.{}({})".format(caller, function_name, source))
         function = node.body[0].value.func
 
         assert len(self.cell_visitor.data_ios) == 0
@@ -76,8 +70,8 @@ class TestCellVisitorGetFunctionData:
 
     def test_get_function_data_subscript(self):
         function_name = "readers[0]"
-        source = "'data.csv'"
-        text = f"{function_name}({source})"
+        source = "data.csv"
+        text = "{}(\"{}\")".format(function_name, source)
         node = ast.parse(text)
         function = node.body[0].value.func
 
@@ -94,7 +88,7 @@ class TestCellVisitorGetFunctionData:
         function_name = "read_csv"
         source = "x + y"
 
-        node = ast.parse(f"{caller}.{function_name}({source})")
+        node = ast.parse("{}.{}({})".format(caller, function_name, source))
         function = node.body[0].value.func
         function.value = None
 
@@ -133,48 +127,48 @@ class TestCellVisitorGetSourceData:
         source = "'SELECT * FROM data'"
         other_arg = "conn"
 
-        node = ast.parse(f"{caller}.{function_name}({source}, {other_arg})")
+        node = ast.parse("{}.{}({}, {})"
+                         .format(caller, function_name, source, other_arg))
         args = node.body[0].value.args
 
-        result_source, result_source_type = self.cell_visitor.get_source_data(args)
+        result_source = self.cell_visitor.get_source_data(args)
         assert result_source == source
-        assert result_source_type == ast.Constant.__name__
 
-    def test_get_source_data_name(self):
+    def test_get_source_data_variable(self):
+        file = "data.json"
         caller = "pd"
         function_name = "read_json"
         source = "SOURCE"
 
-        node = ast.parse("{}.{}({})".format(caller, function_name, source))
-        args = node.body[0].value.args
+        self.cell_visitor.variables[source] = file
+        node = ast.parse("{} = {}\n{}.{}({})".format(source, file, caller, function_name, source))
+        args = node.body[1].value.args
 
-        result_source, result_source_type = self.cell_visitor.get_source_data(args)
-        assert result_source == source
+        result_source = self.cell_visitor.get_source_data(args)
+        assert result_source == file
 
     def test_get_source_data_subscript(self):
         caller = "pd"
         function_name = "read_xlsx"
         source = "sources[0]"
 
-        node = ast.parse(f"{caller}.{function_name}({source})")
+        node = ast.parse("{}.{}({})".format(caller, function_name, source))
         args = node.body[0].value.args
 
-        result_source, result_source_type = self.cell_visitor.get_source_data(args)
-        assert result_source == source
-        assert result_source_type == ast.Subscript.__name__
+        result_source = self.cell_visitor.get_source_data(args)
+        assert result_source is None
 
     def test_get_source_data_call(self):
-        upper_function = "order"
+        outter_function = "order"
         function_name = "read_csv"
         source = "'data.csv'"
-        upper_source = f"{function_name}({source})"
+        outter_source = "{}({})".format(function_name, source)
 
-        node = ast.parse(f"{upper_function}({upper_source})")
+        node = ast.parse("{}({})".format(outter_function, outter_source))
         args = node.body[0].value.args
 
-        result_source, result_source_type = self.cell_visitor.get_source_data(args)
-        assert result_source == upper_source
-        assert result_source_type == ast.Call.__name__
+        result_source = self.cell_visitor.get_source_data(args)
+        assert result_source == source
 
 
 class TestCellVisitorVisitCall:
@@ -182,181 +176,214 @@ class TestCellVisitorVisitCall:
         self.checker = PathLocalChecker("")
         self.cell_visitor = CellVisitor(self.checker)
 
-    """ Input and Output """
-
-    def test_visit_call_input_read(self):
+    def test_visit_call_text(self):
         function_name = "read_excel"
-        source = "'data.xlsx'"
-        text = f"{function_name}({source})"
+        source = "data.xlsx"
+        text = "{}(\"{}\")".format(function_name, source)
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
         self.cell_visitor.visit(node)
-
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, result_caller, \
-            result_function_name, result_function_type, \
-            result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type, result_caller,
-                result_function_name, result_function_type,
-                result_source, result_source_type
-                ) == (1, "input", None,
-                      function_name, ast.Name.__name__,
-                      source, ast.Constant.__name__)
 
-    def test_visit_call_output_to(self):
-        caller = "df"
-        function_name = "to_csv"
-        source = "'data.csv'"
-        text = f"{caller}.{function_name}({source})"
-        node = ast.parse(text)
+        result_line, result_caller, \
+            result_function_name, result_function_type, \
+            result_source = self.cell_visitor.data_ios[0]
+
+        assert (result_line, result_caller,
+                result_function_name, result_function_type, result_source) \
+               == (1, None, function_name, ast.Name.__name__, source)
+
+    def test_visit_call_variable(self):
+        file = "data.csv"
+        caller = "pd"
+        function_name = "read_csv"
+        source = "file"
+
+        node = ast.parse("{}=\"{}\"\n{}.{}({})".format(source, file, caller, function_name, source))
 
         assert len(self.cell_visitor.data_ios) == 0
         self.cell_visitor.visit(node)
-
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, result_caller, \
+
+        result_line, result_caller, \
             result_function_name, result_function_type, \
-            result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type, result_caller,
-                result_function_name, result_function_type,
-                result_source, result_source_type
-                ) == (1, "output", caller,
-                      function_name, ast.Attribute.__name__,
-                      source, ast.Constant.__name__)
+            result_source = self.cell_visitor.data_ios[0]
+
+        assert (result_line, result_caller,
+                result_function_name, result_function_type, result_source) \
+               == (2, caller, function_name, ast.Attribute.__name__, file)
+
+    def test_visit_call_variable_not_found(self):
+        caller = "pd"
+        function_name = "read_csv"
+        source = "file"
+
+        node = ast.parse("{}.{}({})".format(caller, function_name, source))
+
+        assert len(self.cell_visitor.data_ios) == 0
+        self.cell_visitor.visit(node)
+        assert len(self.cell_visitor.data_ios) == 0
+
+    def test_visit_call_variable_not_text(self):
+        file = "2"
+        caller = "pd"
+        function_name = "read_csv"
+        source = "file"
+
+        node = ast.parse("{}={}\n{}.{}({})".format(source, file, caller, function_name, source))
+
+        assert len(self.cell_visitor.data_ios) == 0
+        self.cell_visitor.visit(node)
+        assert len(self.cell_visitor.data_ios) == 0
+
+    def test_visit_call_constant(self):
+        file = "data.csv"
+        caller = "pd"
+        function_name = "read_csv"
+        source = "FILE"
+
+        node = ast.parse("{}=\"{}\"\n{}.{}({})".format(source, file, caller, function_name, source))
+
+        assert len(self.cell_visitor.data_ios) == 0
+        self.cell_visitor.visit(node)
+        assert len(self.cell_visitor.data_ios) == 1
+
+        result_line, result_caller, \
+            result_function_name, result_function_type, \
+            result_source = self.cell_visitor.data_ios[0]
+
+        assert (result_line, result_caller,
+                result_function_name, result_function_type, result_source) \
+               == (2, caller, function_name, ast.Attribute.__name__, file)
 
     """ Function Type"""
 
-    def test_visit_call_input_func_name(self):
+    def test_visit_call_func_name(self):
         function_name = "read_csv"
-        source = "'data.csv'"
-        text = f"{function_name}({source})"
+        source = "data.csv"
+        text = "{}(\"{}\")".format(function_name, source)
+
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
         self.cell_visitor.visit(node)
 
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, result_caller, \
+        result_line, result_caller, \
             result_function_name, result_function_type, \
-            result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type, result_caller,
-                result_function_name, result_function_type,
-                result_source, result_source_type
-                ) == (1, "input", None,
-                      function_name, ast.Name.__name__,
-                      source, ast.Constant.__name__)
+            result_source = self.cell_visitor.data_ios[0]
 
-    def test_visit_call_input_func_attribute(self):
+        assert (result_line, result_caller,
+                result_function_name, result_function_type, result_source) \
+               == (1, None, function_name, ast.Name.__name__, source)
+
+    def test_visit_call_func_attribute(self):
         caller = "pd"
         function_name = "read_csv"
-        source = "'data.csv'"
-        text = f"{caller}.{function_name}({source})"
+        source = "data.csv"
+        text = "{}.{}(\"{}\")".format(caller, function_name, source)
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
         self.cell_visitor.visit(node)
-
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, result_caller, \
+
+        result_line, result_caller, \
             result_function_name, result_function_type, \
-            result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type, result_caller,
+            result_source = self.cell_visitor.data_ios[0]
+        assert (result_line, result_caller,
                 result_function_name, result_function_type,
-                result_source, result_source_type
-                ) == (1, "input", caller,
-                      function_name, ast.Attribute.__name__,
-                      source, ast.Constant.__name__)
+                result_source) \
+               == (1, caller, function_name, ast.Attribute.__name__, source)
 
     def test_visit_call_input_func_subscript(self):
         function_name = "reads[0]"
-        source = "'data.csv'"
-        text = f"{function_name}({source})"
+        source = "data.csv"
+        text = "{}(\"{}\")".format(function_name, source)
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
         self.cell_visitor.visit(node)
-
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, result_caller, \
-            result_function_name, result_function_type, \
-            result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type, result_caller,
-                result_function_name, result_function_type,
-                result_source, result_source_type
-                ) == (1, "input", None,
-                      function_name, ast.Subscript.__name__,
-                      source, ast.Constant.__name__)
+
+        result_line, result_caller, \
+            result_function_name, result_function_type, result_source = self.cell_visitor.data_ios[0]
+        assert (result_line, result_caller,
+                result_function_name, result_function_type, result_source) \
+               == (1, None, function_name, ast.Subscript.__name__, source)
 
     """ Source Type """
 
-    def test_visit_call_input_src_constant(self):
+    def test_visit_call_input_src_str(self):
         caller = "pd"
         function_name = "read_csv"
-        source = "'data.csv'"
-        text = f"{caller}.{function_name}({source})"
+        source = "data.csv"
+        text = "{}.{}(\"{}\")".format(caller, function_name, source)
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
         self.cell_visitor.visit(node)
-
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, result_caller, \
+
+        result_line, result_caller, \
             result_function_name, result_function_type, \
-            result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type, result_caller,
-                result_function_name, result_function_type,
-                result_source, result_source_type
-                ) == (1, "input", caller,
-                      function_name, ast.Attribute.__name__,
-                      source, ast.Constant.__name__)
+            result_source = self.cell_visitor.data_ios[0]
+        assert (result_line, result_caller,
+                result_function_name, result_function_type, result_source) \
+               == (1, caller, function_name, ast.Attribute.__name__, source)
+
+    def test_visit_call_input_src_other(self):
+        caller = "pd"
+        function_name = "read_csv"
+        source = "2"
+        text = "{}.{}({})".format(caller, function_name, source)
+        node = ast.parse(text)
+
+        assert len(self.cell_visitor.data_ios) == 0
+        self.cell_visitor.visit(node)
+        assert len(self.cell_visitor.data_ios) == 0
 
     def test_visit_call_input_src_name(self):
+        file = "file.csv"
         caller = "pd"
         function_name = "read_csv"
         source = "SOURCE"
-        text = f"{caller}.{function_name}({source})"
+        text = "{}=\"{}\"\n{}.{}({})".format(source, file, caller, function_name, source)
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
         self.cell_visitor.visit(node)
-
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, result_caller, \
-            result_function_name, result_function_type, \
-            result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type, result_caller,
-                result_function_name, result_function_type,
-                result_source, result_source_type
-                ) == (1, "input", caller,
-                      function_name, ast.Attribute.__name__,
-                      source, ast.Name.__name__)
+
+        result_line, result_caller, \
+            result_function_name, result_function_type, result_source = self.cell_visitor.data_ios[0]
+        assert (result_line, result_caller,
+                result_function_name, result_function_type, result_source) \
+               == (2, caller, function_name, ast.Attribute.__name__, file)
 
     def test_visit_call_input_src_subscript(self):
+        file = "source.xlsx"
         function_name = "reads_excel"
         source = "reads[0]"
-        text = f"{function_name}({source})"
+        text = "{}=\"{}\"\n{}({})".format(source, file, function_name, source)
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
         self.cell_visitor.visit(node)
-
         assert len(self.cell_visitor.data_ios) == 1
-        result_line, result_type, result_caller, \
-            result_function_name, result_function_type, \
-            result_source, result_source_type = self.cell_visitor.data_ios[0]
-        assert (result_line, result_type, result_caller,
-                result_function_name, result_function_type,
-                result_source, result_source_type
-                ) == (1, "input", None,
-                      function_name, ast.Name.__name__,
-                      source, ast.Subscript.__name__)
+
+        result_line, result_caller, \
+            result_function_name, result_function_type, result_source = self.cell_visitor.data_ios[0]
+        assert (result_line, result_caller,
+                result_function_name, result_function_type, result_source) \
+               == (1, None, function_name, ast.Name.__name__, file)
 
     def test_visit_call_input_src_call_inner(self):
-        upper_function = "order"
+        outter_function = "order"
         function_name = "reads_excel"
         source = "source.xlsx"
-        text = f"{upper_function}({function_name}({source}))"
+        text = f"{outter_function}({function_name}({source}))"
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
@@ -374,11 +401,11 @@ class TestCellVisitorVisitCall:
                       source, ast.Attribute.__name__)
 
     def test_visit_call_input_src_call_both(self):
-        upper_function = "opens"
+        outter_function = "opens"
         function_name = "reads_excel"
         source = "source.xlsx"
-        upper_source = f"{function_name}({source})"
-        text = f"{upper_function}({upper_source})"
+        outter_source = f"{function_name}({source})"
+        text = f"{outter_function}({outter_source})"
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
@@ -402,5 +429,5 @@ class TestCellVisitorVisitCall:
                 result_function_name, result_function_type,
                 result_source, result_source_type
                 ) == (1, "input", None,
-                      upper_function, ast.Name.__name__,
-                      upper_source, ast.Call.__name__)
+                      outter_function, ast.Name.__name__,
+                      outter_source, ast.Call.__name__)
