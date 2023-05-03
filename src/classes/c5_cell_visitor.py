@@ -1,6 +1,5 @@
 import ast
 import re
-
 import astunparse
 
 
@@ -39,28 +38,28 @@ class CellVisitor(ast.NodeVisitor):
         return caller, function_name, function_type
 
     def get_source_data(self, arguments):
+        sources = []
         if len(arguments) >= 1:
-            first_arg = arguments[0]
-            value = None
+            for arg in arguments:
+                value = None
 
-            if isinstance(first_arg, ast.Constant):
-                value = self.visit(first_arg)
+                if isinstance(arg, ast.Constant):
+                    value = self.visit(arg)
 
-            elif isinstance(first_arg, ast.Name):
-                value = self.variables.get(first_arg.id, None)
+                elif isinstance(arg, ast.Name):
+                    value = self.variables.get(arg.id, None)
 
-            elif isinstance(first_arg, ast.Call):
-                """ Adds Data IO recursively """
-                value = self.visit(first_arg)
+                elif isinstance(arg, ast.Call):
+                    """ Adds Data IO recursively """
+                    self.visit(arg)
 
-            if value and (isinstance(value, ast.Str) or isinstance(value, str)):
-                return value
-
-        return None
+                if value and (isinstance(value, ast.Str) or isinstance(value, str)):
+                    sources.append(value)
+        return sources
 
     @staticmethod
     def like_a_file(string):
-        re.match(r"^.+\.[a-z]+$", string)
+        return bool(re.match(r"^.+\.[a-z]+$", string))
 
     def visit_Str(self, node):
         return node.value
@@ -81,10 +80,11 @@ class CellVisitor(ast.NodeVisitor):
         caller, function_name, function_type = self.get_function_data(function)
 
         if function_name and function_type:
-            source = self.get_source_data(arguments)
+            sources = self.get_source_data(arguments)
 
-            if source and self.like_a_file(source):
-                self.new_data_io(node.lineno, caller, function_name, function_type, source)
+            for src in sources:
+                if self.like_a_file(src):
+                    self.new_data_io(node.lineno, caller, function_name, function_type, src)
 
     def visit_Import(self, node):
         """ Gets modules from 'import ...' """

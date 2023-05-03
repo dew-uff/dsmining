@@ -646,12 +646,11 @@ class CellDataIO(Base):
     index = Column(Integer)
 
     line = Column(Integer)
-    type = Column(String)
     caller = Column(String)
     function_name = Column(String)
     function_type = Column(String)
     source = Column(String)
-    source_type = Column(String)
+    mode = Column(String)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
@@ -726,12 +725,11 @@ class PythonFileDataIO(Base):
     python_file_id = Column(Integer)
 
     line = Column(Integer)
-    type = Column(String)
     caller = Column(String)
     function_name = Column(String)
     function_type = Column(String)
     source = Column(String)
-    source_type = Column(String)
+    mode = Column(String)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
