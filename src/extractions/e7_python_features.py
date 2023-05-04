@@ -75,7 +75,7 @@ def process_python_file(
             )
 
         for line,  caller, \
-                function_name, function_type, source in data_ios:
+                function_name, function_type, source, mode in data_ios:
 
             session.add(
                 PythonFileDataIO(
@@ -86,7 +86,8 @@ def process_python_file(
                     caller=caller,
                     function_name=function_name,
                     function_type=function_type,
-                    source=source
+                    source=source,
+                    mode=mode
                 )
             )
 

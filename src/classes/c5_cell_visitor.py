@@ -15,9 +15,9 @@ class CellVisitor(ast.NodeVisitor):
         """Insert new module"""
         self.modules.append((line, type_, name, self.local_checker.is_local(name)))
 
-    def new_data_io(self, line, caller, function_name, function_type, source):
+    def new_data_io(self, line, caller, function_name, function_type, source, mode):
         """Insert new data input or output"""
-        self.data_ios.append((line, caller, function_name, function_type, source))
+        self.data_ios.append((line, caller, function_name, function_type, source, mode))
 
     @staticmethod
     def get_function_data(function):
@@ -37,25 +37,58 @@ class CellVisitor(ast.NodeVisitor):
 
         return caller, function_name, function_type
 
+    def get_file_open_mode(self, mode_arg):
+        modes = [
+            "r", "w", "x", "a",
+            "rb", "wb", "xb", "ab",
+            "rt", "wt", "xt", "at",
+            "r+", "w+", "x+", "a+",
+            "rb+", "wb+", "xb+", "ab+",
+            "rt+", "wt+", "xt+", "at+",
+        ]
+
+        value = self.visit(mode_arg)
+        if value and (isinstance(value, ast.Str) or isinstance(value, str)) and value in modes:
+            return value
+
+    def get_argument_data(self, arg, sources):
+        value = None
+
+        if isinstance(arg, ast.Constant):
+            value = self.visit(arg)
+
+        elif isinstance(arg, ast.Name):
+            value = self.variables.get(arg.id, None)
+
+        elif isinstance(arg, ast.Call):
+            """ Adds Data IO recursively """
+            self.visit(arg)
+
+        if value and (isinstance(value, ast.Str) or isinstance(value, str)):
+            sources.append(value)
+
+        return sources
+
     def get_source_data(self, arguments):
         sources = []
         if len(arguments) >= 1:
             for arg in arguments:
-                value = None
-
-                if isinstance(arg, ast.Constant):
-                    value = self.visit(arg)
-
-                elif isinstance(arg, ast.Name):
-                    value = self.variables.get(arg.id, None)
-
-                elif isinstance(arg, ast.Call):
-                    """ Adds Data IO recursively """
-                    self.visit(arg)
-
-                if value and (isinstance(value, ast.Str) or isinstance(value, str)):
-                    sources.append(value)
+                sources = self.get_argument_data(arg, sources)
         return sources
+
+    def get_open_data(self, arguments):
+        sources = []
+        if len(arguments) >= 2 and isinstance(arguments[1], ast.Constant):
+            source_arg = arguments[0]
+            mode_arg = arguments[1]
+
+            sources = self.get_argument_data(source_arg, sources)
+            mode = self.get_file_open_mode(mode_arg)
+
+            if sources and mode:
+                return sources, mode
+
+        return self.get_source_data(arguments), None
 
     @staticmethod
     def like_a_file(string):
@@ -80,11 +113,15 @@ class CellVisitor(ast.NodeVisitor):
         caller, function_name, function_type = self.get_function_data(function)
 
         if function_name and function_type:
-            sources = self.get_source_data(arguments)
+            mode = None
+            if function_name == "open":
+                sources, mode = self.get_open_data(arguments)
+            else:
+                sources = self.get_source_data(arguments)
 
             for src in sources:
                 if self.like_a_file(src):
-                    self.new_data_io(node.lineno, caller, function_name, function_type, src)
+                    self.new_data_io(node.lineno, caller, function_name, function_type, src, mode)
 
     def visit_Import(self, node):
         """ Gets modules from 'import ...' """

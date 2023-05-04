@@ -74,7 +74,7 @@ def process_code_cell(
             )
 
         for line, caller, \
-                function_name, function_type, source in data_ios:
+                function_name, function_type, source, mode in data_ios:
             session.add(
                 CellDataIO(
                     repository_id=repository_id,
@@ -86,7 +86,8 @@ def process_code_cell(
                     caller=caller,
                     function_name=function_name,
                     function_type=function_type,
-                    source=source
+                    source=source,
+                    mode=mode
                 )
             )
 

@@ -17,7 +17,8 @@ class TestCellVisitorVisitWith:
     def test_visit_call_input_read(self):
         function_name = "open"
         source = "data.text"
-        text = "with open(\"{}\") {} my_file:\n\tprint(my_file.read())".format(source, "as")
+        mode = "r"
+        text = "with open(\"{}\", \"{}\") {} my_file:\n\tprint(my_file.read())".format(source, mode, "as")
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
@@ -25,17 +26,18 @@ class TestCellVisitorVisitWith:
         assert len(self.cell_visitor.data_ios) == 1
 
         assert self.cell_visitor.data_ios[0] \
-               == (1, None, function_name, ast.Name.__name__, source)
+               == (1, None, function_name, ast.Name.__name__, source, mode)
 
     def test_visit_call_input_nested(self):
         function_name = "open"
         source = "data.text"
+        mode = "wb+"
         nested_caller = "pd"
         nested_function = "read_excel"
         nested_source = "data.xlsx"
 
-        text = "with {}(\"{}\") {} my_file:\n\tprint(my_file.read())\n\t{}.{}(\"{}\")\n"\
-            .format(function_name, source, "as", nested_caller, nested_function, nested_source)
+        text = "with {}(\"{}\", \"{}\") {} my_file:\n\tprint(my_file.read())\n\t{}.{}(\"{}\")\n"\
+            .format(function_name, source, mode, "as", nested_caller, nested_function, nested_source)
         node = ast.parse(text)
 
         assert len(self.cell_visitor.data_ios) == 0
@@ -43,7 +45,7 @@ class TestCellVisitorVisitWith:
         assert len(self.cell_visitor.data_ios) == 2
 
         assert self.cell_visitor.data_ios[0]\
-               == (1, None, function_name, ast.Name.__name__, source)
+               == (1, None, function_name, ast.Name.__name__, source, mode)
 
         assert self.cell_visitor.data_ios[1] \
-               == (3, nested_caller, nested_function, ast.Attribute.__name__, nested_source)
+               == (3, nested_caller, nested_function, ast.Attribute.__name__, nested_source, None)
