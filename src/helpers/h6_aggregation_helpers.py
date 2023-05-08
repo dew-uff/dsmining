@@ -22,20 +22,59 @@ MODULE_LOCAL = {
 MODULE_TYPES = {
     "any", "import_from", "import", "load_ext"
 }
+modes = [
+    "r", "w", "x", "a",
+    "rb", "wb", "xb", "ab",
+    "rt", "wt", "xt", "at",
+    "r+", "w+", "x+", "a+",
+    "rb+", "wb+", "xb+", "ab+",
+    "rt+", "wt+", "xt+", "at+",
+]
+
+input_modes = ["r", "rb", "rt", "rb+", "rt+"]
+output_modes = [
+    "w", "x", "a",
+    "wb", "xb", "ab",
+    "wt", "xt", "at",
+    "w+", "x+", "a+",
+    "wb+", "xb+", "ab+",
+    "wt+", "xt+", "at+",
+]
+
+input_functions_names = ["read", "open", "input", "load"]
+output_functions_names = ["write", "save", "output"]
 
 
-input_modes = ["r", "rb"]
-output_modes = ["w", "wb", "x", "xb", "a", "ab"]
-input_functions_names = ["read", "open", "input"]
-output_functions_names = ["to_", "save", "write"]
+def get_open_type(mode):
+    if any(word in mode for word in input_modes):
+        return "input"
+    elif any(word in mode for word in output_modes):
+        return "output"
+    else:
+        return "unknown"
 
 
 def infer_source(source):
-    source = source.replace("'", "")
-    if "." in source and source[-1] != "/":
-        return source.rsplit(".", 1)
+    web = ["http://", "https://", "www.", ".com", ".gov"]# noqa
+    if "@" in source:
+        return "email", None, None
+    elif any(word in source for word in web):
+        return "website", None, None
     else:
-        return None, None
+        file_name, extension = source.rsplit(".", 1)
+        return "file", file_name, extension
+
+
+def infer_data_io_type(data_io):
+    if data_io.mode:
+        return get_open_type(data_io.mode)
+    else:
+        if any(word in data_io.function_name for word in input_functions_names):
+            return "input"
+        elif any(word in data_io.function_name for word in output_functions_names):
+            return "output"
+        else:
+            return "unknown"
 
 
 def calculate_markdown(notebook):
@@ -127,11 +166,13 @@ def calculate_data_ios(file, file_type):
 
     dtiorows = []
     for data_io in query:
-        index, infered_file, infered_file_extension = None, None, None
-        if data_io.source_type == "Constant" or data_io.source_type == "Str":
-            infered_file, infered_file_extension = infer_source(data_io.source)
+        index = None
+        infered_function_type = infer_data_io_type(data_io)
+        infered_source_type, infered_file, infered_file_extension = infer_source(data_io.source)
+
         if check_index:
             index = data_io.index
+
         row = DataIO(
             repository_id=file.repository_id,
             notebook_id=notebook_id,
@@ -139,18 +180,18 @@ def calculate_data_ios(file, file_type):
             type=file_type,
             index=index,
             line=data_io.line,
-            infered_type=data_io.type,
+            infered_type=infered_function_type,
             caller=data_io.caller,
             function_name=data_io.function_name,
             function_type=data_io.function_type,
             source=data_io.source,
-            source_type=data_io.source_type,
+            infered_source_type=infered_source_type,
             infered_file=infered_file,
             infered_file_extension=infered_file_extension
 
         )
-        dtiorows.append(row)
 
+        dtiorows.append(row)
     return dtiorows
 
 

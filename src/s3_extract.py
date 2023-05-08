@@ -41,8 +41,8 @@ ORDER = [
     "e5_markdown_cells",
     "e6_code_cells",
     "e7_python_features",
-    # "ag1_notebook_aggregate",
-    # "ag2_python_aggregate"
+    "ag1_notebook_aggregate",
+    "ag2_python_aggregate"
 ]
 
 

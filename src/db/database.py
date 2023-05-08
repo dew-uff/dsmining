@@ -1063,7 +1063,7 @@ class DataIO(Base):
     function_name = Column(String)
     function_type = Column(String)
     source = Column(String)
-    source_type = Column(String)
+    infered_source_type = Column(String)
     infered_file = Column(String)
     infered_file_extension = Column(String)
 
