@@ -214,7 +214,6 @@ def CellDataIOFactory(session):
         function_name = 'read_excel'
         function_type = 'Attribute'
         source = 'data.xlsx'
-        source_type = 'Constant'
 
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):
@@ -256,7 +255,6 @@ def PythonFileDataIOFactory(session):
         function_name = 'read_excel'
         function_type = 'Attribute'
         source = 'data.xlsx'
-        source_type = 'Constant'
 
         @factory.post_generation
         def commit_to_db(self, create, extracted, **kwargs):

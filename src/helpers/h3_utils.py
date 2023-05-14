@@ -132,7 +132,7 @@ def extract_features(text, checker):
         raise SyntaxError("Invalid escape")
     visitor.visit(parsed)
 
-    return visitor.modules, visitor.data_ios
+    return visitor.modules, visitor.data_ios, visitor.extracted_args, visitor.missed_args
 
 
 def cell_output_formats(cell):

@@ -49,7 +49,8 @@ def process_code_cell(
     try:
         vprint(2, "Extracting features")
         try:
-            modules, data_ios = extract_features(cell.source, checker)
+            modules, data_ios, \
+                extracted_args, missed_args = extract_features(cell.source, checker)
         except TimeoutError:
             cell.state = CELL_PROCESS_TIMEOUT
             return 'Failed due to  Time Out Error.'
@@ -91,6 +92,8 @@ def process_code_cell(
                 )
             )
 
+        cell.extracted_args = extracted_args
+        cell.missed_args = missed_args
         cell.state = CELL_PROCESSED
         return "done"
 

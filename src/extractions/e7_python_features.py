@@ -47,7 +47,8 @@ def process_python_file(
     try:
         vprint(2, "Extracting features")
         try:
-            modules, data_ios = extract_features(python_file.source, checker)
+            modules, data_ios, \
+                extracted_args, missed_args = extract_features(python_file.source, checker)
         except TimeoutError:
             python_file.state = PF_PROCESS_TIMEOUT
             return 'Failed due to  Time Out Error.'
@@ -87,10 +88,12 @@ def process_python_file(
                     function_name=function_name,
                     function_type=function_type,
                     source=source,
-                    mode=mode
+                    mode=mode,
                 )
             )
 
+        python_file.extracted_args = extracted_args
+        python_file.missed_args = missed_args
         python_file.state = PF_PROCESSED
         return "done"
     except Exception as err:

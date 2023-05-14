@@ -10,6 +10,8 @@ class CellVisitor(ast.NodeVisitor):
         self.variables = {}
         self.modules = []
         self.data_ios = []
+        self.extracted_args = 0
+        self.missed_args = 0
 
     def new_module(self, line, type_, name):
         """Insert new module"""
@@ -17,6 +19,7 @@ class CellVisitor(ast.NodeVisitor):
 
     def new_data_io(self, line, caller, function_name, function_type, source, mode):
         """Insert new data input or output"""
+        self.extracted_args = self.extracted_args + 1
         self.data_ios.append((line, caller, function_name, function_type, source, mode))
 
     @staticmethod
@@ -63,9 +66,12 @@ class CellVisitor(ast.NodeVisitor):
         elif isinstance(arg, ast.Call):
             """ Adds Data IO recursively """
             self.visit(arg)
+            return sources
 
         if value and (isinstance(value, ast.Str) or isinstance(value, str)):
             sources.append(value)
+        else:
+            self.missed_args = self.missed_args + 1
 
         return sources
 
@@ -122,6 +128,8 @@ class CellVisitor(ast.NodeVisitor):
             for src in sources:
                 if self.like_a_file(src):
                     self.new_data_io(node.lineno, caller, function_name, function_type, src, mode)
+                else:
+                    self.missed_args = self.missed_args + 1
 
     def visit_Import(self, node):
         """ Gets modules from 'import ...' """

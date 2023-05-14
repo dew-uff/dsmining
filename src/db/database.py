@@ -292,6 +292,9 @@ class Cell(Base):
     source = Column(String)
     python = Column(Boolean)
 
+    extracted_args = Column(Integer)
+    missed_args = Column(Integer)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
@@ -329,6 +332,9 @@ class PythonFile(Base):
     name = Column(String)
     source = Column(String)
     total_lines = Column(Integer)
+
+    extracted_args = Column(Integer)
+    missed_args = Column(Integer)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)

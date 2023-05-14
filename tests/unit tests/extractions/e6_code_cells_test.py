@@ -21,7 +21,7 @@ import src.extractions.e6_code_cells as e6
 class TestCodeCellsProcessCodeCell:
     def test_process_code_cell(self, session):
         module_name = 'pandas'
-        caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
+        caller, function_name, source = 'pd', 'read_csv', 'data.csv'
 
         repository = RepositoryFactory(session).create(state=REP_REQ_FILE_EXTRACTED)
         notebook = NotebookFactory(session).create(repository_id=repository.id)
@@ -30,7 +30,7 @@ class TestCodeCellsProcessCodeCell:
             notebook_id=notebook.id,
             state=CELL_LOADED,
             source="import {} as pd\n".format(module_name) +
-                   "df = {}.{}({})".format(caller, function_name, source)
+                   "df = {}.{}('{}')".format(caller, function_name, source)
         )
 
         checker = PathLocalChecker("")
@@ -42,6 +42,8 @@ class TestCodeCellsProcessCodeCell:
 
         assert result == 'done'
         assert cell.state == CELL_PROCESSED
+        assert cell.extracted_args == 1
+        assert cell.missed_args == 0
 
         assert module.cell_id == cell.id
         assert module.module_name == module_name
@@ -161,6 +163,8 @@ class TestCodeCellsProcessCodeCell:
 
         assert result == 'done'
         assert cell.state == CELL_PROCESSED
+        assert cell.extracted_args == 1
+        assert cell.missed_args == 0
 
         assert module.cell_id == cell.id
         assert cm_created_at != module.created_at
@@ -197,6 +201,8 @@ class TestCodeCellsProcessCodeCell:
 
         assert result == 'done'
         assert cell.state == CELL_PROCESSED
+        assert cell.extracted_args == 1
+        assert cell.missed_args == 0
 
         assert module.cell_id == cell.id
         assert cm_created_at != module.created_at
@@ -233,6 +239,8 @@ class TestCodeCellsProcessCodeCell:
 
         assert result == 'done'
         assert cell.state == CELL_PROCESSED
+        assert cell.extracted_args == 1
+        assert cell.missed_args == 0
 
         assert module.cell_id == cell.id
         assert cm_created_at != module.created_at

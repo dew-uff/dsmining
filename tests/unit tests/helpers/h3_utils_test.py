@@ -16,10 +16,12 @@ class TestExtractFeatures:
     def test_extract_features(self, session):
         text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"
         checker = PathLocalChecker("")
-        modules, data_ios = extract_features(text, checker)
+        modules, data_ios, extracted_args, missed_args = extract_features(text, checker)
 
         assert modules[0] == (1, "import", "pandas", False)
-        assert data_ios[0] == (2, 'input', 'pd', 'read_excel', 'Attribute', "'data.xlsx'", 'Constant')
+        assert data_ios[0] == (2, 'pd', 'read_excel', 'Attribute', 'data.xlsx', None)
+        assert extracted_args == 1
+        assert missed_args == 0
 
     def test_extract_features_error(self, session, monkeypatch):
         text = "import pandas as pd\ndf=pd.read_excel('data.xlsx')"

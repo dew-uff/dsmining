@@ -20,12 +20,12 @@ from tests.factories.models import PythonFileModuleFactory, PythonFileDataIOFact
 class TestPythonFilesExtract:
     def test_process_python_file(self, session):
         module_name = 'pandas'
-        caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
+        caller, function_name, source = 'pd', 'read_csv', 'data.csv'
 
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
             repository_id=repository.id,
-            source="import {} as pd\ndf={}.{}({})".format(module_name, caller, function_name, source),
+            source="import {} as pd\ndf={}.{}('{}')".format(module_name, caller, function_name, source),
             state=PF_LOADED
         )
 
@@ -41,6 +41,8 @@ class TestPythonFilesExtract:
 
         assert result == 'done'
         assert python_file.state == PF_PROCESSED
+        assert python_file.extracted_args == 1
+        assert python_file.missed_args == 0
 
         assert module.python_file_id == python_file.id
         assert module.module_name == module_name
@@ -140,12 +142,12 @@ class TestPythonFilesExtract:
 
     def test_process_python_file_retry_process_error(self, session):
         module_name = 'pandas'
-        caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
+        caller, function_name, source = 'pd', 'read_csv', 'data.csv'
 
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
             repository_id=repository.id, state=PF_PROCESS_ERROR,
-            source="import {} as pd\ndf={}.{}({})".format(module_name, caller, function_name, source),
+            source="import {} as pd\ndf={}.{}('{}')".format(module_name, caller, function_name, source),
         )
         checker = PathLocalChecker("")
         dispatches = set()
@@ -166,6 +168,8 @@ class TestPythonFilesExtract:
 
         assert result == 'done'
         assert python_file.state == PF_PROCESSED
+        assert python_file.extracted_args == 1
+        assert python_file.missed_args == 0
 
         assert module.python_file_id == python_file.id
         assert pm_created_at != module.created_at
@@ -175,12 +179,12 @@ class TestPythonFilesExtract:
 
     def test_process_python_file_retry_process_syntax(self, session):
         module_name = 'pandas'
-        caller, function_name, source = 'pd', 'read_csv', "'data.csv'"
+        caller, function_name, source = 'pd', 'read_csv', 'data.csv'
 
         repository = RepositoryFactory(session).create()
         python_file = PythonFileFactory(session).create(
             repository_id=repository.id, state=PF_SYNTAX_ERROR,
-            source="import {} as pd\ndf={}.{}({})".format(module_name, caller, function_name, source),
+            source="import {} as pd\ndf={}.{}('{}')".format(module_name, caller, function_name, source),
         )
         checker = PathLocalChecker("")
         dispatches = set()
@@ -201,6 +205,8 @@ class TestPythonFilesExtract:
 
         assert result == 'done'
         assert python_file.state == PF_PROCESSED
+        assert python_file.extracted_args == 1
+        assert python_file.missed_args == 0
 
         assert module.python_file_id == python_file.id
         assert pm_created_at != module.created_at
@@ -236,9 +242,12 @@ class TestPythonFilesExtract:
 
         assert result == 'done'
         assert python_file.state == PF_PROCESSED
+        assert python_file.extracted_args == 1
+        assert python_file.missed_args == 0
 
         assert module.python_file_id == python_file.id
         assert pm_created_at != module.created_at
 
         assert data_io.python_file_id == python_file.id
         assert pd_created_at != data_io.created_at
+
