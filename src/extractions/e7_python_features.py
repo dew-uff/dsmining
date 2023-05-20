@@ -1,6 +1,11 @@
 """ Extracts features from Python Files"""
 
 import os
+import sys
+dir_path = os.path.dirname(os.path.dirname(os.path.abspath('')))
+if dir_path not in sys.path:
+    sys.path.append(dir_path)
+
 import argparse
 from itertools import groupby
 import src.config.consts as consts

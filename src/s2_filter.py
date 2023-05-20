@@ -6,6 +6,12 @@ This script is responsible for filtering that were collected in
 of the repositories to be extracted and futher analyzed in `s3_extract.py`.
 """
 
+import os
+import sys
+dir_path = os.path.dirname(os.path.abspath(''))
+if dir_path not in sys.path:
+    sys.path.append(dir_path)
+
 import pandas as pd
 from src.config.states import REP_FILTERED, REP_SELECTED, REP_DISCARDED
 from src.db.database import connect, Repository

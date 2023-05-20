@@ -1,9 +1,13 @@
 """ Extracts code features from code cells """
 
-import argparse
 import os
-import src.config.consts as consts
+import sys
+dir_path = os.path.dirname(os.path.dirname(os.path.abspath('')))
+if dir_path not in sys.path:
+    sys.path.append(dir_path)
 
+import argparse
+import src.config.consts as consts
 
 from itertools import groupby
 from future.utils.surrogateescape import register_surrogateescape

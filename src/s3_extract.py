@@ -15,9 +15,13 @@ the loop if and when you want to, by typing stop.
 """
 
 import os
+import sys
+dir_path = os.path.dirname(os.path.abspath(''))
+if dir_path not in sys.path:
+    sys.path.append(dir_path)
+
 import select
 import subprocess
-import sys
 import threading
 from datetime import datetime
 

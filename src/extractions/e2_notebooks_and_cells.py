@@ -1,6 +1,11 @@
 """ Extracts notebooks and their cells from repositories"""
 
 import os
+import sys
+dir_path = os.path.dirname(os.path.dirname(os.path.abspath('')))
+if dir_path not in sys.path:
+    sys.path.append(dir_path)
+
 import argparse
 import nbformat as nbf
 import src.config.consts as consts

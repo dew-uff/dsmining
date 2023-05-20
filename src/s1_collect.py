@@ -12,8 +12,12 @@ Using the API the scripts craws GitHub and populates the table Query
 with the information it receives.
 
 """
-
 import os
+import sys
+dir_path = os.path.dirname(os.path.abspath(''))
+if dir_path not in sys.path:
+    sys.path.append(dir_path)
+
 import time
 import traceback
 import pytz
