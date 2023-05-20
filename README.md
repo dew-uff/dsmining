@@ -207,6 +207,9 @@ pip install -r requirements.txt
 To run the project you simply have to run scripts s1, s2, s3, p1, p2 and then each analysis notebook.
 To run the tests you can call them using ``pytest file.py`` or ``pytest directory/``
 
+# Tests
+Run the tests by using ```python -m pytest tests```
+
 # References
 - [DB Mining](https://github.com/gems-uff/db-mining)
 - [Script Analysis](https://github.com/dew-uff/script-analysis)
