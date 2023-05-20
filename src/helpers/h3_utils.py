@@ -218,5 +218,5 @@ def get_next_pyexec():
 
 def remove_repositorires(repositories):
     for rep in repositories:
-        if rep.dir_path.exists():
+        if rep.dir_path and rep.dir_path.exists():
             shutil.rmtree(os.path.join(rep.dir_path))
