@@ -186,6 +186,7 @@ conda create -n dsm27 python=2.7 -y
 conda activate dsm27  
 pip install --upgrade pip
 pip install -r requirements.txt
+pip install astunparse
 ```
 
 ### Conda 3.5
