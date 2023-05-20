@@ -2,9 +2,13 @@
 from __future__ import print_function
 
 import os
+import sys
+src_path = os.path.dirname(os.path.abspath(''))
+if src_path not in sys.path:
+    sys.path.append(src_path)
+
 import re
 import shutil
-import sys
 import ast
 import bisect
 import fnmatch

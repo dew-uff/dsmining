@@ -1,3 +1,9 @@
+import os
+import sys
+src_path = os.path.dirname(os.path.abspath(''))
+if src_path not in sys.path:
+    sys.path.append(src_path)
+
 from src.db.database import Repository, Cell, PythonFile, Notebook
 from src.config.states import PF_EMPTY, NB_GENERIC_LOAD_ERROR
 

@@ -1,6 +1,11 @@
 import os
+import sys
+src_path = os.path.dirname(os.path.abspath(''))
+if src_path not in sys.path:
+    sys.path.append(src_path)
+
 import shutil
-from src.config.consts import REPOS_DIR, DB_FILE, LOGS_DIR
+from src.config.consts import REPOS_DIR, LOGS_DIR
 from src.db.database import *
 
 REPOS = True

@@ -1,3 +1,9 @@
+import os
+import sys
+src_path = os.path.dirname(os.path.abspath(''))
+if src_path not in sys.path:
+    sys.path.append(src_path)
+
 from collections import Counter, OrderedDict
 from src.db.database import CellModule, CellMarkdownFeature, PythonFileModule, CellDataIO, PythonFileDataIO, DataIO
 from src.helpers.h3_utils import vprint
