@@ -178,6 +178,7 @@ Then you must run ``conda init`` to initialize conda.
 
 We also used several Python modules that can be found on ```requirements.txt```. You can follow the instructions bellow to set up the conda enviroments and download the modules in each one of them.
 
+Install nltk stopwords that will be used in Cell Markdowns extraction by running ```python -c "import nltk; nltk.download('stopwords')"```
 
 ### Conda 2.7
 ```
