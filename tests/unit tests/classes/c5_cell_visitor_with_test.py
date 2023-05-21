@@ -27,7 +27,7 @@ class TestCellVisitorVisitWith:
 
         assert self.cell_visitor.data_ios[0] \
                == (1, None, function_name, ast.Name.__name__, source, mode)
-        assert self.cell_visitor.extracted_args == 1
+        assert self.cell_visitor.extracted_args == 2
         assert self.cell_visitor.missed_args == 0
 
     def test_visit_call_input_nested(self):
@@ -51,5 +51,5 @@ class TestCellVisitorVisitWith:
 
         assert self.cell_visitor.data_ios[1] \
                == (3, nested_caller, nested_function, ast.Attribute.__name__, nested_source, None)
-        assert self.cell_visitor.extracted_args == 2
+        assert self.cell_visitor.extracted_args == 3
         assert self.cell_visitor.missed_args == 0

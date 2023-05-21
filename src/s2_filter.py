@@ -106,7 +106,7 @@ def select_repositories(session, filtered_queries):
            .format(len(selected_repos)))
     selected_repos = selected_repos.sort_values(by='stargazers', ascending=False)
 
-    ids = selected_repos["id"][:10]
+    ids = selected_repos["id"]
     repos = session.query(Repository).filter(Repository.id.in_(ids))
     repos.update({Repository.state: REP_SELECTED}, synchronize_session=False)
     session.commit()

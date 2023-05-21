@@ -386,5 +386,5 @@ class TestCellVisitorVisitCall:
         assert self.cell_visitor.data_ios[0]\
                == (1, None, function_name, ast.Name.__name__, source, None)
 
-        assert self.cell_visitor.extracted_args == 1
+        assert self.cell_visitor.extracted_args == 2
         assert self.cell_visitor.missed_args == 0

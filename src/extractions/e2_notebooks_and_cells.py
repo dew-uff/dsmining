@@ -14,7 +14,7 @@ from IPython.core.interactiveshell import InteractiveShell
 from src.db.database import Cell, Notebook, connect
 from src.helpers.h3_utils import savepid, unzip_repository, cell_output_formats
 from src.classes.c1_safe_session import SafeSession
-from src.helpers.h3_utils import find_files, TimeoutError, vprint
+from src.helpers.h3_utils import timeout, find_files, TimeoutError, vprint
 from src.classes.c2_status_logger import StatusLogger
 from src.helpers.h2_script_helpers import apply, set_up_argument_parser
 
@@ -99,7 +99,7 @@ def load_cells(repository_id, nbrow, notebook, status):
     return nbrow, cells_info, exec_count, status
 
 
-# @timeout(5 * 60, use_signals=False)
+@timeout(5 * 60, use_signals=False)
 def load_notebook(repository_id, path, notebook_file, nbrow):
     """ Extract notebook information and cells from notebook """
     # pylint: disable=too-many-locals

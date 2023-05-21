@@ -65,6 +65,7 @@ class CellVisitor(ast.NodeVisitor):
 
         elif isinstance(arg, ast.Call):
             """ Adds Data IO recursively """
+            self.extracted_args = self.extracted_args + 1
             self.visit(arg)
             return sources
 
