@@ -5,7 +5,7 @@ if src_path not in sys.path:
     sys.path.append(src_path)
 
 import shutil
-from src.config.consts import REPOS_DIR, LOGS_DIR
+from src.config.consts import REPOS_DIR, LOGS_DIR, DB_FILE, DB_RESTORED
 from src.db.database import *
 
 REPOS = True
@@ -17,16 +17,18 @@ if REPOS:
         shutil.rmtree(REPOS_DIR)
         print("Deleted Repositories")
 
-if DATABASE:
-    with connect() as session:
-        for table in Base.metadata.sorted_tables:
-            if table != Base.metadata.tables["repositories"]:
-                table.drop(session.connection())
-        print("Dropped all tables but 'repositories'")
-
 if LOGS:
     if os.path.exists(LOGS_DIR):
         for root, dirs, files in os.walk(LOGS_DIR, topdown=False):
             for folder in dirs:
                 shutil.rmtree(os.path.join(root, folder))
         print("Deleted logs")
+
+
+if DATABASE:
+    if os.path.exists(DB_FILE):
+        os.remove(DB_FILE)
+        shutil.copy2(DB_RESTORED, DB_FILE)
+        print("Database restored to initial settings")
+
+
