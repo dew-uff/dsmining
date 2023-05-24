@@ -166,6 +166,7 @@ class Commit(Base):
         ),
     )
     id = Column(Integer, primary_key=True, autoincrement=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     type = Column(String)
     hash = Column(String)
@@ -191,6 +192,7 @@ class Notebook(Base):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     state = Column(Enum(NB_LOADED,
                         NB_LOAD_ERROR,
@@ -232,7 +234,6 @@ class Notebook(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
-
     @property
     def path(self):
         """Return notebook path"""
@@ -278,6 +279,7 @@ class Cell(Base):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     notebook_id = Column(Integer)
     state = Column(Enum(CELL_LOADED, CELL_UNKNOWN_VERSION, CELL_SYNTAX_ERROR,
@@ -323,6 +325,7 @@ class PythonFile(Base):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     state = Column(Enum(PF_LOADED, PF_EMPTY, PF_L_ERROR,
                         PF_PROCESSED, PF_PROCESS_ERROR, PF_PROCESS_TIMEOUT,
@@ -371,6 +374,7 @@ class RequirementFile(Base):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     state = Column(Enum(REQ_FILE_LOADED, REQ_FILE_L_ERROR, REQ_FILE_EMPTY,
                         name='requirement_file_states',
@@ -416,6 +420,7 @@ class CellMarkdownFeature(Base):
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     notebook_id = Column(Integer)
     cell_id = Column(Integer)
@@ -601,6 +606,7 @@ class CellModule(Base):
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     notebook_id = Column(Integer)
     cell_id = Column(Integer)
@@ -646,6 +652,7 @@ class CellDataIO(Base):
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     notebook_id = Column(Integer)
     cell_id = Column(Integer)
@@ -689,6 +696,7 @@ class PythonFileModule(Base):
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     python_file_id = Column(Integer)
 
@@ -727,6 +735,7 @@ class PythonFileDataIO(Base):
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     python_file_id = Column(Integer)
 
@@ -757,6 +766,7 @@ class Extraction(Base):
     __tablename__ = 'extractions'
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    machine = Column(String, default=consts.MACHINE)
     state = Column(Enum(EXTRACTED_SUCCESS,
                         EXTRACTED_ERROR,
                         name='extraction_states',
@@ -796,6 +806,7 @@ class NotebookMarkdown(Base):
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     notebook_id = Column(Integer)
 
@@ -981,6 +992,7 @@ class Module(Base):
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     type = Column(String)
     notebook_id = Column(Integer)
@@ -1057,6 +1069,7 @@ class DataIO(Base):
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    machine = Column(String, default=consts.MACHINE)
     repository_id = Column(Integer)
     type = Column(String)
     notebook_id = Column(Integer)
