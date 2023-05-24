@@ -1,12 +1,16 @@
+import ast
 import os
 import sys
+
+from src.classes.c5_cell_visitor import CellVisitor
+
 src_path = os.path.dirname(os.path.abspath(''))
 if src_path not in sys.path:
     sys.path.append(src_path)
 
 import src.config.consts as consts
 from src.helpers.h4_filters import filter_repositories
-from src.helpers.h3_utils import vprint, check_exit
+from src.helpers.h3_utils import vprint, check_exit, timeout
 
 
 def set_up_argument_parser(parser, script_name, script_type="repository"):
@@ -61,3 +65,16 @@ def apply(session, status, selected_repositories, retry,
 
         status.count += 1
         session.commit()
+
+
+@timeout(1 * 60, use_signals=False)
+def extract_features(text, checker):
+    """Use cell visitor to extract features from cell text"""
+    visitor = CellVisitor(checker)
+    try:
+        parsed = ast.parse(text)
+    except ValueError:
+        raise SyntaxError("Invalid escape")
+    visitor.visit(parsed)
+
+    return visitor.modules, visitor.data_ios, visitor.extracted_args, visitor.missed_args

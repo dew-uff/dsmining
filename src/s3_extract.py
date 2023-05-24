@@ -50,7 +50,7 @@ ORDER = [
 ]
 
 
-def save_extraction(session, start, end, selected_repositories, error=False):
+def save_extraction(session, start, end, selected_repositories, error=False, failure=None):
     repositories_ids = [int(item) for item in selected_repositories if item.isdigit()]
     repositories = session.query(Repository).filter(Repository.id.in_(repositories_ids))
 
@@ -61,22 +61,21 @@ def save_extraction(session, start, end, selected_repositories, error=False):
             state=EXTRACTED_SUCCESS
         )
 
-        session.add(extract)
-        session.flush()
-
-        repositories.update({Repository.extraction_id: extract.id}, synchronize_session=False)
-
-        successfull_repos = repositories.filter(Repository.state == REP_REQ_FILE_EXTRACTED)
-        successfull_repos.update({Repository.state: REP_FINISHED}, synchronize_session=False)
-
     else:
-        extraction = Extraction(
+        extract = Extraction(
             start=start, end=end, runtime=end - start,
             repositores=len(selected_repositories),
-            state=EXTRACTED_ERROR
+            state=EXTRACTED_ERROR, failure=failure
         )
 
-        session.add(extraction)
+    session.add(extract)
+    session.flush()
+
+    repositories.update({Repository.extraction_id: extract.id}, synchronize_session=False)
+
+    successfull_repos = repositories.filter(Repository.state == REP_REQ_FILE_EXTRACTED)
+    successfull_repos.update({Repository.state: REP_FINISHED}, synchronize_session=False)
+
     session.commit()
     remove_repositorires(repositories)
 
@@ -84,9 +83,9 @@ def save_extraction(session, start, end, selected_repositories, error=False):
 def inform(session, iteration, selected_output):
     query = session.query(Repository)
     vprint(1, "Processed Repositories: {}"
-           .format(query.filter(Repository.state == REP_REQ_FILE_EXTRACTED).count()))
+           .format(query.filter(Repository.state.in_(REP_EXTRACT_ORDER)).count()))
     vprint(1, "Failed Repositories: {}"
-           .format(query.filter(Repository.state in REP_ERRORS).count()))
+           .format(query.filter(Repository.state.in_(REP_ERRORS)).count()))
     vprint(1, "Unprocessed Repositories: {}\n\n"
            .format(query.filter(Repository.state == REP_SELECTED).count()))
     vprint(2, "Iteration {}".format(iteration))
@@ -193,7 +192,10 @@ def main():
                 inform(session, iteration, selected_output)
 
                 start = datetime.utcnow()
+                current_script = None
                 for script, args in to_execute.items():
+                    current_script = script
+
                     if check_exit({"all", "main", "main.py"}):
                         vprint(0, "Found .exit file. Exiting")
                         return
@@ -214,7 +216,8 @@ def main():
                        .format(iteration, err))
 
                 end = datetime.utcnow()
-                save_extraction(session, start, end, selected_repositories, error=True)
+                save_extraction(session, start, end, selected_repositories,
+                                error=True, failure=current_script)
 
             vprint(4, "\033[93mFiles from {} were removed from memory.\033[0m"
                    .format(selected_output))

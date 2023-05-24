@@ -767,6 +767,7 @@ class Extraction(Base):
     end = Column(DateTime)
     runtime = Column(Interval)
     repositores = Column(Integer)
+    failure = Column(String)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)

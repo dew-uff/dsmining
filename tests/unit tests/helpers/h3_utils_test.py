@@ -5,7 +5,7 @@ if src not in sys.path:
     sys.path.append(src)
 
 from src.classes.c4_local_checkers import PathLocalChecker
-from src.helpers.h3_utils import extract_features
+from src.helpers.h2_script_helpers import extract_features
 from tests.database_config import connection, session  # noqa: F401
 
 import ast

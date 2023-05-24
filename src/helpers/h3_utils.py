@@ -9,7 +9,6 @@ if src_path not in sys.path:
 
 import re
 import shutil
-import ast
 import bisect
 import fnmatch
 import subprocess
@@ -17,7 +16,6 @@ import src.config.consts as consts
 
 from src.config.consts import Path, LOGS_DIR
 from contextlib import contextmanager
-from src.classes.c5_cell_visitor import CellVisitor
 from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: F401
 
 
@@ -124,19 +122,6 @@ def unzip_repository(repository):
         if uncompressed != 0:
             return "Extraction failed with code {}".format(uncompressed)
     return "done"
-
-
-@timeout(1 * 60, use_signals=False)
-def extract_features(text, checker):
-    """Use cell visitor to extract features from cell text"""
-    visitor = CellVisitor(checker)
-    try:
-        parsed = ast.parse(text)
-    except ValueError:
-        raise SyntaxError("Invalid escape")
-    visitor.visit(parsed)
-
-    return visitor.modules, visitor.data_ios, visitor.extracted_args, visitor.missed_args
 
 
 def cell_output_formats(cell):
