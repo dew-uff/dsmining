@@ -67,7 +67,7 @@ def apply(session, status, selected_repositories, retry,
         session.commit()
 
 
-@timeout(1 * 60, use_signals=False)
+@timeout(2 * 60, use_signals=False)
 def extract_features(text, checker):
     """Use cell visitor to extract features from cell text"""
     visitor = CellVisitor(checker)

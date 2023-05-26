@@ -22,7 +22,11 @@ from timeout_decorator import timeout, TimeoutError, timeout_decorator  # noqa: 
 def to_unicode(text):
     if isinstance(text, str):
         return text
-    return bytes(text).decode("utf-8")
+    try:
+        decoded_text = bytes(text).decode("utf-8")
+    except Exception:
+        decoded_text = text.encode("utf-8").decode("utf-8")
+    return decoded_text
 
 
 def vprint(verbose, *args):

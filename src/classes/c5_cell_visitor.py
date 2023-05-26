@@ -1,7 +1,7 @@
 import ast
 import re
 import astunparse
-
+import sys
 
 class CellVisitor(ast.NodeVisitor):
 
@@ -57,7 +57,7 @@ class CellVisitor(ast.NodeVisitor):
     def get_argument_data(self, arg, sources):
         value = None
 
-        if isinstance(arg, ast.Constant):
+        if sys.version_info.major > 3 and isinstance(arg, ast.Constant):
             value = self.visit(arg)
 
         elif isinstance(arg, ast.Name):
@@ -102,7 +102,7 @@ class CellVisitor(ast.NodeVisitor):
         return bool(re.match(r"^.+\.[a-z]+$", string))
 
     def visit_Str(self, node):
-        return node.value
+        return astunparse.unparse(node).replace('\n', '').replace('\'', '').replace('"', '')
 
     def visit_Assign(self, node):
         target = node.targets[0]

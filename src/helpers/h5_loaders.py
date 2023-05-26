@@ -56,12 +56,12 @@ def load_files(
         return True, True, file.id, archives, None
 
     vprint(1, 'Loading file: {}'.format(file))
-    name = to_unicode(file.name)
-
-    tarzip, repo_path = archives
-    file_path = os.path.join(repo_path, name)
 
     try:
+        name = to_unicode(file.name)
+
+        tarzip, repo_path = archives
+        file_path = os.path.join(repo_path, name)
 
         if tarzip:
             checker = CompressedLocalChecker(tarzip, file_path)

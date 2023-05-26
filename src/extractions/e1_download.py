@@ -145,9 +145,9 @@ def process_repository(session, repository, branch=None, commit=None, retry=Fals
             vprint(3, "retrying to download {}".format(repository))
             commit = remove_repo_and_prepare(session, repository)
 
-    if repository.state == REP_LOADED \
-            or repository.state in REP_ERRORS\
-            or repository.state in states_after(REP_LOADED, REP_ORDER):
+    if not retry and (repository.state == REP_LOADED \
+                      or repository.state in REP_ERRORS\
+                      or repository.state in states_after(REP_LOADED, REP_ORDER)):
         return "already downloaded"
 
     load_repository_and_commits(
