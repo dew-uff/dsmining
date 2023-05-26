@@ -9,7 +9,7 @@ from src.db.database import CellModule, CellMarkdownFeature, PythonFileModule, C
 from src.helpers.h3_utils import vprint
 
 IGNORE_COLUMNS = {
-    "id", "repository_id", "notebook_id", "cell_id", "index",
+    "id", "machine", "repository_id", "notebook_id", "cell_id", "index",
     "skip", "processed", 'state', 'created_at', 'updated_at'
 }
 

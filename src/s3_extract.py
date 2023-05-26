@@ -28,7 +28,7 @@ from datetime import datetime
 from sqlalchemy import func
 
 from src.classes.c2_status_logger import StatusLogger
-from src.config.consts import EXTRACTION_DIR, LOGS_DIR, MAIN_VERSION
+from src.config.consts import EXTRACTION_DIR, LOGS_DIR, MAIN_VERSION, MACHINE
 from src.config.states import *
 from src.db.database import connect, Repository, Extraction
 from src.helpers.h3_utils import check_exit, savepid, vprint, remove_repositorires
@@ -101,7 +101,7 @@ def execute_script(script, args, iteration):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    out = path / "{}_{}_{}.outerr".format("itr"+str(iteration), script, start)
+    out = path / "{}_{}_{}_{}.outerr".format(MACHINE, "itr"+str(iteration), script, start)
     if out.exists():
         out = str(out) + ".2"
 

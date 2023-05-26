@@ -10,7 +10,7 @@ else:
 GITHUB = "github.com"
 GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-MACHINE = os.environ.get("GITHUB_USERNAME")
+MACHINE = "luam"
 
 # Directories
 CONFIG_DIR = os.path.dirname(os.path.realpath(__file__))
