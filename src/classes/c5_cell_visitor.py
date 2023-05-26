@@ -57,7 +57,7 @@ class CellVisitor(ast.NodeVisitor):
     def get_argument_data(self, arg, sources):
         value = None
 
-        if sys.version_info.major > 3 and isinstance(arg, ast.Constant):
+        if sys.version_info.major >= 3 and isinstance(arg, ast.Constant):
             value = self.visit(arg)
 
         elif isinstance(arg, ast.Name):
