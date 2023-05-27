@@ -55,10 +55,20 @@ class CellVisitor(ast.NodeVisitor):
         if value and (isinstance(value, ast.Str) or isinstance(value, str)) and value in modes:
             return value
 
+    @staticmethod
+    def is_constant_or_str(arg):
+        if sys.version_info.major >= 3 and sys.version_info.minor > 5:
+            if isinstance(arg, ast.Constant):
+                return True
+        else:
+            if isinstance(arg, ast.Str):
+                return True
+        return False
+
     def get_argument_data(self, arg, sources):
         value = None
 
-        if sys.version_info.major >= 3 and sys.version_info.minor > 5 and isinstance(arg, ast.Constant):
+        if self.is_constant_or_str(arg):
             value = self.visit(arg)
 
         elif isinstance(arg, ast.Name):
@@ -86,7 +96,7 @@ class CellVisitor(ast.NodeVisitor):
 
     def get_open_data(self, arguments):
         sources = []
-        if len(arguments) >= 2 and isinstance(arguments[1], ast.Constant):
+        if len(arguments) >= 2 and self.is_constant_or_str(arguments[1]):
             source_arg = arguments[0]
             mode_arg = arguments[1]
 
