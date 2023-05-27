@@ -297,6 +297,7 @@ class Cell(Base):
     output_formats = Column(String)
     source = Column(String)
     python = Column(Boolean)
+    run_with_version = Column(String, default=None)
 
     extracted_args = Column(Integer)
     missed_args = Column(Integer)
@@ -340,6 +341,7 @@ class PythonFile(Base):
     name = Column(String)
     source = Column(String)
     total_lines = Column(Integer)
+    run_with_version = Column(String)
 
     extracted_args = Column(Integer)
     missed_args = Column(Integer)

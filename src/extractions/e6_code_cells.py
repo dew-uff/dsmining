@@ -108,6 +108,7 @@ def process_code_cell(
             traceback.print_exc()
         return 'Failed to process ({})'.format(err)
     finally:
+        cell.run_with_version = '.'.join(map(str, sys.version_info))
         session.add(cell)
 
 

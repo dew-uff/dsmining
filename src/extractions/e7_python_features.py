@@ -108,6 +108,7 @@ def process_python_file(
             traceback.print_exc()
         return 'Failed to process ({})'.format(err)
     finally:
+        python_file.run_with_version = '.'.join(map(str, sys.version_info))
         session.add(python_file)
 
 
