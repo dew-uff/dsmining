@@ -159,11 +159,13 @@ class Commit(Base):
     """Commits Table"""
     # pylint: disable=invalid-name
     __tablename__ = 'commits'
+    sqlite_autoincrement = True
     __table_args__ = (
         ForeignKeyConstraint(
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True}
     )
     id = Column(Integer, primary_key=True, autoincrement=True)
     machine = Column(String, default=consts.MACHINE)
@@ -189,6 +191,7 @@ class Notebook(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -276,6 +279,7 @@ class Cell(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -322,6 +326,7 @@ class PythonFile(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -371,6 +376,7 @@ class RequirementFile(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -417,6 +423,7 @@ class CellMarkdownFeature(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
@@ -603,6 +610,7 @@ class CellModule(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
@@ -649,6 +657,7 @@ class CellDataIO(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
@@ -693,6 +702,7 @@ class PythonFileModule(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
@@ -732,6 +742,7 @@ class PythonFileDataIO(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
@@ -764,7 +775,9 @@ class Extraction(Base):
     """Repository Files Table"""
     # pylint: disable=too-few-public-methods, invalid-name
     __tablename__ = 'extractions'
-
+    __table_args__ = (
+        {'sqlite_autoincrement': True},
+    )
     id = Column(Integer, autoincrement=True, primary_key=True)
     machine = Column(String, default=consts.MACHINE)
     state = Column(Enum(EXTRACTED_SUCCESS,
@@ -804,6 +817,7 @@ class NotebookMarkdown(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
@@ -990,6 +1004,8 @@ class Module(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
+
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
@@ -1067,6 +1083,7 @@ class DataIO(Base):
             ['repository_id'],
             ['repositories.id']
         ),
+        {'sqlite_autoincrement': True},
     )
 
     id = Column(Integer, autoincrement=True, primary_key=True)
