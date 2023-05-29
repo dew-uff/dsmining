@@ -6,6 +6,6 @@ with connect() as session:
     session.execute(
         update(Repository)
         .where(Repository.state == 'error_cloning_repository')
-        .values(extraction_id='none', state='repository_selected')
+        .values(extraction_id=None, state='repository_selected')
     )
     session.commit()
