@@ -25,7 +25,7 @@ import subprocess
 import threading
 from datetime import datetime
 
-from sqlalchemy import func
+from sqlalchemy import func, Integer
 
 from src.classes.c2_status_logger import StatusLogger
 from src.config.consts import EXTRACTION_DIR, LOGS_DIR, MAIN_VERSION, MACHINE
@@ -82,12 +82,46 @@ def save_extraction(session, start, end, selected_repositories, error=False, fai
 
 def inform(session, iteration, selected_output):
     query = session.query(Repository)
-    vprint(1, "Processed Repositories: {}"
-           .format(query.filter(Repository.state.in_(REP_EXTRACT_ORDER)).count()))
-    vprint(1, "Failed Repositories: {}"
-           .format(query.filter(Repository.state.in_(REP_ERRORS)).count()))
-    vprint(1, "Unprocessed Repositories: {}\n\n"
-           .format(query.filter(Repository.state == REP_SELECTED).count()))
+    processed = query.filter(Repository.state.in_(REP_EXTRACT_ORDER)).count()
+    unprocessed = query.filter(Repository.state == REP_SELECTED).count()
+    failed = query.filter(Repository.state.in_(REP_ERRORS)).count()
+
+    # size_processed
+    result_processed = query.filter(Repository.state.in_(REP_EXTRACT_ORDER)).with_entities(
+        func.sum(func.cast(Repository.disk_usage, Integer))).one()[0]
+    if result_processed is not None:
+        size_processed = int(result_processed) / (10 ** 6)
+    else:
+        size_processed = 0
+
+    # size_unprocessed
+    result_unprocessed = query.filter(Repository.state == REP_SELECTED).with_entities(
+        func.sum(func.cast(Repository.disk_usage, Integer))).one()[0]
+    if result_unprocessed is not None:
+        size_unprocessed = int(result_unprocessed) / (10 ** 6)
+    else:
+        size_unprocessed = 0
+
+    # size_failed
+    result_failed = query.filter(Repository.state.in_(REP_ERRORS)).with_entities(
+        func.sum(func.cast(Repository.disk_usage, Integer))).one()[0]
+    if result_failed is not None:
+        size_failed = int(result_failed) / (10 ** 6)
+    else:
+        size_failed = 0
+
+    total = size_processed + size_unprocessed + size_failed
+
+    vprint(1, "Processed Repositories: {} ({:.2f}GB - {:.2f}%)"
+           .format(processed, size_processed, (size_processed/total)*100),
+           )
+    vprint(1, "Unprocessed Repositories: {} ({:.2f}GB - {:.2f}%)"
+           .format(unprocessed, size_unprocessed, (size_unprocessed/total)*100)
+           )
+    vprint(1, "Failed Repositories: {} ({:.2f}GB - {:.2f}%)\n\n"
+           .format(failed, size_failed, (size_failed/total)*100)
+           )
+
     vprint(2, "Iteration {}".format(iteration))
     vprint(2, selected_output + "\n\n")
 
