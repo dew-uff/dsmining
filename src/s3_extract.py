@@ -35,7 +35,7 @@ from src.helpers.h3_utils import check_exit, savepid, vprint, remove_repositorir
 
 stop = False
 
-SIZE_LIMIT = 50 * (10 ** 3)  # 100 MB (since disk usage already comes in KB)
+SIZE_LIMIT = 500 * (10 ** 3)  # 100 MB (since disk usage already comes in KB)
 
 ORDER = [
     "e1_download",
@@ -174,8 +174,8 @@ def filtered_repositories(session):
 
 
 def select_repositories(session):
-    filtered_repos = session.query(Repository).filter(Repository.state == REP_SELECTED)\
-        .order_by(cast(Repository.disk_usage, Integer).asc())
+    filtered_repos = session.query(Repository).filter(Repository.state == REP_SELECTED)
+        # .order_by(cast(Repository.disk_usage, Integer).asc())
     iteration_repositories = []
     iteration_size = 0
     options_to_all = ['-sr']
