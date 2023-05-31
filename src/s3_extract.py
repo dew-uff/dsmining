@@ -35,7 +35,7 @@ from src.helpers.h3_utils import check_exit, savepid, vprint, remove_repositorir
 
 stop = False
 
-SIZE_LIMIT = 500 * (10 ** 3)  # 100 MB (since disk usage already comes in KB)
+SIZE_LIMIT = 50 * (10 ** 3)  # 100 MB (since disk usage already comes in KB)
 
 ORDER = [
     "e1_download",
@@ -82,17 +82,26 @@ def save_extraction(session, start, end, selected_repositories, error=False, fai
 
 def inform(session, iteration, selected_output):
     query = session.query(Repository)
-    processed = query.filter(Repository.state.in_(REP_EXTRACT_ORDER)).count()
+    processed = query.filter(Repository.state == REP_FINISHED).count()
+    inbetween = query.filter(Repository.state.in_(REP_EXTRACT_ORDER)).count()
     unprocessed = query.filter(Repository.state == REP_SELECTED).count()
     failed = query.filter(Repository.state.in_(REP_ERRORS)).count()
 
     # size_processed
-    result_processed = query.filter(Repository.state.in_(REP_EXTRACT_ORDER)).with_entities(
+    result_processed = query.filter(Repository.state == REP_FINISHED).with_entities(
         func.sum(func.cast(Repository.disk_usage, Integer))).one()[0]
     if result_processed is not None:
         size_processed = int(result_processed) / (10 ** 6)
     else:
         size_processed = 0
+
+    # size_inbetween
+    result_inbetween = query.filter(Repository.state.in_(REP_EXTRACT_ORDER)).with_entities(
+        func.sum(func.cast(Repository.disk_usage, Integer))).one()[0]
+    if result_inbetween is not None:
+        size_inbetween = int(result_inbetween) / (10 ** 6)
+    else:
+        size_inbetween = 0
 
     # size_unprocessed
     result_unprocessed = query.filter(Repository.state == REP_SELECTED).with_entities(
@@ -114,6 +123,9 @@ def inform(session, iteration, selected_output):
 
     vprint(1, "Processed Repositories: {} ({:.2f}GB - {:.2f}%)"
            .format(processed, size_processed, (size_processed/total)*100),
+           )
+    vprint(1, "Inbetween Repositories: {} ({:.2f}GB - {:.2f}%)"
+           .format(inbetween, size_inbetween, (size_inbetween / total) * 100)
            )
     vprint(1, "Unprocessed Repositories: {} ({:.2f}GB - {:.2f}%)"
            .format(unprocessed, size_unprocessed, (size_unprocessed/total)*100)
