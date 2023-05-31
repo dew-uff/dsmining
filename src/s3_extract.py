@@ -25,7 +25,7 @@ import subprocess
 import threading
 from datetime import datetime
 
-from sqlalchemy import func, Integer
+from sqlalchemy import func, Integer, cast
 
 from src.classes.c2_status_logger import StatusLogger
 from src.config.consts import EXTRACTION_DIR, LOGS_DIR, MAIN_VERSION, MACHINE
@@ -162,7 +162,8 @@ def filtered_repositories(session):
 
 
 def select_repositories(session):
-    filtered_repos = session.query(Repository).filter(Repository.state == REP_SELECTED)
+    filtered_repos = session.query(Repository).filter(Repository.state == REP_SELECTED)\
+        .order_by(cast(Repository.disk_usage, Integer).asc())
     iteration_repositories = []
     iteration_size = 0
     options_to_all = ['-sr']
