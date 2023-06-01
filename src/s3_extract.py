@@ -174,8 +174,8 @@ def filtered_repositories(session):
 
 
 def select_repositories(session):
-    filtered_repos = session.query(Repository).filter(Repository.state == REP_SELECTED)
-        # .order_by(cast(Repository.disk_usage, Integer).asc())
+    filtered_repos = session.query(Repository).filter(Repository.state == REP_SELECTED)\
+        .order_by(cast(Repository.disk_usage, Integer).desc())
     iteration_repositories = []
     iteration_size = 0
     options_to_all = ['-sr']
