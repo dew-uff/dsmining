@@ -195,8 +195,8 @@ def select_repositories(session):
 
     ids = [repo.id for repo in iteration_repositories]
 
-    selected_output = "Selected Repositories:{} ({:.2f}KB / {:.2f}MB / {:.2f}GB)"\
-        .format(ids, iteration_size, iteration_size / (10 ** 3), iteration_size / (10 ** 6))
+    selected_output = "Selected {} Repositories:{} ({:.2f}KB / {:.2f}MB / {:.2f}GB)"\
+        .format(len(ids), ids, iteration_size, iteration_size / (10 ** 3), iteration_size / (10 ** 6))
 
     for id_ in ids:
         options_to_all.append(str(id_))
@@ -255,8 +255,8 @@ def main():
                 end = datetime.utcnow()
 
                 save_extraction(session, start, end, selected_repositories)
-                vprint(4, "\033[92mRepositories from iteration {} extracted successfully!!\033[0m"
-                       .format(iteration))
+                vprint(4, "\033[92mRepositories from iteration {} extracted successfully!! Duration:{}\033[0m"
+                       .format(iteration, end - start))
 
             except Exception as err:
                 vprint(4, "\033[91mError extracting repositories from iteration {} \n{}\033[0m"
