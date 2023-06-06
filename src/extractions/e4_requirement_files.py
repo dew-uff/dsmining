@@ -97,6 +97,8 @@ def process_requirement_files(session, repository, req_names, reqformat):
                 state=REQ_FILE_LOADED,
             )
             session.add(requirement_file)
+            session.commit()
+
         except ValueError as err:
             vprint(1, "Requirement {} {!r}".format(name, err))
             requirement_file = RequirementFile(
@@ -106,6 +108,7 @@ def process_requirement_files(session, repository, req_names, reqformat):
                 state=REQ_FILE_EMPTY,
             )
             session.add(requirement_file)
+            session.commit()
 
         except Exception as err:
             vprint(1, "Failed to load requirement {} due {!r}".format(name, err))
@@ -117,6 +120,7 @@ def process_requirement_files(session, repository, req_names, reqformat):
                 state=REQ_FILE_L_ERROR,
             )
             session.add(requirement_file)
+            session.commit()
 
 
 def process_repository(session, repository):

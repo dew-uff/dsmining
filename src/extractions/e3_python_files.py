@@ -37,7 +37,7 @@ def find_python_files(session, repository):
     files = find_files(repository.path, "*.py")
     for file in files:
         if "/setup.py" not in str(file) \
-                and "venv" not in str(file) \
+                and "env" not in str(file) \
                 and "CorePython" not in str(file) \
                 and "conda" not in str(file) \
                 and str(file) != 'setup.py':
@@ -46,7 +46,7 @@ def find_python_files(session, repository):
     return python_files
 
 
-@timeout(5 * 60, use_signals=False)
+# @timeout(5 * 60, use_signals=False)
 def process_python_files(session, repository, python_files_names, count):
 
     for name in python_files_names:
@@ -93,6 +93,7 @@ def process_python_files(session, repository, python_files_names, count):
             )
 
             session.add(python_file)
+            session.commit()
         except Exception as err:
 
             vprint(1, "Failed to load python file {} due {!r}".format(name, err))
@@ -104,6 +105,7 @@ def process_python_files(session, repository, python_files_names, count):
                 state=PF_L_ERROR
             )
             session.add(python_file)
+            session.commit()
 
     return count
 
