@@ -25,7 +25,7 @@ import subprocess
 import threading
 from datetime import datetime
 
-from sqlalchemy import func, Integer, cast
+from sqlalchemy import func, Integer, cast # noqa
 
 from src.classes.c2_status_logger import StatusLogger
 from src.config.consts import EXTRACTION_DIR, LOGS_DIR, MAIN_VERSION, MACHINE
@@ -180,15 +180,22 @@ def select_repositories(session):
     iteration_size = 0
     options_to_all = ['-sr']
 
+    # to set a limit of repositories per iteration
+    limit = False
+    count = 0
+
     for rep in filtered_repos:
 
         """
         disk_usage: The number of KBs (kilobytes) this repository occupies on disk.
         """
+        if limit and count >= 100:
+            break
 
         if iteration_size + int(rep.disk_usage) < SIZE_LIMIT:
             iteration_size = iteration_size + int(rep.disk_usage)
             iteration_repositories.append(rep)
+            count = count + 1
 
     if len(iteration_repositories) == 0:
         return False, None

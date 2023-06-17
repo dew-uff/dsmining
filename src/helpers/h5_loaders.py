@@ -33,7 +33,7 @@ def load_archives(session, repository):
             zip_path = to_unicode(repository.hash_dir2)
             return False, (tarzip, zip_path)
 
-    if repository.path.exists():
+    if repository.path and repository.path.exists():
         repo_path = to_unicode(repository.path)
         return False, (None, repo_path)
     else:

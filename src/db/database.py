@@ -74,6 +74,7 @@ class Repository(Base):
     domain = Column(String)
     repository = Column(String)
     extraction_id = Column(Integer)
+    part = Column(Integer, default=consts.PART)
     primary_language = Column(String)
     disk_usage = Column(String)
     is_mirror = Column(Boolean)

@@ -12,7 +12,7 @@ import src.config.consts as consts
 from src.db.database import PythonFile, connect
 from src.helpers.h3_utils import vprint, savepid
 from src.classes.c2_status_logger import StatusLogger
-from src.helpers.h3_utils import find_files, unzip_repository, timeout
+from src.helpers.h3_utils import find_files, unzip_repository
 from src.helpers.h2_script_helpers import apply, set_up_argument_parser
 
 from src.config.states import PF_LOADED, PF_EMPTY, PF_L_ERROR
@@ -37,7 +37,8 @@ def find_python_files(session, repository):
     files = find_files(repository.path, "*.py")
     for file in files:
         if "/setup.py" not in str(file) \
-                and "env" not in str(file) \
+                and "venv" not in str(file) \
+                and "site-packages" not in str(file) \
                 and "CorePython" not in str(file) \
                 and "conda" not in str(file) \
                 and str(file) != 'setup.py':
@@ -129,7 +130,7 @@ def process_repository(session, repository):
             count = process_python_files(session, repository, repository_python_files_names, count)
             repository.state = REP_PF_EXTRACTED
             repository.python_files_count = count
-        except Exception:
+        except Exception:  # noqa
             vprint(1, "Timed out")
 
     session.add(repository)
