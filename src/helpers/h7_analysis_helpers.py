@@ -25,9 +25,17 @@ from matplotlib import pyplot as plt
 from dask.dataframe.core import Series as DaskSeries
 from dask.array.core import Array as DaskArray
 from dask.array import histogram as _dask_histogram
-
+import matplotlib.colors as mcolors
 
 Distribution = namedtuple("Distribution", "min q1 median q3 max")
+
+
+def pastel_colormap(size=5):
+    colors = ['#FFCED1', '#FFFDD1', '#AEEAC6', '#CDE7F0', '#e3e3e3']
+    if size == 4:
+        colors = ['#FFCED1', '#FFFDD1', '#AEEAC6', '#CDE7F0']
+    cmapp = mcolors.ListedColormap(colors)
+    return cmapp
 
 
 def tex_escape(text):
@@ -326,6 +334,7 @@ def get_toplevel_modules(modules):
     ]
 
     for column in columns:
+        print("coluna", column)
         modules[column] = modules[column].apply(lambda c: {a for a in c.split(",") if a})
         modules["toplevel_" + column] = modules[column].apply(lambda imports: {
             getitem(x.split("."), 0, x) for x in imports
@@ -355,6 +364,7 @@ def calculate_frequencies(repositories_with_commits, commits):
     frequency_in_days = []
 
     for index, repository in repositories_with_commits.iterrows():
+        print(repository.repository_id)
         if repository.commits > 1:
             repository_id = repository.repository_id
             current_repository_commits = commits[commits.repository_id == repository_id].sort_values(by="date")
