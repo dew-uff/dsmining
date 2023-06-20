@@ -7,12 +7,13 @@ REP_EMPTY = "empty_repository"
 REP_LOADED = "repository_loaded"
 REP_FAILED_TO_CLONE = 'error_cloning_repository'
 REP_N_EXTRACTED = "notebooks_cells_extracted"
-REP_N_ERROR = "error_extracting_notebooks_cells"
+REP_N_ERROR = "error_extracting_notebooks_and_cells"
 REP_PF_EXTRACTED = "python_files_extracted"
 REP_REQ_FILE_EXTRACTED = "requirement_files_extracted"
 REP_UNAVAILABLE_FILES = "error_unavailable_files"
 REP_FINISHED = "repository_finished_processing"
 REP_STOPPED = "loading_repository_stopped"
+REP_TROUBLESOME = "troublesome_repository"
 
 
 REP_ORDER = [REP_COLLECTED, REP_FILTERED, REP_SELECTED,

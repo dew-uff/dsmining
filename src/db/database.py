@@ -67,6 +67,7 @@ class Repository(Base):
             REP_UNAVAILABLE_FILES,
             REP_STOPPED,
             REP_EMPTY,
+            REP_TROUBLESOME,
             name='repository_states',
             validate_strings=True
         ), default=REP_FILTERED)
