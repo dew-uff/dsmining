@@ -29,12 +29,16 @@ import matplotlib.colors as mcolors
 
 Distribution = namedtuple("Distribution", "min q1 median q3 max")
 
+def count(dataframe, *attrs):
+    counter = Counter()
+    for attr in attrs:
+        counter[attr] = len(dataframe[dataframe[attr] != 0])
+    return counter
 
-def pastel_colormap(size=5):
+def pastel_colormap(size=5, reverse=False):
     colors = ['#FFCED1', '#FFFDD1', '#AEEAC6', '#CDE7F0', '#e3e3e3']
-    if size == 4:
-        colors = ['#FFCED1', '#FFFDD1', '#AEEAC6', '#CDE7F0']
-    cmapp = mcolors.ListedColormap(colors)
+
+    cmapp = mcolors.ListedColormap(colors[:size])
     return cmapp
 
 
@@ -125,9 +129,9 @@ def display_counts(
     if show_values:
         for p in ax.patches:
             text = template.format(int(p.get_height()))
-            ax.annotate(text, (p.get_x() + 0.25, p.get_height() + 1.035), ha="center")
+            ax.annotate(text, (p.get_x() + 0.25, p.get_height() + max(ax.get_ylim()) * 0.01), ha="center")
     fig = ax.get_figure()
-    fig.set_size_inches(width, min(7, 0.375 * len(str(counts).split('\n'))), forward=True)
+    fig.set_size_inches(width, 5, forward=True)
     if plot:
         plt.show()
         display(counts)
@@ -325,16 +329,16 @@ def get_python_version(python_notebooks):
     return pv2
 
 
-def get_toplevel_modules(modules):
-    columns = [
-        "any_any", "local_any", "external_any",
-        "any_import_from", "local_import_from", "external_import_from",
-        "any_import", "local_import", "external_import",
-        "any_load_ext", "local_load_ext", "external_load_ext",
-    ]
+def get_toplevel_modules(modules, columns):
+    # columns = [
+    #     "any_any", "local_any", "external_any",
+    #     "any_import_from", "local_import_from", "external_import_from",
+    #     "any_import", "local_import", "external_import",
+    #     "any_load_ext", "local_load_ext", "external_load_ext",
+    # ]
 
     for column in columns:
-        print("coluna", column)
+        print("Processin column {}...".format(column))
         modules[column] = modules[column].apply(lambda c: {a for a in c.split(",") if a})
         modules["toplevel_" + column] = modules[column].apply(lambda imports: {
             getitem(x.split("."), 0, x) for x in imports
@@ -402,3 +406,87 @@ def create_repositories_piechart(repository_attribute, attribute_name,
     ax.yaxis.set_label_coords(-0.1, 0.5)
     return fig, ax
 
+def check_test(y, name):
+    return y == name or y.startswith(name) and y[len(name)] == '.'
+
+def is_test(y):
+    """Modules related to test, mocks, and fixtures.
+    Select Unittet, Mock tools, Fuzz Testing tools, Acceptance testing tools
+    from https://wiki.python.org/moin/PythonTestingToolsTaxonomy
+
+    Unit test, """
+    return (
+            "test" in y
+            or "TEST" in y
+            or "Test" in y
+            or "mock" in y
+            or "MOCK" in y
+            or "Mock" in y
+            or "fixture" in y
+            or "FIXTURE" in y
+            or "Fixture" in y
+            # or check_test(y, 'unittest')
+            # or check_test(y, 'doctest')
+            # or check_test(y, 'pytest')
+            or check_test(y, 'nose')
+            # or check_test(y, 'testify')
+            or check_test(y, 'twisted.trial')
+            # or check_test(y, 'testify')
+            or check_test(y, 'subunit')
+            # or check_test(y, 'testresources')
+            or check_test(y, 'reahl.tofu')
+            # or check_test(y, 'testtools')
+            or check_test(y, 'sancho')
+            # or check_test(y, 'zope.testing')
+            or check_test(y, 'pry')
+            or check_test(y, 'pythoscope')
+            # or check_test(y, 'testlib')
+            # or check_test(y, 'pytest')
+            # or check_test(y, 'utils.dutest')
+
+            # or check_test(y, 'testoob')
+            # or check_test(y, 'TimedTest') # pyUnitPerf
+            # or check_test(y, 'LoadTest') # pyUnitPerf
+            or check_test(y, 'peckcheck')
+            # or check_test(y, 'testosterone')
+            # or check_test(y, 'qunittest')
+
+            # Mock tools
+            or check_test(y, 'ludibrio')
+            # or check_test(y, 'mock')
+            # or check_test(y, 'pymock')
+            # or check_test(y, 'unittest.mock')
+            # or check_test(y, 'pmock')
+            # or check_test(y, 'minimock')
+            # or check_test(y, 'svnmock')
+            # or check_test(y, 'mocker')
+            or check_test(y, 'reahl.stubble')
+            or check_test(y, 'mox')
+            # or check_test(y, 'mocktest')
+            or check_test(y, 'fudge')
+            # or check_test(y, 'mockito')
+            # or check_test(y, 'capturemock')
+            or check_test(y, 'doublex')
+            or check_test(y, 'aspectlib')
+
+            # Fuzz Testing
+            or check_test(y, 'hypothesis')
+            or check_test(y, 'pester')
+            # peach - executable only
+            or check_test(y, 'antiparser')
+            or check_test(y, 'taof')
+            or check_test(y, 'fusil')
+
+            # web testing tools - ignored
+
+            # acceptance/business logic testing
+            or check_test(y, 'behave')
+            or check_test(y, 'fit')
+            # texttext - executable only
+            or check_test(y, 'lettuce')
+        # FitLoader - unavailable
+        # robot framework
+
+        # gui testing toolls - ignored
+
+    )
