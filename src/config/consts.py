@@ -23,7 +23,7 @@ OUTPUTS_DIR = SRC_DIR + os.sep + "outputs"
 
 # Database
 DB_DIR = SRC_DIR + os.sep + "db"
-DB_FILE = DB_DIR + os.sep + "dsmining.sqlite"
+DB_FILE = DB_DIR + os.sep + "final.sqlite"
 DB_RESTORED = ROOT + os.sep + "dsmining.sqlite"
 DB_FILE_TEST = DB_DIR + os.sep + "dsmining_test.sqlite"
 DB_CONNECTION = "sqlite:////{}".format(DB_FILE)

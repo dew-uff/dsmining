@@ -20,6 +20,7 @@ from src.config.states import REP_REQ_FILE_EXTRACTED, REP_PF_EXTRACTED
 from src.config.states import REP_ORDER, REP_ERRORS, REP_UNAVAILABLE_FILES
 from src.config.states import states_after, states_before
 
+excluded_keywords = ["venv", "site-packages", "CorePython", "conda", "setup.py"]
 
 def find_requirements(session, repository):
     setups, requirements, pipfiles, pipfile_locks = [], [], [], []
@@ -52,6 +53,9 @@ def process_requirement_files(session, repository, req_names, reqformat):
         name = str(item)
 
         if not name:
+            continue
+
+        if any(keyword in name for keyword in excluded_keywords):
             continue
 
         requirement_file = session.query(RequirementFile).filter(

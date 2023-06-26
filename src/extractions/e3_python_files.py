@@ -35,19 +35,16 @@ def find_python_files(session, repository):
             return python_files
 
     files = find_files(repository.path, "*.py")
+    excluded_keywords = ["venv", "site-packages", "CorePython", "conda", "setup.py"]
+
     for file in files:
         if "/setup.py" not in str(file) \
-                and "venv" not in str(file) \
-                and "site-packages" not in str(file) \
-                and "CorePython" not in str(file) \
-                and "conda" not in str(file) \
-                and str(file) != 'setup.py':
+                and not any(keyword in str(file) for keyword in excluded_keywords):
             python_files.append(str(file.relative_to(repository.path)))
 
     return python_files
 
 
-# @timeout(5 * 60, use_signals=False)
 def process_python_files(session, repository, python_files_names, count):
 
     for name in python_files_names:

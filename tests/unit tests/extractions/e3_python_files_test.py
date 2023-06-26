@@ -49,12 +49,14 @@ class TestPythonFilesFindPythonFiles:
         file2_relative_path = 'to/file.py'
         file3_relative_path = 'setup.py'
         file4_relative_path = 'abc123/setup.py'
+        file5_relative_path = 'venv/aaaa.py'
 
         def mock_find_python_files(path, pattern):  # noqa: F841
             return [Path('{}/{}'.format(repository.path, file1_relative_path)),
                     Path('{}/{}'.format(repository.path, file2_relative_path)),
                     Path('{}/{}'.format(repository.path, file3_relative_path)),
-                    Path('{}/{}'.format(repository.path, file4_relative_path))]
+                    Path('{}/{}'.format(repository.path, file4_relative_path)),
+                    Path('{}/{}'.format(repository.path, file5_relative_path))]
 
         monkeypatch.setattr(e3, 'find_files', mock_find_python_files)
         monkeypatch.setattr(Path, 'exists', lambda path: False)
@@ -65,6 +67,7 @@ class TestPythonFilesFindPythonFiles:
         assert file2_relative_path in python_files
         assert file3_relative_path not in python_files
         assert file4_relative_path not in python_files
+        assert file5_relative_path not in python_files
 
     def test_find_python_files_zip_error(self, session, monkeypatch):
         repository = RepositoryFactory(session).create()
