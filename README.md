@@ -14,11 +14,11 @@ Table of Contents
 
 ## Overview
 The project consists of 4 step that go from data collection to analysis.
-<img width="1534" alt="Project Workflow" src="https://user-images.githubusercontent.com/50959073/234132659-5b46ecde-bce4-4622-87ed-7ce5cd41d773.png">
+<img width="700" alt="Project Workflow" src="https://github.com/dew-uff/dsmining/assets/50959073/a5435783-3dbe-40b0-9576-a12054eb0f80">
 
 
 # Workflow
-<img width="1500" alt="Workflow" src="https://github.com/dew-uff/dsmining/assets/50959073/6ea0987e-90d5-4b3a-9457-5baf55288d5c">
+<img width="700" alt="Workflow" src="https://github.com/dew-uff/dsmining/assets/50959073/73d39922-3119-4100-be6e-fc9c25a90d90">
 
 # Corpus
 The corpus of the project consists of a search in GitHub's GraphQL API for the terms: "Data Science", "Ciência de Dados", "Ciencia de los Datos" and "Science des Données". After the collection, we estabelished the following requirements a repository has to have to be analyzed:
