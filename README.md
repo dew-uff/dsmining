@@ -16,13 +16,13 @@ Table of Contents
 ## Overview
 The project consists of 4 step that go from data collection to analysis.
 <p align="center">
-  <img width="600" alt="Project Workflow" src="https://github.com/dew-uff/dsmining/assets/50959073/a5435783-3dbe-40b0-9576-a12054eb0f80">
+  <img width="600" alt="Project Workflow" src="https://github.com/dew-uff/dsmining/assets/50959073/cb668609-a34f-42b4-965d-110bcabe8b4f">
 </p>
 
 
 # Workflow
 <p align="center">
-<img width="700" alt="Workflow" src="https://github.com/dew-uff/dsmining/assets/50959073/73d39922-3119-4100-be6e-fc9c25a90d90">
+<img width="700" alt="Workflow" src="https://github.com/dew-uff/dsmining/assets/50959073/faea6198-fb8b-4753-8924-b4f04ee41492">
 </p>
 
 # Corpus
@@ -171,7 +171,7 @@ After we extract all the data from selected repositories, we use Jupyter Noteboo
   </table>
 
 # Results
-The resulting database is available here (~28GB). 
+The resulting database is available [here](https://iduffbr-my.sharepoint.com/:u:/g/personal/luamsilva_id_uff_br/EZA39jEoSIZDtC_xUtI8a5IBnAo8Y8d-nMrkU94_UfR9Fw?e=FEpsIc) (~28GB). 
 
 # Installation
 The project primarily uses Python 3.8 as an interpreter, but it also uses other Python versions (2.7 and 3.5) when extracting features from Abstract Syntax Trees from other versions, to deal with that we use Conda, instructions to install it on Linux can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html).
