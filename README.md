@@ -7,6 +7,7 @@ Table of Contents
 - [Overview](#overview)
 - [Workflow](#workflow)
 - [Corpus](#corpus)
+- [Results](#results)
 - [Installation](#installation)
 - [Running](#running)
 - [References](#references)
@@ -17,7 +18,6 @@ The project consists of 4 step that go from data collection to analysis.
 <p align="center">
   <img width="600" alt="Project Workflow" src="https://github.com/dew-uff/dsmining/assets/50959073/a5435783-3dbe-40b0-9576-a12054eb0f80">
 </p>
-
 
 
 # Workflow
@@ -170,7 +170,8 @@ After we extract all the data from selected repositories, we use Jupyter Noteboo
     </tr>
   </table>
 
-
+# Results
+The resulting database is available here (~28GB). 
 
 # Installation
 The project primarily uses Python 3.8 as an interpreter, but it also uses other Python versions (2.7 and 3.5) when extracting features from Abstract Syntax Trees from other versions, to deal with that we use Conda, instructions to install it on Linux can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html).
