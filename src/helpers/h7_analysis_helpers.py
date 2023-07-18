@@ -7,6 +7,7 @@ if src_path not in sys.path:
 import re
 import csv
 import math
+import locale
 import matplotlib
 
 import numpy as np
@@ -28,12 +29,25 @@ from dask.array import histogram as _dask_histogram
 import matplotlib.colors as mcolors
 
 Distribution = namedtuple("Distribution", "min q1 median q3 max")
+locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+
+
+def formatar_inteiro(numero):
+    return locale.format_string('%.0f', numero, grouping=True)
+
+
+def formatar_decimal(numero, duas_casas=False):
+    if duas_casas:
+        return locale.format_string('%.2f', numero, grouping=True)
+    return locale.format_string('%.1f', numero, grouping=True)
+
 
 def count(dataframe, *attrs):
     counter = Counter()
     for attr in attrs:
         counter[attr] = len(dataframe[dataframe[attr] != 0])
     return counter
+
 
 def pastel_colormap(size=5, reverse=False):
     colors = ['#FFCED1', '#FFFDD1', '#AEEAC6', '#CDE7F0', '#e3e3e3']
@@ -124,12 +138,7 @@ def display_counts(
     if isinstance(counts, pd.Series):
         counts = counts.to_frame()
     ax = counts.plot.bar(logy=logy, color=color)
-    ax.get_yaxis().set_major_formatter(
-        matplotlib.ticker.FuncFormatter(lambda x, p: template2.format(x)))  # noqa
-    if show_values:
-        for p in ax.patches:
-            text = template.format(int(p.get_height()))
-            ax.annotate(text, (p.get_x() + 0.25, p.get_height() + max(ax.get_ylim()) * 0.01), ha="center")
+
     fig = ax.get_figure()
     fig.set_size_inches(width, 5, forward=True)
     if plot:
