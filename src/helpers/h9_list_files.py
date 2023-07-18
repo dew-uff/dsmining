@@ -20,7 +20,7 @@ def obter_tamanho_arquivo(caminho_arquivo):
 
 
 # Diretório que será analisado
-diretorio = "/home/luam/Downloads/DataScience-FinalProject-master"
+diretorio = "path"
 
 # Obtém todos os arquivos no diretório e subdiretórios
 arquivos = obter_arquivos_recursivamente(diretorio)
@@ -33,6 +33,6 @@ counter = 0
 for arquivo in arquivos_ordenados:
     counter = counter + 1
     tamanho_mb = obter_tamanho_arquivo(arquivo)
-    print(f"{arquivo}: {tamanho_mb:.2f} MB")
+    print("{}: {:.2f} MB".format(arquivo, tamanho_mb))
 
 print("Number of files:", counter)
