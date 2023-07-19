@@ -1,0 +1,18 @@
+Repositório,Linguagem,KB,GB,Arquivos,DadosAnalise,Mais de um projeto,Anotações
+mcarujo/pneumonia-detector,Jupyter Notebook,1652521,"1,65",11798,Sim,Não,"Diversas imagens jpeg  de pacientes com e sem pneumonia medindo 1,3 GB"
+shashiniyer/Once-a-DS-N00b,Jupyter Notebook,1716488,"1,72",22911,Sim,Não,Multiplos dados de mineração de dados
+hirurana/COMP0031,Jupyter Notebook,1092935,"1,09",103,Sim,Não,Dados do airbnb em csv de diversos países
+Ely6899/Data_science_project,Jupyter Notebook,2151018,"2,15",75684,Sim,Não,Dados de treinapento em .jpg
+Kim-Ro/CDS-FinalProject,HTML,2670414,"2,67",1081,Sim,Não,Diversos dados de digitialização
+Bhik95/DataScience-FinalProject,Jupyter Notebook,1119169,"1,12",57,Sim,Não,Dados de modelos de treinamento
+RicardoSantos0/timely_accurate_portable,Jupyter Notebook,2889779,"2,89",578,Sim,Não,Imagens em png de modelos 
+Seonghyeony/DataScience,Python,1482191,"1,48",19026,Sim,No,Imagens em png de pets
+loedata/FORMATION_DATA_SCIENCE_STATQUEST,HTML,1193914,"1,19",273,Não,Não,"Tutoriais em docx, não se tratam de dados utilizados em analises"
+EzhilSaha/CE888,HTML,6887880,"6,89",48000,Sim,Não,Dados de detecção de fogo
+davemlz/Master_of_DataScience,HTML,1632037,"1,63",1243,Sim,Sim,"Diversos projetos no respositório, os arquivos que pesam mais são .csv, utilizados como entrada ou como resultado de testes"
+asaiyed10/LSTM_Tumours,Python,1013198,"1,01",3618,Sim,Não,"Diversas imagens no formato .dcm de ressonancia magnética, cada uma medindo 0,5 MB"
+PankajB1997/Big_Data_Systems,XSLT,2177345,"2,18",2147,Sim,Não,Arquivos do tipo .snappy.parquet
+guryaniv/GDS,Jupyter Notebook,1673064,"1,67",20671,Sim,Não,O tamanho se deve a modelos treinados resultantes
+dapankratov/data_science_portfolio,Jupyter Notebook,1087678,"1,09",1487,Não,Sim,Multiplos projetos de diversas áreas
+lunar-master,Python,1096947,"1,1",274,Sim,Não,Imagens da lua nos formatos png/tiff
+fabio-a-oliveira/movie-recommendations,R,1062470,"1,06",207,Sim,Não,Resultados de treinamento de predições de recomendação de filme

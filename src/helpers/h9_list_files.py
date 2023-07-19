@@ -1,5 +1,8 @@
 import os
 
+tamanho_total = 0
+diretorio = "/home/luam/Downloads/pneumonia-detector-develop"
+
 
 def obter_arquivos_recursivamente(diretorio):
     lista_arquivos = []
@@ -14,18 +17,12 @@ def obter_arquivos_recursivamente(diretorio):
 
 def obter_tamanho_arquivo(caminho_arquivo):
     tamanho_bytes = os.path.getsize(caminho_arquivo)
-    tamanho_mb = tamanho_bytes / (1024 * 1024)
+    tamanho_em_mb = tamanho_bytes / (1024 * 1024)
 
-    return tamanho_mb
+    return tamanho_em_mb
 
 
-# Diretório que será analisado
-diretorio = "path"
-
-# Obtém todos os arquivos no diretório e subdiretórios
 arquivos = obter_arquivos_recursivamente(diretorio)
-
-# Ordena a lista de arquivos pelo tamanho em ordem decrescente
 arquivos_ordenados = sorted(arquivos, key=lambda x: obter_tamanho_arquivo(x), reverse=True)
 
 
@@ -33,6 +30,8 @@ counter = 0
 for arquivo in arquivos_ordenados:
     counter = counter + 1
     tamanho_mb = obter_tamanho_arquivo(arquivo)
+    tamanho_total = tamanho_total + tamanho_mb
     print("{}: {:.2f} MB".format(arquivo, tamanho_mb))
 
 print("Number of files:", counter)
+print("Média", tamanho_total/counter)
